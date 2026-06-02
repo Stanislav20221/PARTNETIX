@@ -1,0 +1,555 @@
+{% extends 'users/base.html' %}
+{% load number_format %}
+
+{% block title %}Выплаты{% endblock %}
+{% block page_title %}ВЫПЛАТЫ{% endblock %}
+
+{% block content %}
+<style>
+.payouts-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 18px;
+    padding: 0 24px 24px;
+}
+
+.payout-card {
+    position: relative;
+    background: #fff;
+    border-radius: 22px;
+    padding: 28px;
+    margin-bottom: 24px;
+    box-shadow: 0 10px 30px rgba(15, 23, 42, 0.06);
+    border: 1px solid #eef2f7;
+}
+
+.payout-card-header {
+    margin-bottom: 18px;
+}
+
+.payout-card-header h3 {
+    margin: 0 0 4px;
+    font-size: 20px;
+    font-weight: 900;
+}
+
+.payout-card-header span {
+    color: #6b7280;
+    font-size: 13px;
+}
+
+.payout-status {
+    position: absolute;
+    top: 24px;
+    right: 24px;
+    padding: 8px 14px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 800;
+}
+
+.payout-amount {
+    color: #1F5BFF;
+    font-size: 30px;
+    font-weight: 900;
+    margin: 8px 0 20px;
+}
+
+.payout-details {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 14px;
+    margin-bottom: 18px;
+}
+
+.payout-details > div {
+    background: #f8fafc;
+    border-radius: 14px;
+    padding: 14px;
+    min-height: 64px;
+    font-size: 13px;
+}
+
+.payout-details strong {
+    display: block;
+    color: #6b7280;
+    font-size: 11px;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+    font-weight: 800;
+    padding-top: 13px;
+}
+
+.payout-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    margin-top: 18px;
+}
+
+.payout-accruals {
+    margin-top: 14px;
+}
+
+.payout-accruals summary {
+    color: #1F5BFF;
+    font-weight: 800;
+    cursor: pointer;
+}
+.accruals-list {
+    display: grid;
+    gap: 12px;
+    margin-top: 14px;
+}
+
+.accrual-item {
+    background: #f9fafb;
+    border-radius: 14px;
+    padding: 14px;
+    border: 1px solid #e5e7eb;
+}
+
+.empty-card {
+    background: white;
+    border-radius: 18px;
+    padding: 24px;
+    color: #6b7280;
+}
+.show-card-btn {
+    margin-left: 10px;
+    border: none;
+    background: transparent;
+    color: #1F5BFF;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+}
+.payout-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    margin-top: 18px;
+}
+
+.copy-payout-btn,
+.mark-paid-btn {
+    border: none;
+    border-radius: 12px;
+    padding: 12px 18px;
+    font-weight: 800;
+    cursor: pointer;
+}
+
+.copy-payout-btn {
+    background: white;
+    color: #111827;
+    border: 1px solid #d1d5db;
+}
+
+.mark-paid-btn {
+    background: #1F5BFF;
+    color: white;
+}
+.confirm-payout-box {
+    margin-top: 18px;
+    padding: 16px;
+    border-radius: 14px;
+    background: #f9fafb;
+    border: 1px solid #e5e7eb;
+}
+
+.confirm-payout-box p {
+    margin: 0 0 10px;
+}
+.withdraw-modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.55);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+}
+
+.withdraw-modal-overlay.active {
+    display: flex;
+}
+
+.withdraw-modal {
+    width: 100%;
+    max-width: 520px;
+    background: #fff;
+    border-radius: 22px;
+    padding: 28px;
+    position: relative;
+    box-shadow: 0 20px 60px rgba(15,23,42,0.25);
+}
+
+.withdraw-close-btn {
+    position: absolute;
+    top: 14px;
+    right: 14px;
+    border: none;
+    background: transparent;
+    font-size: 24px;
+    cursor: pointer;
+}
+
+.withdraw-modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    margin-top: 20px;
+}
+.modal-cancel-btn,
+.modal-confirm-btn {
+    border: none;
+    border-radius: 12px;
+    padding: 12px 20px;
+    font-size: 14px;
+    font-weight: 800;
+    cursor: pointer;
+    transition: .2s ease;
+}
+
+.modal-cancel-btn {
+    background: #f3f4f6;
+    color: #374151;
+}
+
+.modal-cancel-btn:hover {
+    background: #e5e7eb;
+}
+
+.modal-confirm-btn {
+    background: #1F5BFF;
+    color: white;
+}
+
+.modal-confirm-btn:hover {
+    background: #1F5BFF;
+}
+.payout-tabs {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin-bottom: 24px;
+    width: 100%;
+}
+
+.payout-tab {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 14px 18px;
+    border-radius: 14px;
+    background: #f3f4f6;
+    color: #374151;
+    font-weight: 700;
+    text-decoration: none;
+    transition: .2s;
+    text-align: center;
+}
+
+.payout-tab:hover {
+    background: #e5e7eb;
+}
+
+.payout-tab.active {
+    background: #2563eb;
+    color: white;
+}
+.paid-disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+.accrual-item {
+    line-height: 2;
+}
+@media (max-width: 700px) {
+    .payout-details {
+        grid-template-columns: 1fr;
+    }
+
+    .payout-card-header {
+        flex-direction: column;
+    }
+    .payout-card-header h3 {
+        margin: 0 0 4px;
+        font-size: 14px;
+        font-weight: 900;
+    }
+   
+    .payout-status {
+        top: 4px;
+        right: 7px;
+        padding: 8px 14px;
+        border-radius: 999px;
+        font-size: 12px;
+        font-weight: 600;
+    }
+    .payout-tab {
+        font-size: 12px;
+    }
+        .payouts-grid {
+        width: 408px;
+    }
+ 
+}
+</style>
+<div class="payouts-grid">
+    <div class="payout-tabs">
+        <a href="?status=all"
+        class="payout-tab {% if status_filter == 'all' %}active{% endif %}">
+            Все заявки ({{ all_count }})
+        </a>
+
+        <a href="?status=pending"
+        class="payout-tab {% if status_filter == 'pending' %}active{% endif %}">
+            Заявки на выплату ({{ pending_count }})
+        </a>
+
+        <a href="?status=paid"
+        class="payout-tab {% if status_filter == 'paid' %}active{% endif %}">
+            Выплачено ({{ paid_count }})
+        </a>
+    </div>
+
+    {% for withdrawal in payout_requests %}
+        <div class="payout-card">
+            <div class="payout-card-header">
+                <div>
+                    <h3>
+                        {% if withdrawal.settlement_account and withdrawal.bank_inn %}
+                            Партнёр: {{ withdrawal.recipient_name|default:withdrawal.partner.email }}
+                        {% elif withdrawal.settlement_account %}
+                            Партнёр: {{ withdrawal.partner.partner_registration.company_short_name|default:withdrawal.partner.partner_registration.company_full_name|default:withdrawal.recipient_name }}
+                        {% else %}
+                            Партнёр: {{ withdrawal.partner.get_full_name|default:withdrawal.recipient_name|default:withdrawal.partner.email }}
+                        {% endif %}
+                    </h3>
+                    <span>{{ withdrawal.created_at|date:"d.m.Y H:i" }}</span>
+                </div>
+
+                <div class="payout-status status-{{ withdrawal.status }}">
+                    {{ withdrawal.get_status_display }}
+                </div>
+            </div>
+
+            <div class="payout-amount">
+                {{ withdrawal.amount|space_thousands }} ₽
+            </div>
+
+           <div class="payout-details">
+            {% if withdrawal.settlement_account and withdrawal.bank_inn %}
+                <div><strong>Получатель:</strong> {{ withdrawal.recipient_name|default:"—" }}</div>
+                <div><strong>Банк:</strong> {{ withdrawal.legal_bank_name|default:"—" }}</div>
+                <div><strong>БИК:</strong> {{ withdrawal.bik|default:"—" }}</div>
+                <div><strong>ИНН банка:</strong> {{ withdrawal.bank_inn|default:"—" }}</div>
+                <div><strong>КПП банка:</strong> {{ withdrawal.bank_kpp|default:"—" }}</div>
+                <div><strong>Расчётный счёт:</strong> {{ withdrawal.settlement_account|default:"—" }}</div>
+                <div><strong>Корр. счёт:</strong> {{ withdrawal.correspondent_account|default:"—" }}</div>
+
+            {% elif withdrawal.settlement_account %}
+                <div>
+                    <strong>Получатель:</strong>
+                    {{ withdrawal.recipient_name|default:"—" }}
+                    {% if withdrawal.partner.get_full_name %}
+                        ({{ withdrawal.partner.get_full_name }})
+                    {% endif %}
+                </div>
+                <div><strong>Расчётный счёт:</strong> {{ withdrawal.settlement_account }}</div>
+                <div><strong>БИК:</strong> {{ withdrawal.bik|default:"—" }}</div>
+                <div><strong>Корр. счёт:</strong> {{ withdrawal.correspondent_account|default:"—" }}</div>
+                <div><strong>Банк:</strong> {{ withdrawal.legal_bank_name|default:"—" }}</div>
+                <div><strong>ИНН:</strong> {{ withdrawal.partner.partner_registration.inn|default:"—" }}</div>
+                <div><strong>КПП:</strong> {{ withdrawal.partner.partner_registration.kpp|default:"—" }}</div>
+
+            {% else %}
+                <div><strong>Получатель:</strong> {{ withdrawal.recipient_name|default:"—" }}</div>
+                <div><strong>Банк:</strong> {{ withdrawal.bank_name|default:"—" }}</div>
+                <div>
+                    <strong>Карта:</strong>
+                    <span id="card-mask-{{ withdrawal.id }}">
+                        {{ withdrawal.card_mask|default:"—" }}
+                    </span>
+
+                    <button type="button"
+                            class="show-card-btn"
+                            data-payout-id="{{ withdrawal.id }}">
+                        Показать номер
+                    </button>
+                </div>
+                <div><strong>Система:</strong> {{ withdrawal.payment_system|default:"—" }}</div>
+                
+            {% endif %}
+
+            <div><strong>Комментарий:</strong> {{ withdrawal.comment|default:"—" }}</div>
+        </div>
+        
+        <div class="payout-actions">
+            <button type="button"
+                    class="copy-payout-btn"
+                    data-payout-id="{{ withdrawal.id }}">
+                Копировать реквизиты
+            </button>
+
+            {% if withdrawal.status == 'paid' %}
+                <button type="button"
+                        class="mark-paid-btn paid-disabled"
+                        disabled>
+                    Выплачено
+                </button>
+            {% else %}
+                <button type="button"
+                        class="mark-paid-btn"
+                        data-payout-id="{{ withdrawal.id }}"
+                        data-partner="{{ withdrawal.partner.get_full_name }}"
+                        data-recipient="{{ withdrawal.recipient_name }}"
+                        data-amount="{{ withdrawal.amount|space_thousands }}">
+                    Выплатить
+                </button>
+            {% endif %}
+        </div>
+
+            <details class="payout-accruals">
+                <summary>Начисления в заявке</summary>
+
+                <div class="accruals-list">
+                    {% for accrual in withdrawal.accruals.all %}
+                        <div class="accrual-item">
+                            <div><strong>Оффер:</strong> {{ accrual.offer.title|default:"—" }}</div>
+                            <div><strong>Лид:</strong> {{ accrual.lead.title|default:"—" }}</div>
+                            <div><strong>Сумма сделки:</strong> {{ accrual.lead.deal_amount|space_thousands }} ₽</div>
+                            <div><strong>Вознаграждение:</strong> {{ accrual.amount|space_thousands }} ₽</div>
+                        </div>
+
+
+                        
+                    {% empty %}
+                        <div class="empty">Начисления не найдены</div>
+                    {% endfor %}
+                </div>
+            </details>
+        </div>
+    {% empty %}
+        <div class="empty-card">Заявок на выплату пока нет</div>
+    {% endfor %}
+
+    <div class="withdraw-modal-overlay" id="paidConfirmModal">
+        <div class="withdraw-modal">
+            <button type="button"
+                    class="withdraw-close-btn"
+                    id="closePaidModal">
+                ×
+            </button>
+
+            <h3>Подтверждение выплаты</h3>
+
+            <p>Вы собираетесь отметить заявку как выплаченную.</p>
+
+            <div class="confirm-payout-box">
+                <p><strong>Партнёр:</strong> <span id="confirmPartner"></span></p>
+                <p><strong>Получатель:</strong> <span id="confirmRecipient"></span></p>
+                <p><strong>Сумма:</strong> <span id="confirmAmount"></span> ₽</p>
+            </div>
+
+            <form method="post" id="paidConfirmForm">
+                {% csrf_token %}
+
+                <div class="withdraw-modal-actions">
+                    <button type="button"
+                            class="modal-cancel-btn"
+                            id="cancelPaidModal">
+                        Отмена
+                    </button>
+
+                    <button type="submit"
+                            class="modal-confirm-btn">
+                        Подтвердить выплату
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>    
+</div>
+<script>
+// Обработчик для кнопок "Показать номер"    
+    document.querySelectorAll('.show-card-btn').forEach(btn => {
+        btn.addEventListener('click', async function () {
+            const payoutId = this.dataset.payoutId;
+            const cardMaskEl = document.getElementById(`card-mask-${payoutId}`);
+            const originalMask = cardMaskEl.textContent;
+
+            try {
+                const response = await fetch(
+                    `/users/payouts/${payoutId}/card-number/`
+                );
+
+                const data = await response.json();
+
+                if (!data.success) {
+                    alert(data.message);
+                    return;
+                }
+
+                cardMaskEl.textContent = data.card_number;
+                btn.disabled = true;
+
+                let seconds = 10;
+                btn.textContent = `Скрытие через ${seconds} сек`;
+
+                const interval = setInterval(() => {
+                    seconds--;
+
+                    if (seconds <= 0) {
+                        clearInterval(interval);
+
+                        cardMaskEl.textContent = originalMask;
+                        btn.disabled = false;
+                        btn.textContent = 'Показать номер';
+                        return;
+                    }
+
+                    btn.textContent = `Скрытие через ${seconds} сек`;
+                }, 1000);
+
+            } catch {
+                alert('Ошибка загрузки номера карты');
+            }
+        });
+    });
+</script>
+<script>
+    // Обработчик для кнопок "Выплатить"
+    const paidModal = document.getElementById('paidConfirmModal');
+    const paidForm = document.getElementById('paidConfirmForm');
+
+    document.querySelectorAll('.mark-paid-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.getElementById('confirmPartner').textContent = btn.dataset.partner;
+            document.getElementById('confirmRecipient').textContent = btn.dataset.recipient;
+            document.getElementById('confirmAmount').textContent = btn.dataset.amount;
+
+            paidForm.action = `/users/payouts/${btn.dataset.payoutId}/mark-paid/`;
+
+            paidModal.classList.add('active');
+        });
+    });
+
+    document.getElementById('closePaidModal').addEventListener('click', () => {
+        paidModal.classList.remove('active');
+    });
+
+    document.getElementById('cancelPaidModal').addEventListener('click', () => {
+        paidModal.classList.remove('active');
+    });
+
+    paidModal.addEventListener('click', (e) => {
+        if (e.target === paidModal) {
+            paidModal.classList.remove('active');
+        }
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,736 @@
+{% extends 'users/base.html' %}
+
+{% block title %}Профиль{% endblock %}
+{% block page_title %}ПРОФИЛЬ{% endblock %}
+
+{% block content %}
+<style>
+    .profile-wrapper {
+        max-width: 100%;
+    }
+
+    .profile-grid {
+        width: 100%;
+        display: grid;
+        grid-template-columns: 280px minmax(0, 1fr);
+        gap: 24px;
+        align-items: start;
+    }
+    .profile-card {
+        grid-row: span 2;
+    }
+    .profile-card, .form-card {
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+            height: 100%;
+        }
+
+    .form-card {
+        display: flex;
+        flex-direction: column;
+        width: 100%;
+    }
+
+    .avatar-box {
+        text-align: center;
+        margin-bottom: 20px;
+    }
+
+    .avatar-wrap {
+        display: flex;
+        justify-content: center;
+        margin-bottom: 16px;
+    }
+
+    .avatar-image,
+    .avatar-placeholder {
+        width: 160px;
+        height: 160px;
+        border-radius: 50%;
+        object-fit: cover;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #e5e7eb;
+        color: #6b7280;
+    }
+
+    .avatar-placeholder svg {
+        width: 72px;
+        height: 72px;
+        opacity: 0.8;
+    }
+
+    .user-name {
+        font-size: 22px;
+        font-weight: 700;
+        color: #111827;
+        margin-bottom: 8px;
+    }
+
+    .user-meta {
+        color: #6b7280;
+        margin-bottom: 6px;
+    }
+
+    .form-title {
+        font-size: 20px;
+        font-weight: 700;
+        color: #111827;
+        margin-bottom: 20px;
+    }
+
+    .form-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+    }
+
+    .form-group {
+        margin-bottom: 4px;
+    }
+
+    .form-group.full {
+        grid-column: 1 / -1;
+    }
+
+    label {
+        display: block;
+        margin-bottom: 6px;
+        font-size: 14px;
+        font-weight: 600;
+        color: #374151;
+    }
+
+    .form-input,
+    input,
+    textarea,
+    select {
+        width: 100%;
+        padding: 13px 14px;
+        border: 1px solid #d1d5db;
+        border-radius: 12px;
+        outline: none;
+        font-size: 14px;
+        background: #f9fafb;
+        transition: 0.2s;
+    }
+
+    .form-input:focus,
+    input:focus,
+    textarea:focus,
+    select:focus {
+        border-color: #1F5BFF;
+        background: #fff;
+        box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.12);
+    }
+
+    .btn {
+        border: none;
+        border-radius: 12px;
+        padding: 14px 18px;
+        font-size: 15px;
+        font-weight: 700;
+        cursor: pointer;
+        background: #1F5BFF;
+        color: white;
+        margin-top: 18px;
+    }
+
+    .btn:hover {
+        background: #1d4ed8;
+    }
+
+    .message-success {
+        background: #ecfdf5;
+        color: #065f46;
+        padding: 12px 14px;
+        border-radius: 10px;
+        margin-bottom: 18px;
+        font-size: 14px;
+    }
+
+    .field-errors,
+    .errorlist {
+        margin-top: 6px;
+        color: #dc2626;
+        font-size: 13px;
+        list-style: none;
+        padding: 0;
+    }
+
+    .upload-btn {
+        display: block;
+        width: 100%;
+        text-align: center;
+        padding: 12px 18px;
+        background: #1F5BFF;
+        color: white;
+        border-radius: 10px;
+        cursor: pointer;
+        font-size: 14px;
+        font-weight: 600;
+        transition: 0.2s;
+        margin-bottom: 10px;
+    }
+
+    .upload-btn:hover {
+        background: #1d4ed8;
+    }
+
+    .delete-btn {
+        display: block;
+        width: 100%;
+        text-align: center;
+        padding: 12px 18px;
+        background: #ef4444;
+        color: white;
+        border-radius: 10px;
+        cursor: pointer;
+        font-size: 14px;
+        font-weight: 600;
+        transition: 0.2s;
+        border: none;
+    }
+
+    .delete-btn:hover {
+        background: #dc2626;
+    }
+
+    .hidden {
+        display: none;
+    }
+    .content {
+       margin-left: 326px;
+    }
+    .drop-zone {
+        border: 2px dashed #cbd5f5;
+        border-radius: 12px;
+        padding: 6px;
+        margin-bottom: 12px;
+        text-align: center;
+        cursor: pointer;
+        transition: 0.2s;
+        background: #f9fafb;
+    }
+
+    .drop-zone:hover {
+        border-color: #1F5BFF;
+        background: #eef2ff;
+    }
+
+    .drop-zone.dragover {
+        border-color: #1F5BFF;
+        background: #dbeafe;
+    }
+
+    .drop-text {
+        font-size: 14px;
+        color: #6b7280;
+    }
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 18px;
+    }
+    .stats-card {
+        grid-column: 2;
+    }
+    .form-card {
+        grid-column: 2;
+    }
+
+    .stat-number {
+        font-size: 28px;
+        font-weight: 800;
+        color: #111827;
+    }
+
+    .stat-label {
+        margin-top: 6px;
+        color: #6b7280;
+        font-weight: 600;
+    }
+    .password-field-wrap {
+        position: relative;
+    }
+
+    .password-field-wrap input {
+        padding-right: 48px;
+    }
+
+    .toggle-password-btn {
+        position: absolute;
+        right: 12px;
+        top: 50%;
+        transform: translateY(-50%);
+
+        border: none;
+        background: transparent;
+        cursor: pointer;
+
+        color: #6b7280;
+        font-size: 16px;
+    }    
+    .profile-activity {
+    margin-top: 24px;
+    padding-top: 20px;
+    border-top: 1px solid #eef2f7;
+    text-align: left;
+}
+
+    .activity-title {
+        font-size: 15px;
+        font-weight: 700;
+        color: #111827;
+        margin-bottom: 14px;
+    }
+
+    .activity-item {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        margin-bottom: 14px;
+        justify-content: center;
+    }
+
+    .activity-item span {
+        font-size: 13px;
+        color: #6b7280;
+    }
+
+    .activity-item strong {
+        font-size: 15px;
+        color: #111827;
+        font-weight: 700;
+    }
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 20px;
+    }
+
+   .stat-card {
+        background: #ffffff;
+        border: 1px solid #eef2f7;
+        border-radius: 18px;
+        padding: 22px;
+
+        display: flex;
+        align-items: center;
+        gap: 18px;
+
+        transition: 0.2s ease;
+  }
+    .stat-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 25px rgba(37, 99, 235, 0.08);
+    }
+
+    .stat-icon {
+        width: 58px;
+        height: 58px;
+
+        border-radius: 16px;
+        background: #eef4ff;
+
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 58px;
+        color: #1F5BFF;
+        font-size: 24px;
+
+        flex-shrink: 0;
+    }
+
+    .stat-item {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .stat-number {
+        font-size: 34px;
+        font-weight: 800;
+        color: #1F5BFF;
+        line-height: 1;
+    }
+
+    .stat-label {
+        margin-top: 6px;
+        font-size: 14px;
+        color: #6b7280;
+    }
+    @media (max-width: 900px) {
+        .profile-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+@media (max-width: 768px) {
+
+    .content {
+        margin-left: 0;
+        padding: 16px;
+    }
+
+    .profile-grid {
+        grid-template-columns: 1fr;
+        gap: 18px;
+    }
+
+    .profile-card,
+    .stats-card,
+    .form-card {
+        grid-column: auto;
+        width: 100%;
+    }
+
+    .stats-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .form-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .profile-card {
+        grid-row: auto;
+    }
+
+    .stat-card {
+        width: 100%;
+    }
+
+    .avatar-image,
+    .avatar-placeholder {
+        width: 204px;
+        height: 204px;
+    }
+
+    .user-name {
+        font-size: 20px;
+    }
+
+    .form-title {
+        font-size: 18px;
+    }
+
+    .stat-number {
+        font-size: 28px;
+    }
+
+    .btn {
+        width: 100%;
+    }
+}
+
+    @media (max-width: 640px) {
+        .form-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .form-group.full {
+            grid-column: auto;
+        }
+        
+        .stat-icon {
+            width: 96px;
+            height: 96px;
+        }   
+    }
+</style>
+
+<div class="profile-wrapper">
+    {% if messages %}
+        {% for message in messages %}
+            <div class="message-success">
+                {{ message }}
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        <input type="text" name="fake_username" style="display:none">
+        <input type="password" name="fake_password" style="display:none">
+        <div class="profile-grid">
+            <div class="profile-card">
+                <div class="avatar-box">
+                    <div class="avatar-wrap">
+                        {% if request.user.avatar %}
+                            <img
+                                id="avatar-preview"
+                                src="{{ request.user.avatar.url }}?v={{ request.user.avatar.name }}"
+                                alt="Аватар"
+                                class="avatar-image"
+                            >
+                            <div id="avatar-placeholder" class="avatar-placeholder hidden">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                                    <path d="M20 21a8 8 0 0 0-16 0"></path>
+                                    <circle cx="12" cy="7" r="4"></circle>
+                                </svg>
+                            </div>
+                        {% else %}
+                            <img
+                                id="avatar-preview"
+                                src=""
+                                alt="Аватар"
+                                class="avatar-image hidden"
+                            >
+                            <div id="avatar-placeholder" class="avatar-placeholder">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                                    <path d="M20 21a8 8 0 0 0-16 0"></path>
+                                    <circle cx="12" cy="7" r="4"></circle>
+                                </svg>
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="user-name">
+                        {{ request.user.first_name }} {{ request.user.last_name }}
+                    </div>
+                    <div class="user-meta">
+                            {{ request.user.get_role_display }}
+                    </div>
+                    <div class="profile-activity">
+
+                        <div class="activity-title">
+                            Активность
+                        </div>
+
+                        <div class="activity-item">
+                            <span>Дата регистрации</span>
+                            <strong>
+                                {{ request.user.date_joined|date:"d.m.Y" }}
+                            </strong>
+                        </div>
+
+                        <div class="activity-item">
+                            <span>Последний визит</span>
+                            <strong>
+                                {{ request.user.last_login|date:"d.m.Y H:i" }}
+                            </strong>
+                        </div>
+
+                    </div>
+
+                </div>
+
+            
+
+                <div class="form-group full">
+                <label>Изменить фото профиля</label>
+
+                <div class="drop-zone" id="drop-zone">
+                    <div class="drop-text" id="drop-text">
+                        Перетащите фото сюда или нажмите
+                    </div>
+
+                    <input
+                        type="file"
+                        name="avatar"
+                        id="{{ form.avatar.id_for_label }}"
+                        hidden
+                        accept="image/*"
+                    >
+                </div>
+
+                <input type="hidden" name="delete_avatar" id="delete-avatar-input" value="">
+
+                <button type="button"
+                        class="delete-btn{% if not request.user.avatar %} hidden{% endif %}"
+                        id="delete-avatar-btn">
+                    Удалить фото
+                </button>
+
+                <div class="field-errors">{{ form.avatar.errors }}</div>
+            </div>
+
+
+
+
+
+         </div>
+            <div class="stats-card">
+                <div class="form-title">Краткая статистика</div>
+
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fa-solid fa-users"></i>
+                        </div>
+
+                        <div class="stat-item">
+                            <div class="stat-number">{{ partners_count }}</div>
+                            <div class="stat-label">Партнёров</div>
+                        </div>
+                   </div>
+          
+          
+                    <div class="stat-card">          
+                        <div class="stat-icon">
+                            <i class="fa-solid fa-briefcase"></i>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-number">{{ offers_count }}</div>
+                            <div class="stat-label">Офферов</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">          
+                        <div class="stat-icon">
+                            <i class="fa-solid fa-user-check"></i>
+                        </div>
+                       <div class="stat-item">
+                            <div class="stat-number">{{ leads_count }}</div>
+                            <div class="stat-label">Лидов</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">          
+                        <div class="stat-icon">
+                            <i class="fa-solid fa-handshake"></i>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-number">{{ deals_count }}</div>
+                            <div class="stat-label">Сделок</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-card">
+                <div class="form-title">Редактирование профиля</div>
+
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="{{ form.first_name.id_for_label }}">Имя</label>
+                        {{ form.first_name }}
+                        <div class="field-errors">{{ form.first_name.errors }}</div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="{{ form.last_name.id_for_label }}">Фамилия</label>
+                        {{ form.last_name }}
+                        <div class="field-errors">{{ form.last_name.errors }}</div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="{{ form.email.id_for_label }}">Email</label>
+                        {{ form.email }}
+                        <div class="field-errors">{{ form.email.errors }}</div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="{{ form.phone.id_for_label }}">Телефон</label>
+                        {{ form.phone }}
+                        <div class="field-errors">{{ form.phone.errors }}</div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="{{ form.company.id_for_label }}">Компания</label>
+                        {{ form.company }}
+                        <div class="field-errors">{{ form.company.errors }}</div>
+                    </div>
+                
+                  <div class="form-group">
+                    <label for="password-field">Новый пароль</label>
+
+                    <div class="password-field-wrap">
+                    <input type="password"
+                        name="new_password"
+                        id="password-field"
+                        placeholder="Введите новый пароль"
+                        autocomplete="new-password">
+
+                        <button type="button"
+                                class="toggle-password-btn"
+                                id="toggle-password-btn">
+                            <i class="fa-solid fa-eye"></i>
+                        </button>
+                    </div>
+                 </div>
+                </div>
+                <button type="submit" class="btn">Сохранить изменения</button>
+            </div>
+        </div>
+    </form>
+</div>
+<script src="https://unpkg.com/imask"></script>
+<script>
+    const input = document.getElementById("{{ form.avatar.id_for_label }}");
+    const preview = document.getElementById("avatar-preview");
+    const placeholder = document.getElementById("avatar-placeholder");
+    const dropZone = document.getElementById("drop-zone");
+    const deleteBtn = document.getElementById("delete-avatar-btn");
+    const deleteInput = document.getElementById("delete-avatar-input");
+
+    // 🔥 Клик по зоне
+    dropZone.addEventListener("click", () => input.click());
+
+    // 🔥 Drag & Drop
+    dropZone.addEventListener("dragover", (e) => {
+        e.preventDefault();
+        dropZone.classList.add("dragover");
+    });
+
+    dropZone.addEventListener("dragleave", () => {
+        dropZone.classList.remove("dragover");
+    });
+
+    dropZone.addEventListener("drop", (e) => {
+        e.preventDefault();
+        dropZone.classList.remove("dragover");
+
+        const files = e.dataTransfer.files;
+
+        if (files.length > 0) {
+            input.files = files;
+            handleFile(files[0]);
+        }
+    });
+
+    // 🔥 При выборе файла
+    input.addEventListener("change", function() {
+        if (this.files.length > 0) {
+            handleFile(this.files[0]);
+        }
+    });
+
+    function handleFile(file) {
+        const reader = new FileReader();
+
+        reader.onload = function(e) {
+            preview.src = e.target.result;
+            preview.classList.remove("hidden");
+            placeholder.classList.add("hidden");
+        };
+
+        reader.readAsDataURL(file);
+
+        deleteBtn.classList.remove("hidden");
+        deleteInput.value = "";
+    }
+
+    // 🔥 Удаление
+    deleteBtn.addEventListener("click", function() {
+        preview.src = "";
+        preview.classList.add("hidden");
+        placeholder.classList.remove("hidden");
+
+        input.value = "";
+        deleteInput.value = "on";
+
+        deleteBtn.classList.add("hidden");
+    });
+</script>
+<script>
+    const phoneInput = document.getElementById('{{ form.phone.id_for_label }}');
+
+    if (phoneInput) {
+        IMask(phoneInput, {
+            mask: '+{7} (000) 000-00-00'
+        });
+    }
+</script>
+{% endblock %}

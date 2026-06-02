@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Кабинет партнера{% endblock %}</title>
+
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+
+ <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #f3f4f6;
+        }
+
+        .sidebar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 301px;
+            height: 100vh;
+            background: #1F5BFF;
+            color: white;
+            padding: 30px 20px;
+            z-index: 10000;
+        }
+
+        .logo {
+            font-size: 22px;
+            font-weight: bold;
+            margin-bottom: 40px;
+            text-align: center;
+        }
+
+        .menu {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        .menu-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-decoration: none;
+            color: white;
+            padding: 12px;
+            border-radius: 10px;
+            transition: 0.2s;
+            font-size: 14px;
+            font-weight: 200;
+        }
+
+        .menu-item i {
+            width: 18px;
+            text-align: center;
+            font-size: 15px;
+        }
+
+        .menu-item.active {
+            background: #1c1c1c;
+        }
+
+        .menu-item:hover {
+            background: rgba(255, 255, 255, 0.12);
+        }
+
+        .content {
+            margin-left: 301px;
+            min-height: 100vh;
+            background: white;
+            padding: 30px;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        .page-title {
+            font-size: 26px;
+            font-weight: 700;
+            color: #111827;
+        }
+
+        .logout {
+            text-decoration: none;
+            color: white;
+            background: #1F5BFF;
+            padding: 10px 16px;
+            border-radius: 10px;
+            font-size: 14px;
+        }
+
+        .placeholder-page {
+            padding: 40px;
+            background: white;
+            border-radius: 18px;
+            box-shadow: 0 8px 25px rgba(15,23,42,0.06);
+        }
+        .logo-wrap {
+    text-align: center;
+    margin-bottom: 40px;
+    }
+
+    .logo {
+        font-size: 22px;
+        font-weight: 800;
+        line-height: 1.2;
+        margin-bottom: 12px;
+    }
+
+    .logo-subtitle {
+        margin-top: 6px;
+        font-size: 12px;
+        font-weight: 200;
+        text-align: center;
+        letter-spacing: 1px;
+        opacity: 0.8;
+        text-transform: uppercase;
+        margin-bottom: 35px;
+    }
+    .menu-btn {
+    display: none;
+    background: #2563eb;
+    color: white;
+    border: none;
+    padding: 10px 14px;
+    border-radius: 10px;
+    font-weight: 600;
+    cursor: pointer;
+    margin: 12px;
+}
+
+    .close-menu {
+        display: none;
+        background: transparent;
+        border: none;
+        color: white;
+        font-size: 24px;
+        cursor: pointer;
+        margin-bottom: 20px;
+  }
+  .sidebar-user-card {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px;
+    margin-bottom: 28px;
+    border-radius: 16px;
+    background: rgba(255, 255, 255, 0.12);
+}
+
+.sidebar-user-avatar {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    overflow: hidden;
+    background: rgba(255, 255, 255, 0.25);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.sidebar-user-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.sidebar-user-name {
+    font-size: 15px;
+    font-weight: 600;
+    line-height: 1.2;
+}
+
+.sidebar-user-role {
+    margin-top: 4px;
+    font-size: 12px;
+    opacity: 0.8;
+}
+.sidebar-user-card {
+    position: relative;
+}
+
+.sidebar-user-tooltip {
+    position: absolute;
+    left: calc(100% + 14px);
+    top: 50%;
+    transform: translateY(-50%);
+    width: 260px;
+    background: #111827;
+    color: white;
+    padding: 14px 16px;
+    border-radius: 14px;
+    font-size: 13px;
+    line-height: 1.6;
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    z-index: 9999;
+    box-shadow: 0 12px 30px rgba(0,0,0,0.22);
+    transition: 0.2s;
+}
+
+.sidebar-user-tooltip::before {
+    content: "";
+    position: absolute;
+    left: -7px;
+    top: 50%;
+    transform: translateY(-50%);
+    border-top: 7px solid transparent;
+    border-bottom: 7px solid transparent;
+    border-right: 7px solid #111827;
+}
+
+.sidebar-user-card:hover .sidebar-user-tooltip {
+    opacity: 1;
+    visibility: visible;
+}
+
+.tooltip-title {
+    font-size: 14px;
+    font-weight: 800;
+    margin-bottom: 8px;
+}
+ @media (max-width: 768px) {
+    .menu-btn {
+        display: inline-block !important;
+    }
+
+    .sidebar {
+        left: -100% !important;
+        width: 100% !important;
+        z-index: 2000;
+        transition: 0.3s;
+    }
+
+    .sidebar.active {
+        left: 0 !important;
+    }
+
+    .close-menu {
+        display: block !important;
+    }
+
+    .content {
+        margin-left: 0 !important;
+        padding: 20px;
+    }
+}
+</style>
+
+</head>
+
+<body>
+<button class="menu-btn" id="open-menu">
+    ☰ Меню
+</button>
+<div class="sidebar">
+    <button class="close-menu" id="close-menu">✕</button>
+    <div class="logo">PARTNETIX</div>
+    <div class="sidebar-user-card">
+        <div class="sidebar-user-avatar">
+            {% if request.user.avatar %}
+                <img src="{{ request.user.avatar.url }}" alt="">
+            {% else %}
+                <i class="fa-regular fa-user"></i>
+            {% endif %}
+        </div>
+
+        <div class="sidebar-user-info">
+            <div class="sidebar-user-tooltip">
+                <div class="tooltip-title">
+                    {% if request.user.partner_registration.partner_type == 'company' %}
+                        {{ request.user.partner_registration.company_short_name }}
+                    {% else %}
+                        {{ request.user.partner_registration.full_name }}
+                    {% endif %}
+                </div>
+
+                <div>Правовой статус: {{ request.user.partner_registration.get_partner_type_display }}</div>
+                <div>Статус: {{ request.user.partner_registration.status.name|default:"Не назначен" }}</div>
+                <div>Форма выплаты: {{ request.user.partner_registration.offer.get_payout_type_display }}</div>
+
+                <div>
+                    Вознаграждение:
+                    {% if request.user.partner_registration.offer.payout_type == 'partner_status' %}
+                        {{ request.user.partner_registration.status.reward_percent|floatformat:0 }}%
+                    {% else %}
+                        {{ request.user.partner_registration.offer.reward|floatformat:0 }} ₽
+                    {% endif %}
+                </div>
+            </div>
+            <div class="sidebar-user-name">
+
+                {% if request.user.partner_registration %}
+
+                    {% if request.user.partner_registration.partner_type == 'company' %}
+                        {{ request.user.partner_registration.company_short_name }}
+
+                    {% else %}
+                        {{ request.user.partner_registration.full_name }}
+                    {% endif %}
+
+                {% elif request.user.first_name or request.user.last_name %}
+
+                    {{ request.user.first_name }} {{ request.user.last_name }}
+
+                {% else %}
+
+                    {{ request.user.email }}
+
+                {% endif %}
+
+            </div>
+                <div class="sidebar-user-role">
+                    {% if request.user.partner_registration %}
+                        Партнер
+                    {% elif request.user.role == 'admin' %}
+                        Администратор
+                    {% else %}
+                        Клиент
+                    {% endif %}
+                </div>
+        </div>
+    </div>
+    <div class="menu">
+        <a href="{% url 'partner_dashboard' %}"
+           class="menu-item {% if active_page == 'dashboard' %}active{% endif %}">
+            <i class="fa-solid fa-house"></i>
+            <span>ГЛАВНАЯ</span>
+        </a>
+
+        <a href="{% url 'partner_referral_program' %}"
+        class="menu-item {% if active_page == 'referral_program' %}active{% endif %}">
+            <i class="fa-solid fa-link"></i>
+            <span>РЕФЕРАЛЬНАЯ ПРОГРАММА</span>
+        </a>
+
+        <a href="{% url 'partner_leads' %}"
+        class="menu-item {% if active_page == 'leads' %}active{% endif %}">
+            <i class="fa-solid fa-user-plus"></i>
+            <span>ЛИДЫ</span>
+        </a>
+
+
+        <a href="{% url 'partner_reports' %}"
+        class="menu-item {% if active_page == 'reports' %}active{% endif %}">
+            <i class="fa-solid fa-file-lines"></i>
+            <span>ОТЧЕТЫ</span>
+        </a>
+        
+                
+        <a href="{% url 'partner_accruals' %}"
+           class="menu-item {% if active_page == 'accruals' %}active{% endif %}">
+            <i class="fa-solid fa-coins"></i>
+            <span>НАЧИСЛЕНИЯ</span>
+        </a>
+        
+        <a href="{% url 'partner_education' %}"
+        class="menu-item {% if active_page == 'education' %}active{% endif %}">
+            <i class="fa-solid fa-graduation-cap"></i>
+            <span>ОБУЧЕНИЕ</span>
+        </a>
+
+        <a href="{% url 'partner_materials' %}"
+        class="menu-item {% if active_page == 'materials' %}active{% endif %}">
+            <i class="fa-solid fa-folder-open"></i>
+            <span>МАТЕРИАЛЫ</span>
+        </a>
+
+        <a href="{% url 'partner_profile' %}"
+           class="menu-item {% if active_page == 'profile' %}active{% endif %}">
+            <i class="fa-solid fa-user-gear"></i>
+            <span>ПРОФИЛЬ</span>
+        </a>
+         <a href="{% url 'partner_chat' %}"
+            class="menu-item {% if active_page == 'partner_chat' %}active{% endif %}">
+            <i class="fa-solid fa-comments"></i>
+            <span>ЧАТ С АДМИНИСТРАТОРОМ</span>
+        </a>
+    </div>
+</div>
+
+<div class="content">
+    <div class="header">
+        <div class="page-title">{% block page_title %}{% endblock %}</div>
+       <form method="post" action="{% url 'partner_logout' %}" style="margin: 0;">
+        {% csrf_token %}
+        <button type="submit" class="logout">
+            Выйти
+        </button>
+    </form>
+    </div>
+
+    {% block content %}{% endblock %}
+</div>
+<style>
+    .logout {
+    border: none;
+    cursor: pointer;
+    text-decoration: none;
+    color: white;
+    background: #1F5BFF;
+    padding: 10px 16px;
+    border-radius: 10px;
+    font-size: 14px;
+}
+</style>
+<script>
+    const openMenu = document.getElementById('open-menu');
+    const closeMenu = document.getElementById('close-menu');
+    const sidebar = document.querySelector('.sidebar');
+
+    if (openMenu && closeMenu && sidebar) {
+        openMenu.addEventListener('click', function () {
+            sidebar.classList.add('active');
+        });
+
+        closeMenu.addEventListener('click', function () {
+            sidebar.classList.remove('active');
+        });
+    }
+</script>
+</body>
+</html>

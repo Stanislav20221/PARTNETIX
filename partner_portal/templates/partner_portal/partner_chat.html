@@ -1,0 +1,2868 @@
+{% extends 'partner_portal/base.html' %}
+
+{% block title %}Чат с администратором{% endblock %}
+{% block page_title %}ЧАТ С АДМИНИСТРАТОРОМ{% endblock %}
+
+{% block content %}
+<div class="chat-admin-status" id="adminStatusBlock">
+
+    {% if current_topic %}
+        {% with admin=current_topic.admin %}
+
+            {% if admin.partner_registration.partner_type == 'company' %}
+                {{ admin.partner_registration.company_short_name }}
+            {% else %}
+                {{ admin.first_name }} {{ admin.last_name }}
+            {% endif %}
+
+            (администратор)
+
+            <div class="admin-status-right">
+                {% if admin.is_online %}
+                    <span class="online-dot"></span>
+                    <span class="online-text">online</span>
+                {% else %}
+                    <span class="offline-dot"></span>
+                    <span class="offline-text">
+                        {{ admin.last_seen_text }}
+                    </span>
+                {% endif %}
+            </div>
+
+        {% endwith %}
+    {% else %}
+        {% with admin=admin_user %}
+
+            {% if admin.partner_registration.partner_type == 'company' %}
+                {{ admin.partner_registration.company_short_name }}
+            {% else %}
+                {{ admin.first_name }} {{ admin.last_name }}
+            {% endif %}
+
+            (администратор)
+
+            <div class="admin-status-right">
+                {% if admin.is_online %}
+                    <span class="online-dot"></span>
+                    <span class="online-text">online</span>
+                {% else %}
+                    <span class="offline-dot"></span>
+                    <span class="offline-text">
+                        {{ admin.last_seen_text }}
+                    </span>
+                {% endif %}
+            </div>
+
+        {% endwith %}
+    {% endif %}
+
+</div>
+<style>
+.chat-admin-status {
+    margin: 0 24px 16px;
+    font-size: 14px;
+    font-weight: 600;
+    color: #000;
+
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+.chat-layout {
+    display: grid;
+    grid-template-columns: 380px 1fr;
+    gap: 24px;
+
+    height: calc(100vh - 130px);
+    max-height: calc(100vh - 130px);
+    overflow: hidden;
+}
+
+.chat-sidebar {
+    background: white;
+
+    border-radius: 24px;
+
+    border: 1px solid #eef2f7;
+
+    box-shadow: 0 8px 25px rgba(15,23,42,0.06);
+
+    overflow: hidden;
+
+    display: flex;
+    flex-direction: column;
+}
+
+.chat-sidebar-top {
+    padding: 20px;
+    border-bottom: 1px solid #eef2f7;
+    flex-shrink: 0;
+}
+
+.chat-search {
+    width: 100%;
+
+    height: 48px;
+
+    border-radius: 14px;
+
+    border: 1px solid #dbe4ef;
+
+    padding: 0 16px;
+
+    font-size: 15px;
+}
+
+.chat-topics {
+    padding: 12px;
+    flex: 1;
+    overflow-y: auto;
+    min-height: 0;
+}
+
+.chat-topic-card {
+    padding: 18px;
+
+    border-radius: 18px;
+
+    cursor: pointer;
+
+    transition: 0.2s;
+
+    border: 1px solid transparent;
+
+    margin-bottom: 10px;
+}
+
+.chat-topic-card:hover {
+    background: #f8fafc;
+
+    border-color: #dbe4ef;
+}
+
+.chat-topic-header {
+    display: flex;
+
+    align-items: center;
+
+    justify-content: space-between;
+
+    gap: 12px;
+
+    margin-bottom: 10px;
+}
+
+.chat-topic-title {
+    font-size: 15px;
+
+    font-weight: 700;
+
+    color: #111827;
+}
+
+.chat-topic-status {
+    padding: 6px 10px;
+
+    border-radius: 999px;
+
+    font-size: 12px;
+
+    font-weight: 700;
+}
+
+.chat-topic-status.open {
+    background: rgba(37, 99, 235, 0.08);
+
+    color: #2563eb;
+}
+
+.chat-topic-status.closed {
+    background: rgba(239, 68, 68, 0.08);
+
+    color: #ef4444;
+}
+
+.chat-topic-partner {
+    font-size: 14px;
+
+    color: #6b7280;
+
+    margin-bottom: 8px;
+}
+
+.chat-topic-meta {
+    font-size: 12px;
+
+    color: #9ca3af;
+}
+
+.chat-main {
+    background: white;
+
+    border-radius: 24px;
+
+    border: 1px solid #eef2f7;
+
+    box-shadow: 0 8px 25px rgba(15,23,42,0.06);
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+    overflow: hidden;
+}
+
+.chat-empty-state {
+    text-align: center;
+
+    color: #9ca3af;
+}
+
+.chat-empty-state i {
+    font-size: 72px;
+
+    margin-bottom: 24px;
+
+    color: #dbe4ef;
+}
+
+.chat-empty-state h2 {
+    margin-bottom: 12px;
+
+    color: #111827;
+}
+
+.empty-chat {
+    padding: 32px;
+
+    text-align: center;
+
+    color: #9ca3af;
+}
+.chat-window {
+    width: 100%;
+    height: 100%;
+    max-height: 100%;
+    overflow: hidden;
+
+    display: flex;
+    flex-direction: column;
+}
+
+.chat-window-header {
+    padding: 24px;
+
+    border-bottom: 1px solid #eef2f7;
+}
+
+.chat-window-header h2 {
+    margin: 0 0 6px;
+
+    font-size: 22px;
+}
+
+.chat-window-header span {
+    color: #6b7280;
+    font-size: 14px;
+}
+
+.chat-messages {
+    flex: 1;
+
+    padding: 24px;
+
+    overflow-y: auto;
+
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    flex: 1;
+    overflow-y: auto;
+    min-height: 0;
+}
+
+.message-row {
+    display: flex;
+}
+
+.message-row.own {
+    justify-content: flex-end;
+}
+
+.message-row.other {
+    justify-content: flex-start;
+    align-items: flex-end;
+}
+
+.message-bubble {
+    max-width: 60%;
+
+    padding: 14px 16px;
+
+    border-radius: 18px;
+
+    background: #f3f4f6;
+
+    color: #111827;
+}
+
+.message-row.own .message-bubble {
+    background: #1F5BFF;
+    color: white;
+}
+
+.message-time {
+    margin-top: 6px;
+
+    font-size: 12px;
+    opacity: 0.7;
+}
+.chat-send-form {
+    display: flex;
+    gap: 12px;
+    padding: 18px 24px;
+    border-top: 1px solid #eef2f7;
+}
+
+.chat-send-form {
+    display: flex;
+    align-items: flex-end;
+    gap: 10px;
+    padding: 12px 16px;
+    border-top: 1px solid #eef2f7;
+}
+
+.chat-send-form textarea {
+    flex: 1;
+    min-height: 44px;
+    max-height: 120px;
+    resize: none;
+    overflow-y: auto;
+
+    border-radius: 10px;
+    padding: 12px 14px;
+    line-height: 14px;
+}
+
+.chat-send-form button,
+.voice-btn {
+    width: 44px;
+    height: 44px;
+    flex-shrink: 0;
+}
+.chat-send-form button {
+    width: 52px;
+    height: 52px;
+    border: none;
+    border-radius: 10px;
+    background: #1F5BFF;
+    color: white;
+    cursor: pointer;
+}
+.chat-window-header {
+    display: flex;
+
+    align-items: center;
+
+    justify-content: space-between;
+
+    gap: 20px;
+}
+
+.topic-status-btn {
+    height: 44px;
+
+    padding: 0 18px;
+
+    border: none;
+
+    border-radius: 14px;
+
+    font-size: 14px;
+
+    font-weight: 700;
+
+    cursor: pointer;
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 8px;
+
+    transition: 0.2s;
+}
+
+.close-btn {
+    background: rgba(239,68,68,0.08);
+
+    color: #ef4444;
+}
+
+.close-btn:hover {
+    background: rgba(239,68,68,0.14);
+}
+
+.open-btn {
+    background: rgba(34,197,94,0.08);
+
+    color: #22c55e;
+}
+
+.open-btn:hover {
+    background: rgba(34,197,94,0.14);
+}
+.chat-closed-notice {
+    padding: 18px 24px;
+    border-top: 1px solid #eef2f7;
+
+    display: flex;
+    align-items: center;
+    gap: 10px;
+
+    color: #6b7280;
+    font-weight: 700;
+    background: #f9fafb;
+}
+
+.chat-closed-notice i {
+    color: #ef4444;
+}
+.new-topic-btn {
+    width: 94%;
+    height: 48px;
+    margin-left: 12px;
+    margin-top: 14px;
+    border: none;
+    border-radius: 14px;
+    margin-bottom: 16px;
+    background: #1F5BFF;
+    color: white;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    transition: 0.2s;
+}
+
+.new-topic-btn:hover {
+    background: #1d4ed8;
+}
+.new-topic-modal {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(8, 10, 30, 0.55);
+    z-index: 3000;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+
+.new-topic-modal.active {
+    display: flex;
+}
+
+.new-topic-card {
+    width: 100%;
+    max-width: 520px;
+    background: white;
+    border-radius: 24px;
+    padding: 24px;
+    box-shadow: 0 24px 60px rgba(0,0,0,0.22);
+}
+
+.new-topic-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.new-topic-header h3 {
+    margin: 0;
+    font-size: 22px;
+}
+
+.new-topic-header button {
+    border: none;
+    background: transparent;
+    font-size: 28px;
+    cursor: pointer;
+}
+
+.new-topic-group {
+    margin-bottom: 16px;
+}
+
+.new-topic-group label {
+    display: block;
+    margin-bottom: 7px;
+    font-weight: 700;
+    color: #374151;
+}
+
+.new-topic-group input,
+.new-topic-group select {
+    width: 100%;
+    height: 48px;
+    border: 1px solid #d1d5db;
+    border-radius: 14px;
+    padding: 0 14px;
+}
+
+.new-topic-submit {
+    width: 100%;
+    height: 48px;
+    border: none;
+    border-radius: 14px;
+    background: #1d4ed8;
+    color: white;
+    font-weight: 800;
+    cursor: pointer;
+}
+.chat-topic-card {
+    display: block;
+
+    text-decoration: none;
+
+    color: inherit;
+
+    padding: 18px;
+
+    border-radius: 18px;
+
+    cursor: pointer;
+
+    transition: 0.2s;
+
+    border: 1px solid transparent;
+
+    border-bottom: 1px solid #eef2f7;
+    margin-bottom: 10px;
+}
+
+.chat-topic-card.active {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+
+    background: #eef4ff;
+    border-color: #1d4ed8;
+    box-shadow: 0 8px 20px rgba(37,99,235,0.16);
+}
+.chat-topic-created,
+.chat-topic-last-message,
+.chat-topic-date {
+    font-size: 13px;
+
+    line-height: 1.5;
+
+    color: #6b7280;
+
+    margin-top: 8px;
+}
+
+.chat-topic-last-message {
+    color: #374151;
+}
+.chat-topic-right {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 8px;
+}
+
+.chat-topic-time {
+    font-size: 12px;
+    color: #9ca3af;
+    font-weight: 600;
+}
+
+.chat-topic-unread {
+    min-width: 22px;
+    height: 22px;
+
+    border-radius: 999px;
+
+    background: #1d4ed8;
+    color: white;
+
+    font-size: 12px;
+    font-weight: 700;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    padding: 0 6px;
+
+    margin-top: 6px;
+}
+.chat-send-form {
+    flex-shrink: 0;
+}
+.chat-topic-unread-text {
+    margin-top: 6px;
+
+    font-size: 12px;
+    font-weight: 700;
+
+    color: #1d4ed8;
+
+    background: rgba(37,99,235,0.08);
+
+    border-radius: 10px;
+
+    padding: 6px 10px;
+
+    display: inline-block;
+}
+.mobile-topics-toggle {
+    display: none;
+}
+.message-bubble {
+    max-width: 60%;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+}
+.chat-tabs {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+    padding: 0px 10px;
+    border-bottom: 1px solid #eef2f7;
+}
+
+.chat-tab {
+    height: 38px;
+    border-radius: 12px;
+    background: #f3f4f6;
+    color: #374151;
+    font-size: 12px;
+    font-weight: 800;
+    text-decoration: none;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.chat-tab.active {
+    background: #1F5BFF;
+    color: white;
+}
+.partner-email {
+    color: #6b7280;
+}
+
+.partner-online {
+    color: #16a34a;
+}
+
+.partner-online::before {
+    content: '';
+
+    width: 8px;
+    height: 8px;
+
+    border-radius: 50%;
+
+    background: #22c55e;
+
+    margin-right: 6px;
+}
+.partner-email {
+    max-width: 180px;
+
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+
+    display: inline-block;
+    vertical-align: bottom;
+}
+.partner-offline {
+    display: inline-flex;
+    align-items: center;
+
+    margin-left: 8px;
+
+    color: #9ca3af;
+
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.partner-offline::before {
+    content: '';
+
+    width: 8px;
+    height: 8px;
+
+    border-radius: 50%;
+
+    background: #9ca3af;
+
+    margin-right: 6px;
+}
+.typing-indicator {
+    padding: 0 24px 10px;
+    color: #6b7280;
+    font-size: 13px;
+    font-weight: 700;
+    font-style: italic;
+}
+.voice-btn {
+    width: 52px;
+    height: 52px;
+    border: none;
+    border-radius: 16px;
+    background: #f3f4f6;
+    color: #1f2937;
+    cursor: pointer;
+}
+
+.voice-btn.listening {
+    background: #ef4444;
+    color: white;
+}
+.message-avatar {
+    width: 38px;
+    height: 38px;
+
+    border-radius: 50%;
+
+    overflow: hidden;
+
+    flex-shrink: 0;
+
+    margin-right: 10px;
+
+    align-self: flex-end;
+    margin: 12px;
+}
+
+.message-avatar img {
+    width: 100%;
+    height: 100%;
+
+    object-fit: cover;
+}
+.message-read-status {
+    margin-left: 6px;
+    font-size: 12px;
+    font-weight: 800;
+    opacity: 0.85;
+}
+.chat-image {
+    max-width: 320px;
+    max-height: 320px;
+
+    border-radius: 12px;
+
+    display: block;
+
+    cursor: pointer;
+}
+.chat-file {
+    color: inherit;
+    text-decoration: none;
+    font-weight: 600;
+}
+
+.chat-file:hover {
+    text-decoration: underline;
+}
+.chat-video {
+    max-width: 320px;
+    max-height: 320px;
+
+    border-radius: 12px;
+
+    display: block;
+}
+
+.chat-file {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+
+    text-decoration: none;
+    color: inherit;
+    font-weight: 600;
+}
+
+.chat-file:hover {
+    text-decoration: underline;
+}
+.message-row.own.media-message .message-bubble,
+.message-row.other.media-message .message-bubble {
+    background: none;
+    padding: 0;
+ }
+ .delete-popup {
+    position: fixed;
+
+    background: white;
+
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+
+    padding: 12px;
+
+    box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+
+    z-index: 9999;
+
+    min-width: 180px;
+}
+
+.delete-popup-checkbox {
+    display: flex;
+    align-items: center;
+
+    gap: 8px;
+
+    margin-bottom: 12px;
+
+    cursor: pointer;
+}
+
+.delete-popup-btn {
+    width: 100%;
+
+    border: none;
+    border-radius: 8px;
+
+    padding: 10px;
+
+    background: #ef4444;
+    color: white;
+
+    cursor: pointer;
+}
+
+.delete-popup-btn:hover {
+    background: #dc2626;
+}
+.file-upload-status {
+    padding: 8px 24px 0;
+    color: #6b7280;
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.voice-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+.file-upload-status {
+    display: block;
+    padding: 0 24px 8px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #6b7280;
+}
+.file-upload-status {
+    display: block;
+    padding: 0 24px 10px;
+}
+
+.file-upload-text {
+    font-size: 13px;
+    font-weight: 600;
+    color: #6b7280;
+    margin-bottom: 6px;
+}
+
+.file-upload-bar {
+    width: 100%;
+    height: 26px;
+    background: #e5e7eb;
+    border-radius: 999px;
+    overflow: hidden;
+}
+
+.file-upload-progress {
+    width: 0%;
+    height: 100%;
+    background: #2563eb;
+    border-radius: 999px;
+    transition: width 0.15s ease;
+}
+
+.chat-notification {
+    position: fixed;
+
+    right: 24px;
+    bottom: 100px;
+
+    background: rgba(0, 0, 0, 0.8);
+    color: white;
+
+    padding: 12px 16px;
+
+    border-radius: 12px;
+
+    font-size: 14px;
+    font-weight: 600;
+
+    opacity: 0;
+    visibility: hidden;
+
+    transition: all 0.25s ease;
+
+    z-index: 9999;
+
+    max-width: 320px;
+
+    transform: translateY(10px);
+}
+
+.chat-notification.show {
+    opacity: 0.8;
+    visibility: visible;
+    transform: translateY(0);
+}
+span.online-text {
+    color: #16a34a;
+}
+.video-note-wrapper {
+    position: relative;
+    width: 220px;
+    height: 220px;
+    border-radius: 50%;
+    overflow: hidden;
+    background: #000;
+}
+
+.video-note {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    border-radius: 50%;
+}
+
+.video-note-play {
+    position: absolute;
+    left: 50%;
+    bottom: 22px;
+    transform: translateX(-50%);
+
+    width: 44px;
+    height: 44px;
+
+    border-radius: 50%;
+    background: rgba(0, 0, 0, 0.55);
+    color: white;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    font-size: 20px;
+    cursor: pointer;
+}
+.video-note-wrapper {
+    position: relative;
+}
+
+.video-note-loader {
+    position: absolute;
+    inset: 0;
+
+    border-radius: 50%;
+    background: linear-gradient(135deg, #1f2937, #111827);
+
+    color: white;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+
+    font-size: 13px;
+    font-weight: 700;
+
+    z-index: 2;
+}
+
+.video-note-spinner {
+    width: 28px;
+    height: 28px;
+
+    border: 3px solid rgba(255,255,255,0.35);
+    border-top-color: white;
+
+    border-radius: 50%;
+
+    margin-bottom: 10px;
+
+    animation: videoNoteSpin 0.8s linear infinite;
+}
+
+@keyframes videoNoteSpin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.video-note-wrapper.loaded .video-note-loader {
+    display: none;
+}
+@media (max-width: 900px) {
+    .message-bubble {
+        max-width: 85%;
+    }
+    .mobile-topics-toggle {
+        display: flex;
+    }
+    .content {
+        margin-left: 0px;
+    }
+    .chat-layout {
+        display: block;
+        height: calc(100vh - 120px);
+        max-height: calc(100vh - 120px);
+        position: relative;
+    }
+
+    .chat-main {
+        display: none;
+    }
+    .mobile-topics-toggle {
+        display: flex;
+        position: fixed;
+        left: 20px;
+        bottom: 20px;
+        z-index: 2500;
+
+        height: 48px;
+        padding: 0 18px;
+        border: none;
+        border-radius: 999px;
+        background: #1F5BFF;
+        color: white;
+        font-weight: 800;
+        align-items: center;
+        gap: 8px;
+        box-shadow: 0 12px 30px rgba(31,91,255,0.3);
+    }
+
+    .chat-sidebar {
+        position: fixed;
+        left: 0;
+        right: 0;
+        bottom: -85vh;
+        height: 78vh;
+        z-index: 3000;
+
+        border-radius: 24px 24px 0 0;
+        transition: bottom 0.28s ease;
+    }
+
+    .chat-sidebar.open {
+        bottom: 0;
+    }
+
+    .topics-backdrop {
+        display: none;
+        position: fixed;
+        inset: 0;
+        z-index: 2900;
+        background: rgba(15,23,42,0.45);
+    }
+
+    .topics-backdrop.open {
+        display: block;
+    }
+
+    .chat-main {
+        display: flex;
+        height: 100%;
+    }
+    .chat-window {
+        position: relative;
+        padding-bottom: 90px;
+        overflow: hidden;
+    }
+
+    .chat-send-form {
+        position: sticky;
+        background: white;
+        border-top: 1px solid #eef2f7;
+        z-index: 20;
+    }
+
+    .chat-messages {
+        padding-bottom: 140px;
+    }
+
+    .mobile-topics-toggle {
+        bottom: 14px;
+    }
+    .page-title {
+        font-size: 22px;
+        font-weight: 600;    
+    }
+
+    .chat-send-form textarea {
+        margin-bottom: 15px;
+    }    
+}
+
+</style>
+
+<div class="chat-layout">
+    <button class="mobile-topics-toggle" type="button" onclick="openTopicsDrawer()">
+        <i class="fa-solid fa-comments"></i>
+        Темы
+    </button>
+    <div class="chat-sidebar">
+
+        <div class="chat-sidebar-top">
+            <input
+                type="text"
+                class="chat-search"
+                placeholder="Поиск темы..."
+            >
+        </div>
+        <button
+            class="new-topic-btn"
+            onclick="openNewTopicModal()">
+
+            <i class="fa-solid fa-plus"></i>
+            Открыть тему
+        </button>
+       <div class="chat-topics">
+
+            {% for topic in topics %}
+
+            <a href="{% url 'partner_chat_topic' topic.id %}"
+            class="chat-topic-card {% if current_topic.id == topic.id %}active{% endif %}"
+            data-topic-id="{{ topic.id }}">
+
+                <div class="chat-topic-header">
+
+                <div>
+                    <div class="chat-topic-title">
+                        {{ topic.title }}
+                    </div>
+
+                    {% if topic.unread_count > 0 %}
+                        <div class="chat-topic-unread-text">
+                            Не прочитано сообщений: {{ topic.unread_count }}
+                        </div>
+                    {% endif %}
+                </div>
+                    <div class="chat-topic-right">
+
+                        {% with last_message=topic.messages.last %}
+                            {% if last_message %}
+                                <div class="chat-topic-time">
+                                    {{ last_message.created_at|date:"H:i" }}
+                                </div>
+                            {% endif %}
+                        {% endwith %}
+
+                        <div class="chat-topic-status {{ topic.status }}">
+                            {{ topic.get_status_display }}
+                        </div>
+
+                    </div>
+
+                </div>
+
+                <div class="chat-topic-created">
+
+                    <strong>Создал:</strong>
+
+                    {% if topic.created_by.partner_registration.partner_type == 'company' %}
+
+                        {{ topic.created_by.partner_registration.company_short_name }}
+
+                    {% else %}
+
+                        {{ topic.created_by.first_name }}
+                        {{ topic.created_by.last_name }}
+
+                    {% endif %}
+
+                    — {{ topic.created_by.email }}
+
+                    {% if topic.created_by.role == 'admin' %}
+                        (Администратор)
+                    {% else %}
+                        (Партнёр)
+                    {% endif %}
+
+                </div>
+
+                    <div class="chat-topic-last-message">
+
+                        <strong>Последнее сообщение:</strong>
+
+                        {% with last_message=topic.messages.last %}
+
+                            {% if last_message %}
+
+                                {% if last_message.sender.partner_registration.partner_type == 'company' %}
+
+                                    {{ last_message.sender.partner_registration.company_short_name }}
+
+                                {% else %}
+
+                                    {{ last_message.sender.first_name }}
+                                    {{ last_message.sender.last_name }}
+
+                                {% endif %}
+
+                                — {{ last_message.sender.email }}
+
+                                {% if last_message.sender.role == 'admin' %}
+                                    (Администратор)
+                                {% else %}
+                                    (Партнёр)
+                                {% endif %}
+
+                            {% endif %}
+
+                        {% endwith %}
+
+                    </div>
+
+                    <div class="chat-topic-date">
+                        <strong>Дата создания:</strong>
+                        {{ topic.created_at|date:"d.m.Y" }}
+                    </div>
+
+                </a>
+
+            {% empty %}
+
+                <div class="empty-chat">
+                    Пока нет открытых тем
+                </div>
+
+            {% endfor %}
+
+        </div>
+
+    </div>
+
+    <div class="chat-main">
+
+        {% if current_topic %}
+            <div class="chat-window">
+
+                <div class="chat-window-header">
+                    <div>
+                        <h2>{{ current_topic.title }}</h2>
+                        <span>
+                            {{ current_topic.partner.first_name }}
+                            {{ current_topic.partner.last_name }}
+                            · {{ current_topic.get_status_display }}
+                        </span>
+                    </div>
+                    <form method="post"
+                        action="{% url 'partner_chat_toggle_topic_status' current_topic.id %}">
+                        {% csrf_token %}
+
+                        {% if current_topic.status == 'closed' %}
+
+                            <button type="submit" class="topic-status-btn open-btn">
+                                <i class="fa-solid fa-lock-open"></i>
+                                Продолжить общение
+                            </button>
+
+                        {% else %}
+
+                            <button type="submit" class="topic-status-btn close-btn">
+                                <i class="fa-solid fa-lock"></i>
+                                Закрыть тему
+                            </button>
+
+                        {% endif %}
+                    </form>
+                </div>
+
+                <div class="chat-messages" id="chatMessages">
+                    {% for message in messages %}
+                    <div class="message-row {% if message.sender == request.user %}own{% else %}other{% endif %} {% if message.is_media %}media-message{% endif %}"
+                        data-message-id="{{ message.id }}"
+                        data-message-type="{{ message.message_type }}">
+                     {% if message.sender != request.user %}
+                            <div class="message-avatar">
+                                {% if message.sender.avatar %}
+                                    <img src="{{ message.sender.avatar.url }}" alt="">
+                                {% else %}
+                                    <div class="default-partner-avatar">
+                                        {{ message.sender.first_name|first }}{{ message.sender.last_name|first }}
+                                    </div>
+                                {% endif %}
+                                </div>
+                            {% endif %}
+                            <div class="message-bubble">
+                                {% if message.message_type == 'video_note' and message.video_note %}
+                                <div class="video-note-wrapper">
+                                    <video
+                                        class="video-note"
+                                        playsinline
+                                        preload="auto">
+                                        <source src="{{ message.video_note.url }}" type="video/webm">
+                                    </video>
+
+                                    <div class="video-note-loader">
+                                        <div class="video-note-spinner"></div>
+                                        Загрузка видео
+                                    </div>
+
+                                    <div class="video-note-play">
+                                        ▶
+                                    </div>
+                                </div>
+                                {% elif message.message_type == 'voice' and message.audio_file %}
+
+
+                                    <audio controls src="{{ message.audio_file.url }}"></audio>
+
+                                {% elif message.message_type == 'image' and message.image_file %}
+
+                                    <img src="{{ message.image_file.url }}" class="chat-image" alt="image">
+
+                                {% elif message.message_type == 'file' and message.file %}
+
+                                    {% if message.is_video %}
+
+                                        <video
+                                            class="chat-video"
+                                            controls
+                                            preload="auto">
+                                            <source src="{{ message.file.url }}">
+                                        </video>
+
+                                    {% elif message.is_image %}
+
+                                        <img
+                                            src="{{ message.file.url }}"
+                                            class="chat-image"
+                                            alt="{{ message.file_name }}"
+                                        >
+
+                                    {% else %}
+
+                                        <a href="{{ message.file.url }}"
+                                        target="_blank"
+                                        class="chat-file">
+                                            📎 {{ message.file_name }}
+                                        </a>
+
+                                    {% endif %}
+
+                                {% else %}
+
+                                    <div class="message-text">
+                                        {{ message.text }}
+                                    </div>
+
+                                {% endif %}
+                                <div class="message-time">
+
+                                    {{ message.created_at|date:"H:i" }}
+
+                                    {% if message.sender == request.user %}
+
+                                        <span class="message-read-status">
+
+                                            {% if message.is_read %}
+                                                ✓✓
+                                            {% else %}
+                                                ✓
+                                            {% endif %}
+
+                                        </span>
+
+                                    {% endif %}
+
+                                </div>
+                            </div>
+                        </div>
+                    {% empty %}
+                        <div class="empty-chat">
+                            Сообщений пока нет
+                        </div>
+                    {% endfor %}
+                </div>
+                <div class="typing-indicator" id="typingIndicator" style="display: none;">
+                    Печатает...
+                </div>
+                {% if current_topic.status == 'closed' %}
+                    <div class="chat-closed-notice">
+                        <i class="fa-solid fa-lock"></i>
+                        Тема закрыта. Отправка сообщений недоступна.
+                   </div>
+                {% else %}
+                    <div id="chatNotification" class="chat-notification"></div>
+
+                    <div id="fileUploadStatus" class="file-upload-status" style="display:none;">
+                        <div class="file-upload-text">
+                            Загрузка файла...
+                        </div>
+
+                        <div class="file-upload-bar">
+                            <div id="fileUploadProgress" class="file-upload-progress"></div>
+                        </div>
+                    </div>
+
+                    <form method="post"
+                        action="{% url 'partner_chat_send_message' current_topic.id %}"
+                        class="chat-send-form">
+
+                        {% csrf_token %}
+
+                        <textarea
+                            name="text"
+                            placeholder="Напишите сообщение..."
+                            required></textarea>
+
+                        <input
+                            type="file"
+                            id="fileInput"
+                            style="display:none;">
+
+                        <button
+                            type="button"
+                            class="voice-btn"
+                            id="fileBtn">
+                            <i class="fa-solid fa-paperclip"></i>
+                        </button>
+
+                        <button
+                            type="button"
+                            class="voice-btn"
+                            id="voiceBtn">
+                            <i class="fa-solid fa-microphone"></i>
+                        </button>
+                        <button type="button" class="voice-btn" id="voiceMessageBtn">
+                            <i class="fa-solid fa-wave-square"></i>
+                        </button>
+                        <button
+                            type="button"
+                            class="voice-btn"
+                            id="videoNoteBtn">
+                            <i class="fa-solid fa-video"></i>
+                        </button>
+                        <button type="submit">
+                            <i class="fa-solid fa-paper-plane"></i>
+                        </button>
+                    </form>
+                {% endif %}    
+            </div>
+        {% else %}
+            <div class="chat-empty-state">
+                <i class="fa-solid fa-comments"></i>
+                <h2>Выберите тему</h2>
+                <p>Выберите диалог слева, чтобы открыть переписку</p>
+            </div>
+        {% endif %}
+
+    </div>
+
+</div>
+<div class="topics-backdrop" id="topicsBackdrop" onclick="closeTopicsDrawer()"></div>
+<div class="new-topic-modal" id="newTopicModal">
+    <div class="new-topic-card">
+        <div class="new-topic-header">
+            <h3>Открыть тему</h3>
+            <button type="button" onclick="closeNewTopicModal()">×</button>
+        </div>
+
+        <form method="post" action="{% url 'partner_chat_create_topic' %}">
+            {% csrf_token %}
+
+            <div class="new-topic-group">
+                <label>Тема</label>
+                <input type="text" name="title" placeholder="Например: Вопрос по выплате" required>
+            </div>
+
+            <button type="submit" class="new-topic-submit">
+                Создать тему
+            </button>
+        </form>
+    </div>
+</div>
+<div id="deleteMessagePopup" class="delete-popup" style="display:none;">
+
+    <label class="delete-popup-checkbox">
+        <input
+            type="checkbox"
+            id="deleteForAllCheckbox">
+        Удалить у всех
+    </label>
+    <button
+        type="button"
+        id="editMessageBtn"
+        class="delete-popup-btn"
+        style="
+            background:#1F5BFF;
+            margin-bottom:8px;
+        ">
+        ✏️ Редактировать
+    </button>
+    <button
+        type="button"
+        id="confirmDeleteBtn"
+        class="delete-popup-btn">
+        🗑 Удалить
+    </button>
+
+</div>
+{% if current_topic %}
+<script>
+    // Обработка кликов на видео заметках
+    document.addEventListener('click', function(event) {
+    const playBtn = event.target.closest('.video-note-play');
+
+    if (!playBtn) return;
+
+    const wrapper = playBtn.closest('.video-note-wrapper');
+    const video = wrapper.querySelector('.video-note');
+
+    if (!video) return;
+
+    if (video.paused) {
+        video.play();
+        playBtn.textContent = '⏸';
+    } else {
+        video.pause();
+        playBtn.textContent = '▶';
+    }
+
+    video.onended = () => {
+        playBtn.textContent = '▶';
+    };
+});
+</script>    
+<script>
+ // Показать уведомление с текстом и автоматически скрыть его через 3 секунды   
+    function showNotification(text) {
+
+    const notification =
+        document.getElementById('chatNotification');
+
+    if (!notification) return;
+
+    notification.textContent = text;
+
+    notification.classList.add('show');
+
+    setTimeout(() => {
+        notification.classList.remove('show');
+    }, 3000);
+}
+</script>
+<script>
+    const chatMessages = document.getElementById('chatMessages');
+    const topicsContainer = document.querySelector('.chat-topics');
+    const chatForm = document.querySelector('.chat-send-form');
+    const voiceBtn = document.getElementById('voiceBtn');
+    const voiceMessageBtn = document.getElementById('voiceMessageBtn');
+    const videoNoteBtn = document.getElementById('videoNoteBtn');
+    const fileBtn = document.getElementById('fileBtn');
+    const fileUploadStatus = document.getElementById('fileUploadStatus');
+    const fileInput = document.getElementById('fileInput');
+    const fileUrl = "{% url 'partner_chat_send_file' current_topic.id %}";
+    const messagesUrl = "{% url 'partner_chat_messages' current_topic.id %}";
+    const voiceUrl = "{% url 'partner_chat_send_voice' current_topic.id %}";
+
+    const transcribeUrl = "{% url 'chat_transcribe_voice' current_topic.id %}";
+
+    const videoNoteUrl = "{% url 'partner_chat_send_video_note' current_topic.id %}";
+    const wsProtocol = window.location.protocol === 'https:' ? 'wss' : 'ws';
+    const chatSocketUrl = `${wsProtocol}://${window.location.host}/ws/chat/{{ current_topic.id }}/`
+
+    let chatSocket = null;
+    let selectedMessageId = null;
+    let editingMessageId = null;
+    let isTranscribing = false;
+    const deletePopup = document.getElementById(
+        'deleteMessagePopup'
+    );
+
+    const deleteForAllCheckbox = document.getElementById(
+        'deleteForAllCheckbox'
+    );
+
+    const confirmDeleteBtn = document.getElementById(
+        'confirmDeleteBtn'
+    );
+    const editMessageBtn = document.getElementById(
+    'editMessageBtn'
+    );
+    chatMessages.addEventListener('contextmenu', function(event) {
+
+    const row = event.target.closest('.message-row.own');
+
+    if (!row) return;
+
+    event.preventDefault();
+
+    selectedMessageId = row.dataset.messageId;
+    const messageType = row.dataset.messageType;
+
+    if (messageType === 'text') {
+        editMessageBtn.style.display = 'block';
+    } else {
+        editMessageBtn.style.display = 'none';
+    }
+    deleteForAllCheckbox.checked = true;
+
+    deletePopup.style.display = 'block';
+    deletePopup.style.left = `${event.clientX}px`;
+    deletePopup.style.top = `${event.clientY}px`;
+});
+// Удаление сообщения при клике на кнопку в попапе
+    confirmDeleteBtn.addEventListener('click', () => {
+
+        if (!selectedMessageId) return;
+
+        if (chatSocket.readyState !== WebSocket.OPEN) {
+            return;
+        }
+
+        chatSocket.send(JSON.stringify({
+            type: 'delete_message',
+            message_id: selectedMessageId,
+            delete_for_all: deleteForAllCheckbox.checked
+        }));
+
+        deletePopup.style.display = 'none';
+        selectedMessageId = null;
+    });
+// Скрытие попапа при клике вне его
+    document.addEventListener('click', function(event) {
+
+        if (
+            deletePopup.style.display === 'block' &&
+            !deletePopup.contains(event.target)
+        ) {
+            deletePopup.style.display = 'none';
+            selectedMessageId = null;
+        }
+    });    
+    editMessageBtn.addEventListener('click', () => {
+
+        if (!selectedMessageId) return;
+
+        const row = document.querySelector(
+            `.message-row[data-message-id="${selectedMessageId}"]`
+        );
+
+        if (!row) return;
+
+        const textBlock = row.querySelector('.message-text');
+
+        if (!textBlock) return;
+
+        const textarea = chatForm.querySelector('textarea');
+
+        editingMessageId = selectedMessageId;
+
+        textarea.value = textBlock.textContent.trim();
+        textarea.focus();
+
+        deletePopup.style.display = 'none';
+        selectedMessageId = null;
+    });
+    function connectChatSocket() {
+        chatSocket = new WebSocket(chatSocketUrl);
+
+        chatSocket.onopen = () => {
+            console.log('Partner WebSocket connected');
+
+            setTimeout(() => {
+                markMessagesAsRead();
+            }, 500);
+        };
+        chatSocket.onmessage = function(event) {
+            const data = JSON.parse(event.data);
+
+        // console.log('Partner WS message:', data);
+            if (data.type === 'message_deleted') {
+
+                const row = document.querySelector(
+                    `.message-row[data-message-id="${data.message_id}"]`
+                );
+
+                if (row) {
+                    row.remove();
+                }
+
+                return;
+            }
+            if (data.type === 'message_edited') {
+
+                const row = document.querySelector(
+                    `.message-row[data-message-id="${data.message_id}"]`
+                );
+
+                if (!row) return;
+
+                const textBlock = row.querySelector('.message-text');
+
+                if (!textBlock) return;
+
+                textBlock.textContent = data.text;
+
+                return;
+            }
+            if (data.type === 'new_message') {
+                loadMessages();
+            }
+            if (data.type === 'messages_read' && data.user_id !== currentUserId) {
+
+                document
+                    .querySelectorAll('.message-row.own .message-read-status')
+                    .forEach(status => {
+                        status.textContent = '✓✓';
+                    });
+            }
+            if (data.type === 'typing' && data.user_id !== currentUserId) {
+
+                clearTimeout(window.typingHideTimer);
+
+                updateTypingIndicator(data.is_typing);
+
+                if (data.is_typing) {
+                    window.typingHideTimer = setTimeout(() => {
+                        updateTypingIndicator(false);
+                    }, 3000);
+                }
+            }
+            if (data.type === 'user_status' && data.user_id !== currentUserId) {
+
+                const block = document.getElementById('adminStatusBlock');
+
+                if (!block) return;
+
+                const statusRight = block.querySelector('.admin-status-right');
+
+                if (data.is_online) {
+
+                    delete statusRight.dataset.offlineAt;
+
+                    statusRight.innerHTML = `
+                        <span class="online-dot"></span>
+                        <span class="online-text">online</span>
+                    `;
+
+                } else {
+
+                    statusRight.dataset.offlineAt = Date.now();
+
+                    statusRight.innerHTML = `
+                        <span class="offline-dot"></span>
+                        <span class="offline-text">
+                            только что
+                        </span>
+                    `;
+                    } 
+            }
+        };        
+
+       chatSocket.onclose = () => {
+            console.log('Partner WebSocket disconnected. Reconnecting...');
+
+            setTimeout(() => {
+                connectChatSocket();
+            }, 3000);
+        };
+
+        chatSocket.onerror = () => {
+            console.log('Partner WebSocket error');
+            chatSocket.close();
+        };
+    }
+    const currentUserId = Number("{{ request.user.id }}");
+    connectChatSocket();
+   
+    if (fileBtn && fileInput) {
+        fileBtn.addEventListener('click', () => {
+            fileInput.click();
+        });
+    }
+   if (fileInput) {
+      fileInput.addEventListener('change', async () => {
+        const file = fileInput.files[0];
+
+        if (!file) return;
+        const maxFileSize = 100 * 1024 * 1024; // 100 MB
+
+        if (file.size > maxFileSize) {
+
+            showNotification(
+                'Файл слишком большой. Максимум 100 МБ.'
+            );
+
+            fileInput.value = '';
+            return;
+        }
+        fileBtn.disabled = true;
+
+        if (fileUploadStatus) {
+
+            const fileUploadText =
+                fileUploadStatus.querySelector('.file-upload-text');
+
+            if (fileUploadText) {
+                fileUploadText.textContent =
+                    `Загрузка: ${file.name}`;
+            }
+
+            fileUploadStatus.style.display = 'block';
+        }
+        const formData = new FormData();
+        formData.append('file', file);
+
+        const csrfToken = chatForm.querySelector('[name=csrfmiddlewaretoken]').value;
+        const text = await new Promise((resolve, reject) => {
+
+            const xhr = new XMLHttpRequest();
+
+            xhr.open('POST', fileUrl, true);
+
+            xhr.setRequestHeader('X-CSRFToken', csrfToken);
+            xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+
+            xhr.upload.onprogress = function(event) {
+
+                if (!event.lengthComputable) return;
+
+                const percent = Math.round(
+                    (event.loaded / event.total) * 100
+                );
+
+                if (fileUploadProgress) {
+                    fileUploadProgress.style.width = percent + '%';
+                }
+
+                const fileUploadText =
+                    fileUploadStatus.querySelector('.file-upload-text');
+
+                if (fileUploadText) {
+                    fileUploadText.textContent =
+                        `Загрузка: ${percent}%`;
+                }
+            };
+
+            xhr.onload = function() {
+                resolve(xhr.responseText);
+            };
+
+            xhr.onerror = function() {
+                reject('Ошибка загрузки');
+            };
+
+            xhr.send(formData);
+        });
+
+
+    console.log('partner fileUrl:', fileUrl);
+
+
+    const data = JSON.parse(text);
+    if (data.success) {
+        const row = renderMessage(data);
+
+        chatMessages.appendChild(row);
+
+        chatSocket.send(JSON.stringify({
+            type: 'new_message',
+            message_id: data.id
+        }));
+
+        moveCurrentTopicToTop();
+
+        setTimeout(() => {
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }, 300);
+    }
+    const fileUploadText =
+    fileUploadStatus.querySelector('.file-upload-text');
+
+    if (fileUploadText) {
+        fileUploadText.textContent = '✓ Файл загружен';
+    }
+
+    if (fileUploadProgress) {
+        fileUploadProgress.style.width = '100%';
+    }
+    fileBtn.disabled = false;
+
+    setTimeout(() => {
+
+        if (fileUploadStatus) {
+            fileUploadStatus.style.display = 'none';
+
+            const fileUploadText =
+                fileUploadStatus.querySelector('.file-upload-text');
+
+            if (fileUploadText) {
+                fileUploadText.textContent = 'Загрузка файла...';
+            }
+        }
+
+        if (fileUploadProgress) {
+            fileUploadProgress.style.width = '0%';
+        }
+
+    }, 1000);
+
+        fileInput.value = '';
+        fileBtn.disabled = false;
+        setTimeout(() => {
+
+            if (fileUploadStatus) {
+                fileUploadStatus.style.display = 'none';
+
+                const fileUploadText =
+                    fileUploadStatus.querySelector('.file-upload-text');
+
+                if (fileUploadText) {
+                    fileUploadText.textContent = 'Загрузка файла...';
+                }
+            }
+
+            if (fileUploadProgress) {
+                fileUploadProgress.style.width = '0%';
+            }
+
+        }, 1000);
+
+    });
+ }
+
+
+
+
+    if (chatMessages) {
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+
+    function getLastMessageId() {
+        const rows = chatMessages.querySelectorAll('.message-row[data-message-id]');
+        if (!rows.length) return 0;
+
+        const lastId = Number(rows[rows.length - 1].dataset.messageId);
+        return Number.isFinite(lastId) ? lastId : 0;
+    }
+    function getFileIcon(fileName) {
+        const name = (fileName || '').toLowerCase();
+
+        if (name.endsWith('.pdf')) return '📄';
+        if (name.endsWith('.doc') || name.endsWith('.docx')) return '📝';
+        if (name.endsWith('.xls') || name.endsWith('.xlsx')) return '📊';
+        if (name.endsWith('.zip') || name.endsWith('.rar') || name.endsWith('.7z')) return '🗜️';
+
+        return '📎';
+    }
+
+    function isImageFile(fileName) {
+        const name = (fileName || '').toLowerCase();
+
+        return (
+            name.endsWith('.jpg') ||
+            name.endsWith('.jpeg') ||
+            name.endsWith('.png') ||
+            name.endsWith('.webp') ||
+            name.endsWith('.gif')
+        );
+    }
+
+    function isVideoFile(fileName) {
+        const name = (fileName || '').toLowerCase();
+
+        return (
+            name.endsWith('.mp4') ||
+            name.endsWith('.webm') ||
+            name.endsWith('.mov')
+        );
+    }
+// Инициализация загрузчиков для видео заметок    
+function initVideoNoteLoaders() {
+    document.querySelectorAll('.video-note-wrapper').forEach(wrapper => {
+        const video = wrapper.querySelector('.video-note');
+
+        if (!video) return;
+
+        const markLoaded = () => {
+            wrapper.classList.add('loaded');
+        };
+
+        video.addEventListener('loadedmetadata', markLoaded, { once: true });
+        video.addEventListener('loadeddata', markLoaded, { once: true });
+        video.addEventListener('canplay', markLoaded, { once: true });
+
+        video.preload = 'auto';
+        video.load();
+    });
+}
+
+document.addEventListener('DOMContentLoaded', initVideoNoteLoaders);   
+    function renderMessage(message) {
+        const row = document.createElement('div');
+        row.className = message.is_own ? 'message-row own' : 'message-row other';
+        row.dataset.messageId = message.id;
+        row.dataset.messageType = message.message_type;
+        let content = '';
+        if (message.message_type === 'video_note' && message.video_note_url) {
+
+            content = `
+                <div class="video-note-wrapper">
+                    <video
+                        class="video-note"
+                        playsinline
+                        preload="auto">
+                        <source src="${message.video_note_url}" type="video/webm">
+                    </video>
+
+                    <div class="video-note-loader">
+                        <div class="video-note-spinner"></div>
+                        Загрузка видео
+                    </div>
+
+                    <div class="video-note-play">
+                        ▶
+                    </div>
+                </div>
+            `;
+        } else
+        if (message.message_type === 'voice' && message.audio_url) {
+
+            content = `
+                <audio controls src="${message.audio_url}"></audio>
+            `;
+
+        } else if (message.message_type === 'file' && message.file_url) {
+
+            if (isImageFile(message.file_name)) {
+
+                content = `
+                    <img
+                        src="${message.file_url}"
+                        class="chat-image"
+                        alt="${message.file_name}">
+                `;
+
+            } else if (isVideoFile(message.file_name)) {
+
+                content = `
+                    <video
+                        class="chat-video"
+                        controls
+                        preload="auto">
+                        <source src="${message.file_url}">
+                    </video>
+                `;
+
+            } else {
+
+                content = `
+                    <a href="${message.file_url}"
+                    target="_blank"
+                    class="chat-file">
+                        ${getFileIcon(message.file_name)}
+                        ${message.file_name}
+                    </a>
+                `;
+            }
+
+        } else {
+
+            content = `
+                <div class="message-text">${message.text || ''}</div>
+            `;
+        }
+
+        if (
+            message.message_type === 'file' &&
+            (
+                isImageFile(message.file_name) ||
+                isVideoFile(message.file_name)
+            )
+        ) {
+            row.classList.add('media-message');
+        }
+
+        row.innerHTML = `
+            ${!message.is_own ? `
+                <div class="message-avatar">
+                    <img src="${message.avatar_url}" alt="">
+                </div>
+            ` : ''}
+
+            <div class="message-bubble">
+                ${content}
+                <div class="message-time">
+                    ${message.time}
+
+                    ${message.is_own ? `
+                        <span class="message-read-status">
+                            ${message.is_read ? '✓✓' : '✓'}
+                        </span>
+                    ` : ''}
+                </div>
+            </div>
+        `;
+            const videoNotes = row.querySelectorAll('.video-note');
+
+            videoNotes.forEach(video => {
+                video.load();
+            });
+
+
+
+        row.querySelectorAll('.video-note-wrapper').forEach(wrapper => {
+            const video = wrapper.querySelector('.video-note');
+
+            if (!video) return;
+
+            const markLoaded = () => {
+                wrapper.classList.add('loaded');
+            };
+
+            video.addEventListener('loadedmetadata', markLoaded, { once: true });
+            video.addEventListener('loadeddata', markLoaded, { once: true });
+            video.addEventListener('canplay', markLoaded, { once: true });
+
+            video.preload = 'auto';
+            video.load();
+        });         
+
+            return row;
+        }
+    function moveCurrentTopicToTop() {
+
+        if (!topicsContainer) return;
+
+        const currentTopicCard = topicsContainer.querySelector(
+            '[data-topic-id="{{ current_topic.id }}"]'
+        );
+
+        if (!currentTopicCard) return;
+
+        topicsContainer.prepend(currentTopicCard);
+    }
+
+    function updateTypingIndicator(isTyping) {
+        const typingIndicator = document.getElementById('typingIndicator');
+        if (!typingIndicator) return;
+
+        typingIndicator.style.display = isTyping ? 'block' : 'none';
+    }
+
+    function loadMessages() {
+        const lastMessageId = getLastMessageId();
+
+        fetch(`${messagesUrl}?after_id=${lastMessageId}&_=${Date.now()}`)
+            .then(response => response.json())
+            .then(data => {
+                updateTypingIndicator(data.typing);
+
+                if (!data.messages.length) return;
+
+                data.messages.forEach(message => {
+                    chatMessages.appendChild(renderMessage(message));
+                });
+                if (!document.hidden) {
+                    markMessagesAsRead();
+                }
+                moveCurrentTopicToTop();
+
+                setTimeout(() => {
+                    chatMessages.scrollTop = chatMessages.scrollHeight;
+                }, 100);
+            });
+    }
+const markReadUrl = "{% url 'partner_chat_mark_read' current_topic.id %}";
+
+let lastMarkReadAt = 0;
+
+function markMessagesAsRead() {
+
+    const now = Date.now();
+
+    if (now - lastMarkReadAt < 1000) {
+        return;
+    }
+
+    lastMarkReadAt = now;
+
+    if (!chatSocket || chatSocket.readyState !== WebSocket.OPEN) {
+        return;
+    }
+
+    chatSocket.send(JSON.stringify({
+        type: 'mark_read'
+    }));
+}
+function formatOfflineText(seconds) {
+
+    if (seconds < 60) {
+        return 'только что';
+    }
+
+    const minutes = Math.floor(seconds / 60);
+
+    if (minutes === 1) {
+        return '1 минуту назад';
+    }
+
+    if (minutes >= 2 && minutes <= 4) {
+        return `${minutes} минуты назад`;
+    }
+
+    return `${minutes} минут назад`;
+}
+
+function updateOfflineTexts() {
+
+    document
+        .querySelectorAll('[data-offline-at]')
+        .forEach(block => {
+
+            const seconds = Math.floor(
+                (Date.now() - Number(block.dataset.offlineAt)) / 1000
+            );
+
+            const text = block.querySelector('.offline-text');
+
+            if (!text) return;
+
+            text.textContent = formatOfflineText(seconds);
+        });
+}
+
+setInterval(updateOfflineTexts, 30000);
+document.addEventListener('visibilitychange', () => {
+
+    if (!document.hidden) {
+
+        markMessagesAsRead();
+    }
+});
+if (chatForm && chatMessages) {
+    const textarea = chatForm.querySelector('textarea');
+    const submitBtn = chatForm.querySelector('button[type="submit"]');
+    const csrfToken = chatForm.querySelector('[name=csrfmiddlewaretoken]').value;
+    textarea.addEventListener('input', () => {
+
+        textarea.style.height = 'auto';
+
+        textarea.style.height = textarea.scrollHeight + 'px';
+    });    
+    textarea.addEventListener('keydown', function(event) {
+
+        if (event.key === 'Enter' && !event.shiftKey) {
+
+            event.preventDefault();
+
+            chatForm.requestSubmit();
+        }
+    });
+
+    textarea.addEventListener('input', () => {
+        console.log('typing...');
+
+        fetch("{% url 'partner_chat_typing' current_topic.id %}", {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': csrfToken,
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        });
+        chatSocket.send(JSON.stringify({
+            type: 'typing',
+            user_id: {{ request.user.id }},
+            is_typing: true
+        }));
+    });
+
+    chatForm.addEventListener('submit', function (event) {
+        event.preventDefault();
+        if (editingMessageId) {
+            const textarea = chatForm.querySelector('textarea');
+            const newText = textarea.value.trim();
+
+            if (!newText) return;
+            console.log('EDIT SEND:', {
+            message_id: editingMessageId,
+            text: newText
+        });
+
+            chatSocket.send(JSON.stringify({
+                type: 'edit_message',
+                message_id: editingMessageId,
+                text: newText
+            }));
+
+            textarea.value = '';
+            textarea.style.height = '';
+
+            editingMessageId = null;
+
+            return;
+        }
+        const formData = new FormData(chatForm);
+
+        submitBtn.disabled = true;
+
+        fetch(chatForm.action, {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+        if (data.success) {
+
+            chatSocket.send(JSON.stringify({
+                type: 'typing',
+                user_id: currentUserId,
+                is_typing: false
+            }));
+
+            updateTypingIndicator(false);
+
+            chatMessages.appendChild(renderMessage(data));
+
+            chatSocket.send(JSON.stringify({
+                type: 'new_message',
+                message_id: data.id
+            }));
+
+            moveCurrentTopicToTop();
+            textarea.value = '';
+            textarea.style.height = '';
+
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+        })
+        .finally(() => {
+            submitBtn.disabled = false;
+        });
+    });
+    } /*
+    const latestUnreadTopicUrl = "{% url 'partner_chat_latest_unread_topic' %}";
+
+    function checkLatestUnreadTopic() {
+        fetch(`${latestUnreadTopicUrl}?current_topic_id={{ current_topic.id }}&_=${Date.now()}`)
+            .then(response => response.json())
+            .then(data => {
+                if (!data.has_topic) return;
+
+                const currentTopicId = Number("{{ current_topic.id }}");
+
+                if (data.topic_id !== currentTopicId) {
+                    window.location.href = data.url;
+                }
+            });
+    }
+
+    setInterval(checkLatestUnreadTopic, 5000);
+    */
+    const SpeechRecognition =
+        window.SpeechRecognition || window.webkitSpeechRecognition;
+/*
+    if (SpeechRecognition && voiceBtn) {
+
+        const recognition = new SpeechRecognition();
+
+        recognition.lang = 'ru-RU';
+        recognition.interimResults = false;
+        recognition.continuous = false;
+
+        let isListening = false;
+
+        recognition.onstart = () => {
+            isListening = true;
+            voiceBtn.classList.add('listening');
+        };
+
+        recognition.onend = () => {
+            isListening = false;
+            voiceBtn.classList.remove('listening');
+        };
+
+        recognition.onresult = (event) => {
+            const textarea = document.querySelector('.chat-send-form textarea');
+
+            if (!textarea) return;
+
+            const transcript = event.results[0][0].transcript;
+
+            textarea.value = `${textarea.value} ${transcript}`.trim();
+
+            textarea.dispatchEvent(new Event('input'));
+        };
+
+        recognition.onerror = (event) => {
+            console.log('Speech error:', event.error);
+
+            isListening = false;
+
+            voiceBtn.classList.remove('listening');
+        };
+
+        voiceBtn.addEventListener('click', () => {
+
+            if (isListening) {
+                recognition.stop();
+                return;
+            }
+
+            recognition.start();
+        });
+    }
+    */
+    let mediaRecorder;
+    let audioChunks = [];
+    let isRecording = false;
+    let videoNoteRecorder;
+    let videoNoteChunks = [];
+    let isVideoNoteRecording = false;
+    // Функция для записи голоса и отправки его на сервер для транскрипции с помощью Whisper
+async function transcribeWithWhisper() {
+
+    if (isTranscribing) {
+        return;
+    }
+
+    isTranscribing = true;
+
+    console.log('Whisper start');
+
+    voiceBtn.classList.add('listening');
+
+    const stream = await navigator.mediaDevices.getUserMedia({
+        audio: true
+    });
+
+    const recorder = new MediaRecorder(stream);
+    const chunks = [];
+
+    const startedAt = Date.now();
+
+    recorder.ondataavailable = (event) => {
+        chunks.push(event.data);
+    };
+
+    recorder.onstop = async () => {
+
+        const duration = Date.now() - startedAt;
+
+        if (duration < 1200) {
+            voiceBtn.classList.remove('listening');
+            isTranscribing = false;
+            return;
+        }
+
+        const audioBlob = new Blob(chunks, {
+            type: 'audio/webm'
+        });
+
+        if (audioBlob.size < 3000) {
+            voiceBtn.classList.remove('listening');
+            isTranscribing = false;
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append('audio', audioBlob, 'speech.webm');
+
+        const csrfToken = chatForm.querySelector(
+            '[name=csrfmiddlewaretoken]'
+        ).value;
+
+        try {
+            const response = await fetch(transcribeUrl, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRFToken': csrfToken,
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            });
+
+            const data = await response.json();
+
+            console.log('Whisper response:', data);
+
+            if (data.success && data.text) {
+                const ignoredTexts = [
+                    'Продолжение следует',
+                    'Продолжение следует...',
+                    'Спасибо за просмотр',
+                    'Субтитры сделал'
+                ];
+
+                if (
+                    ignoredTexts.some(text =>
+                        data.text.trim().startsWith(text)
+                    )
+                ) {
+                    return;
+                }
+
+                const textarea = chatForm.querySelector('textarea');
+
+                textarea.value =
+                    `${textarea.value} ${data.text}`.trim();
+
+                textarea.dispatchEvent(new Event('input'));
+            }
+
+        } finally {
+            voiceBtn.classList.remove('listening');
+            isTranscribing = false;
+        }
+    };
+
+    recorder.start();
+
+    setTimeout(() => {
+        if (recorder.state === 'recording') {
+            recorder.stop();
+        }
+    }, 5000);
+}
+    if (voiceBtn) {
+
+        voiceBtn.addEventListener('click', async () => {
+            await transcribeWithWhisper();
+        });
+
+    }    
+async function startVideoNoteRecording() {
+
+    let stream;
+
+    try {
+        stream = await navigator.mediaDevices.getUserMedia({
+            video: true,
+            audio: true
+        });
+    } catch (error) {
+        console.log('Video note error:', error);
+
+        showNotification(
+            'Камера не найдена или доступ к ней запрещён'
+        );
+
+        return;
+    }
+
+    videoNoteRecorder = new MediaRecorder(stream);
+
+    videoNoteChunks = [];
+
+    videoNoteRecorder.ondataavailable = (event) => {
+        videoNoteChunks.push(event.data);
+    };
+
+    videoNoteRecorder.start();
+
+    isVideoNoteRecording = true;
+
+    videoNoteBtn.classList.add('listening');
+}
+    async function stopVideoNoteRecording() {
+
+        if (!videoNoteRecorder || !isVideoNoteRecording) return;
+
+        videoNoteRecorder.stop();
+
+        videoNoteRecorder.onstop = async () => {
+
+            const videoBlob = new Blob(videoNoteChunks, {
+                type: 'video/webm'
+            });
+
+            const formData = new FormData();
+
+            formData.append(
+                'video',
+                videoBlob,
+                'video-note.webm'
+            );
+
+            const csrfToken = chatForm.querySelector(
+                '[name=csrfmiddlewaretoken]'
+            ).value;
+
+            const response = await fetch(videoNoteUrl, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRFToken': csrfToken,
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+
+                chatMessages.appendChild(renderMessage(data));
+
+                chatSocket.send(JSON.stringify({
+                    type: 'new_message',
+                    message_id: data.id
+                }));
+
+                moveCurrentTopicToTop();
+
+                setTimeout(() => {
+                    chatMessages.scrollTop = chatMessages.scrollHeight;
+                }, 300);
+            }
+            videoNoteBtn.classList.remove('listening');
+            isVideoNoteRecording = false;
+        };
+    }
+    if (videoNoteBtn) {
+        videoNoteBtn.addEventListener('click', async () => {
+
+            if (isVideoNoteRecording) {
+                await stopVideoNoteRecording();
+                return;
+            }
+
+            await startVideoNoteRecording();
+        });
+    }
+    async function startVoiceRecording() {
+
+        const stream = await navigator.mediaDevices.getUserMedia({
+            audio: true
+        });
+
+        mediaRecorder = new MediaRecorder(stream);
+
+        audioChunks = [];
+
+        mediaRecorder.ondataavailable = (event) => {
+            audioChunks.push(event.data);
+        };
+
+        mediaRecorder.onstop = async () => {
+
+            const audioBlob = new Blob(audioChunks, {
+                type: 'audio/webm'
+            });
+
+            const formData = new FormData();
+
+            formData.append(
+                'audio',
+                audioBlob,
+                'voice-message.webm'
+            );
+
+            const csrfToken = chatForm.querySelector(
+                '[name=csrfmiddlewaretoken]'
+            ).value;
+
+            const response = await fetch(voiceUrl, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRFToken': csrfToken,
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            });
+
+            const data = await response.json();
+            console.log('voice message response:', data);
+            if (data.success) {
+
+                chatSocket.send(JSON.stringify({
+                    type: 'typing',
+                    user_id: currentUserId,
+                    is_typing: false
+                }));
+
+                updateTypingIndicator(false); 
+
+                chatSocket.send(JSON.stringify({
+                    type: 'new_message',
+                    message_id: data.id
+                }));
+
+                moveCurrentTopicToTop();
+                const textarea = chatForm.querySelector('textarea');
+                textarea.value = '';
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+            }
+            voiceMessageBtn.classList.remove('listening');
+            isRecording = false;
+        };
+
+        mediaRecorder.start();
+
+        isRecording = true;
+
+        voiceMessageBtn.classList.add('listening');
+    }
+
+    if (voiceMessageBtn) {
+        voiceMessageBtn.addEventListener('mousedown', async () => {
+            if (!isRecording) {
+                await startVoiceRecording();
+            }
+        });
+
+        voiceMessageBtn.addEventListener('mouseup', () => {
+            if (mediaRecorder && isRecording) {
+                mediaRecorder.stop();
+            }
+        });
+    }
+    const readStatusesUrl = "{% url 'partner_chat_read_statuses' current_topic.id %}";
+
+    function updateReadStatuses() {
+        fetch(`${readStatusesUrl}?_=${Date.now()}`)
+            .then(response => response.json())
+            .then(data => {
+                data.messages.forEach(message => {
+                    const row = document.querySelector(
+                        `.message-row[data-message-id="${message.id}"]`
+                    );
+
+                    if (!row) return;
+
+                    const status = row.querySelector('.message-read-status');
+
+                    if (!status) return;
+
+                    status.textContent = message.is_read ? '✓✓' : '✓';
+                });
+            });
+    }
+    updateReadStatuses();
+function warmUpVideoNotes() {
+    document.querySelectorAll('.video-note').forEach(video => {
+        video.muted = true;
+        video.preload = 'auto';
+
+        video.addEventListener('loadedmetadata', () => {
+            try {
+                video.currentTime = 0.1;
+            } catch (e) {
+                console.log('video seek error:', e);
+            }
+        }, { once: true });
+
+        video.load();
+    });
+}
+
+document.addEventListener('DOMContentLoaded', warmUpVideoNotes);
+  //  setInterval(loadMessages, 3000);
+ //   setInterval(updateReadStatuses, 3000);
+</script>
+{% endif %}
+
+<script>
+    function openNewTopicModal() {
+        document.getElementById('newTopicModal').classList.add('active');
+    }
+
+    function closeNewTopicModal() {
+        document.getElementById('newTopicModal').classList.remove('active');
+    }
+
+    document.getElementById('newTopicModal')?.addEventListener('click', function(event) {
+        if (event.target === this) {
+            closeNewTopicModal();
+        }
+    });
+</script>
+<script>
+    function openTopicsDrawer() {
+        document.querySelector('.chat-sidebar')?.classList.add('open');
+        document.getElementById('topicsBackdrop')?.classList.add('open');
+    }
+
+    function closeTopicsDrawer() {
+        document.querySelector('.chat-sidebar')?.classList.remove('open');
+        document.getElementById('topicsBackdrop')?.classList.remove('open');
+    }
+</script>
+<script>
+    /*
+    function sendHeartbeat() {
+        fetch("{% url 'user_heartbeat' %}", {
+            method: 'GET',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        });
+    }
+
+    sendHeartbeat();
+
+    setInterval(sendHeartbeat, 30000);
+    */
+</script>
+{% if current_topic %}
+<script>
+    /*
+function updateAdminStatus() {
+
+    fetch("{% url 'partner_admin_status' current_topic.id %}")
+        .then(response => response.json())
+        .then(data => {
+
+            const block = document.getElementById('adminStatusBlock');
+
+            if (!block) return;
+
+            let statusHtml = '';
+
+            if (data.is_typing) {
+                statusHtml = `
+                    <span class="typing-text">печатает...</span>
+                `;
+            } else if (data.is_online) {
+                statusHtml = `
+                    <span class="online-dot"></span>
+                    <span class="online-text">online</span>
+                `;
+            } else {
+                statusHtml = `
+                    <span class="offline-dot"></span>
+                    <span class="offline-text">${data.last_seen_text}</span>
+                `;
+            }
+
+            block.querySelector('.admin-status-right').innerHTML = statusHtml;
+        });
+}
+
+updateAdminStatus();
+
+setInterval(updateAdminStatus, 3000);
+*/
+</script>
+{% endif %}
+
+{% endblock %}

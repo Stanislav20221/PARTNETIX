@@ -1,0 +1,657 @@
+{% extends 'partner_portal/base.html' %}
+{% load number_format %}
+{% block title %}Реферальная программа{% endblock %}
+{% block page_title %}РЕФЕРАЛЬНАЯ ПРОГРАММА{% endblock %}
+
+{% block content %}
+<div class="links-card">
+    <div class="links-header">
+        <h2>Мои ссылки</h2>
+
+        <button type="button" class="add-link-btn" id="open-link-modal">
+            Добавить ссылку
+        </button>
+    </div>
+   <div class="links-table-wrap">
+        <table class="links-table">
+            <thead>
+                <tr>
+                    <th>Название ссылки</th>
+                    <th>Ссылка</th>
+                    <th>Оффер</th>
+                    <th>Переходы</th>
+                    <th>Регистрации</th>
+                    <th>Сделки</th>
+                    <th>Сумма</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                {% for link in links %}
+                    <tr>
+                        <td>
+                            <div class="link-title-block">
+                                <div class="link-title-text">{{ link.title }}</div>
+
+                                <button type="button" class="rename-link-btn">
+                                    Изменить название
+                                </button>
+                            </div>
+                        </td>
+                            <td>
+                                <div class="link-actions-block">
+                                    <input type="text"
+                                        value="{{ link.url }}"
+                                        readonly
+                                        id="partner-link-{{ link.id }}">
+
+                                    <div class="link-buttons">
+                                        <button type="button"
+                                                class="copy-link-btn"
+                                                onclick="copyPartnerLink('partner-link-{{ link.id }}')">
+                                            Копировать
+                                        </button>
+
+                                    </div>
+                                </div>
+                            </td>
+                        <td class="offer-cell">{{ link.offer.title }}</td>
+                        <td>{{ link.visits_count }}</td>
+                        <td>{{ link.registrations_count }}</td>
+                        <td>{{ link.deals_count }}</td>
+                        <td>{{ link.deals_amount|space_thousands }} ₽</td>                       
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="7">У вас пока нет ссылок</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>   
+        <div class="mobile-links-list">
+           {% for link in links %}
+                <div class="mobile-link-card">
+                    <div class="mobile-link-title">{{ link.title }}</div>
+
+                    <div class="mobile-link-row">
+                        <span>Оффер</span>
+                        <strong>{{ link.offer.title }}</strong>
+                    </div>
+
+                    <div class="mobile-link-url">
+                        <input type="text"
+                            value="{{ link.url }}"
+                            readonly
+                            id="mobile-partner-link-{{ link.id }}">
+                    </div>
+
+                    <div class="mobile-link-stats">
+                        <div>
+                            <span>Переходы</span>
+                            <strong>{{ link.visits_count }}</strong>
+                        </div>
+                        <div>
+                            <span>Регистрации</span>
+                            <strong>{{ link.registrations_count }}</strong>
+                        </div>
+                        <div>
+                            <span>Сделки</span>
+                            <strong>0</strong>
+                        </div>
+                        <div>
+                            <span>Сумма</span>
+                            <strong>0 ₽</strong>
+                        </div>
+                    </div>
+
+                    <div class="mobile-link-actions">
+                        <button type="button" class="rename-link-btn">
+                            Изменить название
+                        </button>
+
+                        <button type="button"
+                                class="copy-link-btn"
+                                onclick="copyPartnerLink('mobile-partner-link-{{ link.id }}')">
+                            Копировать
+                        </button>
+                    </div>
+                </div>
+            {% empty %}
+                <div class="mobile-link-card">
+                    У вас пока нет ссылок
+                </div>
+            {% endfor %}
+        </div>
+    <div class="links-summary">
+        <div class="summary-card">
+            <div class="summary-icon">
+                <i class="fa-solid fa-link"></i>
+            </div>
+            <div class="summary-label">ВСЕГО ССЫЛОК</div>
+            <div class="summary-value">{{ links|length }}</div>
+        </div>
+
+        <div class="summary-card">
+            <div class="summary-icon">
+                <i class="fa-solid fa-handshake"></i>
+            </div>
+            <div class="summary-label">ВСЕГО СДЕЛОК ПО ССЫЛКАМ</div>
+            <div class="summary-value">{{ total_deals }}</div>
+        </div>
+
+        <div class="summary-card">
+            <div class="summary-icon">
+                <i class="fa-solid fa-wallet"></i>
+            </div>
+            <div class="summary-label">ОБЩАЯ СУММА</div>
+            <div class="summary-value">{{ total_amount|space_thousands }} ₽</div>
+        </div>
+    </div>
+        <div class="link-modal" id="link-modal">
+        <div class="link-modal-card">
+            <div class="link-modal-header">
+                <h3>Добавить ссылку</h3>
+                <button type="button" id="close-link-modal">&times;</button>
+            </div>
+
+            <form method="post"
+                  action="{% url 'create_partner_link' %}"
+                  class="link-modal-form">
+                {% csrf_token %}
+
+                <div class="link-modal-group">
+                    <label>Название ссылки</label>
+                    <input type="text"
+                           name="title"
+                           placeholder="Моя новая ссылка"
+                           class="link-title-input"
+                           required>
+                </div>
+
+                <div class="link-modal-group">
+                    <label>Оффер</label>
+                    <select name="offer" required>
+                        <option value="">Выберите оффер</option>
+                        {% for offer in available_offers %}
+                            <option value="{{ offer.id }}">{{ offer.title }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <button type="submit"
+                        class="link-modal-save"
+                        id="save-link-btn"
+                        disabled>
+                    Сохранить
+                </button>
+            </form>
+        </div>
+    </div>
+
+</div>
+
+<style>
+.links-summary {
+    position: fixed;
+    left: 328px;
+    right: 30px;
+    bottom: 20px;
+    z-index: 1000;
+
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 18px;
+    margin-top: 0;
+}
+
+.summary-card {
+    background: #f9fafb;
+    border: 1px solid #e5e7eb;
+    border-radius: 16px;
+    padding: 20px;
+}
+
+.summary-label {
+    font-size: 12px;
+    font-weight: 700;
+    color: #6b7280;
+    margin-bottom: 10px;
+}
+
+.summary-value {
+    font-size: 28px;
+    font-weight: 800;
+    color: #2563eb;
+}    
+.links-card {
+    background: white;
+    border-radius: 18px;
+    padding: 24px;
+    padding-bottom: 42px;
+
+    box-shadow: 0 8px 25px rgba(15,23,42,0.06);
+}
+
+.links-card h2 {
+    margin: 0 0 18px;
+    font-size: 22px;
+}
+
+.links-table-wrap {
+    overflow-x: auto;
+}
+
+.links-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.links-table th,
+.links-table td {
+    padding: 14px;
+    border-bottom: 1px solid #e5e7eb;
+    text-align: left;
+    font-size: 14px;
+}
+
+.links-table th {
+    color: #6b7280;
+    font-size: 12px;
+    text-transform: uppercase;
+}
+
+.links-table input {
+    width: 100%;
+    padding: 8px 10px;
+    border: 1px solid #d1d5db;
+    border-radius: 10px;
+   
+}
+
+.link-actions-block {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    min-width: 280px;
+}
+
+.link-buttons {
+    display: flex;
+    gap: 10px;
+}
+
+.rename-link-btn,
+.copy-link-btn {
+    height: 38px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 6px;
+    border: none;
+
+}
+
+.copy-link-btn {
+    background: #2563eb;
+    color: white;
+    width: 120px;
+}
+
+.copy-link-btn:hover {
+    background: #1d4ed8;
+}
+
+.rename-link-btn {
+    background: #f3f4f6;
+    color: #111827;
+}
+
+.rename-link-btn:hover {
+    background: #e5e7eb;
+}
+.link-title-block,
+.link-actions-block {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: 10px;
+    min-height: 90px;
+}
+.links-table td {
+    vertical-align: top;
+    padding-top: 12px;
+}
+.link-title-text {
+    font-weight: 600;
+    color: #111827;
+    padding-bottom: 15px;
+}
+.link-modal-card {
+    width: 100%;
+    max-width: 460px;
+    background: white;
+    border-radius: 18px;
+    padding: 24px;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.25);
+}
+
+.link-modal-form {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.link-modal-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.link-modal-group label {
+    font-size: 13px;
+    font-weight: 600;
+    color: #374151;
+}
+
+.link-modal-group input,
+.link-modal-group select {
+    width: 100%;
+    height: 46px;
+    padding: 0 14px;
+    border: 1px solid #d1d5db;
+    border-radius: 12px;
+    font-size: 14px;
+    background: #f9fafb;
+}
+
+.link-modal-save {
+    height: 46px;
+    border: none;
+    border-radius: 12px;
+    background: #2563eb;
+    color: white;
+    font-weight: 700;
+    cursor: pointer;
+    transition: .2s;
+}
+
+.link-modal-save:hover {
+    background: #1d4ed8;
+}
+
+#close-link-modal {
+    border: none;
+    background: transparent;
+    font-size: 22px;
+    cursor: pointer;
+    color: #6b7280;
+}
+.link-modal {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(8, 10, 30, 0.55);
+    z-index: 3000;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+
+.link-modal.active {
+    display: flex;
+}
+
+.link-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 18px;
+}
+.add-link-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+
+    padding: 12px 18px;
+    border: none;
+    border-radius: 12px;
+
+    background: #2563eb;
+    color: white;
+
+    font-size: 14px;
+    font-weight: 700;
+
+    cursor: pointer;
+    transition: 0.2s ease;
+    box-shadow: 0 8px 18px rgba(37, 99, 235, 0.18);
+}
+.links-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.links-header h2 {
+    margin: 0;
+}
+.add-link-btn:hover {
+    background: #1d4ed8;
+    transform: translateY(-1px);
+    box-shadow: 0 12px 22px rgba(37, 99, 235, 0.22);
+}
+
+.add-link-btn:active {
+    transform: translateY(0);
+}
+.mobile-links-list {
+    display: none;
+}
+.offer-cell {
+    max-width: 260px;
+    white-space: normal;
+    word-break: break-word;
+    overflow-wrap: break-word;
+    line-height: 1.4;
+}
+.summary-icon {
+    width: 46px;
+    height: 46px;
+    border-radius: 12px;
+    background: rgba(37, 99, 235, 0.08);
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    margin-bottom: 14px;
+}
+
+.summary-icon i {
+    font-size: 18px;
+    color: #2563eb;
+}
+.link-modal-save:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+@media (max-width: 768px) {
+    .links-table-wrap {
+        display: none;
+    }
+
+    .mobile-links-list {
+        display: grid;
+        gap: 14px;
+    }
+
+    .mobile-link-card {
+        background: #ffffff;
+        border: 1px solid #e5e7eb;
+        border-radius: 16px;
+        padding: 16px;
+        box-shadow: 0 8px 22px rgba(15,23,42,0.06);
+    }
+
+    .mobile-link-title {
+        font-size: 16px;
+        font-weight: 800;
+        color: #111827;
+        margin-bottom: 12px;
+    }
+
+    .mobile-link-row {
+        display: flex;
+        justify-content: space-between;
+        gap: 12px;
+        margin-bottom: 12px;
+        font-size: 13px;
+    }
+
+    .mobile-link-row span,
+    .mobile-link-stats span {
+        color: #6b7280;
+        font-size: 12px;
+        font-weight: 600;
+    }
+
+    .mobile-link-row strong {
+        text-align: right;
+        color: #111827;
+        font-size: 13px;
+    }
+
+    .mobile-link-url input {
+        width: 100%;
+        height: 40px;
+        padding: 0 12px;
+        border: 1px solid #d1d5db;
+        border-radius: 10px;
+        background: #f9fafb;
+        font-size: 12px;
+        margin-bottom: 14px;
+    }
+
+    .mobile-link-stats {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
+        margin-bottom: 14px;
+    }
+
+    .mobile-link-stats div {
+        background: #f9fafb;
+        border-radius: 12px;
+        padding: 10px;
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+    }
+
+    .mobile-link-stats strong {
+        color: #2563eb;
+        font-size: 18px;
+    }
+
+    .mobile-link-actions {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+    }
+
+    .mobile-link-actions button {
+        width: 100%;
+    }
+
+        .mobile-link-url input {
+        font-size: 11px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .mobile-link-row {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .mobile-link-row strong {
+        text-align: left;
+    }
+
+    .mobile-link-actions {
+        grid-template-columns: 1fr;
+    }
+
+    .mobile-link-actions button {
+        height: 42px;
+    }
+    .mobile-link-row strong {
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+        line-height: 1.4;
+    }    
+      .links-summary {
+        grid-template-columns: 1fr;
+    }  
+      .links-summary {
+        position: static;
+        margin-top: 28px;
+    }
+
+    .links-card {
+        padding-bottom: 24px;
+    }
+}
+</style>
+<script>
+function copyPartnerLink(inputId) {
+    const input = document.getElementById(inputId);
+
+    navigator.clipboard.writeText(input.value);
+
+    alert('Ссылка скопирована');
+}
+</script>
+<script>
+    const linkModal = document.getElementById('link-modal');
+    const openLinkModal = document.getElementById('open-link-modal');
+    const closeLinkModal = document.getElementById('close-link-modal');
+
+    openLinkModal.addEventListener('click', function () {
+        linkModal.classList.add('active');
+    });
+
+    closeLinkModal.addEventListener('click', function () {
+        linkModal.classList.remove('active');
+    });
+
+    linkModal.addEventListener('click', function (event) {
+        if (event.target === linkModal) {
+            linkModal.classList.remove('active');
+        }
+    });
+</script>
+<script>
+    const titleInput = document.querySelector('input[name="title"]');
+    const offerSelect = document.querySelector('select[name="offer"]');
+    const saveBtn = document.getElementById('save-link-btn');
+
+    if (titleInput && offerSelect && saveBtn) {
+        function validateLinkForm() {
+            const titleFilled = titleInput.value.trim() !== '';
+            const offerFilled = offerSelect.value !== '';
+
+            saveBtn.disabled = !(titleFilled && offerFilled);
+        }
+
+        titleInput.addEventListener('input', validateLinkForm);
+        offerSelect.addEventListener('change', validateLinkForm);
+
+        validateLinkForm();
+    }
+</script>
+{% endblock %}

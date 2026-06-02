@@ -1,0 +1,886 @@
+{% extends 'partner_portal/base.html' %}
+{% load number_format %}
+
+{% block title %}Начисления{% endblock %}
+{% block page_title %}НАЧИСЛЕНИЯ{% endblock %}
+
+{% block content %}
+
+<style>
+.accruals-stats {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 18px;
+    margin-bottom: 24px;
+}
+
+.accrual-stat-card {
+    background: white;
+    border-radius: 18px;
+    padding: 22px;
+    box-shadow: 0 8px 25px rgba(15,23,42,0.06);
+    border: 1px solid #eef2f7;
+}
+
+.accrual-stat-card span {
+    display: block;
+    margin-bottom: 12px;
+    color: #6b7280;
+    font-size: 13px;
+    font-weight: 700;
+    text-transform: uppercase;
+}
+
+.accrual-stat-card strong {
+    color: #2563eb;
+    font-size: 28px;
+    font-weight: 800;
+}
+
+.accrual-stat-card.primary {
+    background: #1F5BFF;
+}
+
+.accrual-stat-card.primary span,
+.accrual-stat-card.primary strong {
+    color: white;
+}
+
+.accruals-card {
+    background: white;
+    border-radius: 18px;
+    padding: 24px;
+    box-shadow: 0 8px 25px rgba(15,23,42,0.06);
+    margin-bottom: 24px;
+}
+
+.accruals-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.accruals-card h2 {
+    margin: 0 0 18px;
+}
+
+.accruals-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.accruals-table th,
+.accruals-table td {
+    padding: 14px;
+    border-bottom: 1px solid #e5e7eb;
+    text-align: left;
+}
+
+.accruals-table th {
+    color: #6b7280;
+    font-size: 12px;
+    text-transform: uppercase;
+}
+
+.withdraw-btn {
+    border: none;
+    border-radius: 12px;
+    background: #1F5BFF;
+    color: white;
+    padding: 12px 18px;
+    font-weight: 800;
+    cursor: pointer;
+}
+
+.withdraw-btn:hover {
+    background: #174BE0;
+}
+.withdraw-modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.55);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+}
+
+.withdraw-modal-overlay.active {
+    display: flex;
+}
+
+.withdraw-modal {
+    max-width: calc(100% - 30px);
+    background: white;
+    border-radius: 22px;
+    padding: 28px;
+    position: relative;
+    box-shadow: 0 20px 60px rgba(15,23,42,0.25);
+    animation: modalFade .2s ease;
+}
+
+.withdraw-modal h3 {
+    margin: 0 0 18px;
+    font-size: 24px;
+    font-weight: 800;
+}
+
+.withdraw-modal p {
+    margin: 0 0 12px;
+    color: #374151;
+    line-height: 1.5;
+}
+
+.withdraw-modal-note {
+    color: #6b7280;
+    font-size: 14px;
+}
+
+.withdraw-modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    margin-top: 24px;
+}
+
+.modal-cancel-btn,
+.modal-confirm-btn {
+    border: none;
+    border-radius: 12px;
+    padding: 12px 18px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.modal-cancel-btn {
+    background: #e5e7eb;
+}
+
+.modal-confirm-btn {
+    background: #1F5BFF;
+    color: white;
+}
+.withdraw-form-group {
+    margin-bottom: 16px;
+}
+
+.withdraw-form-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-size: 13px;
+    font-weight: 700;
+    color: #374151;
+}
+
+.withdraw-form-group input {
+    width: 100%;
+    padding: 14px 16px;
+    border: 1px solid #d1d5db;
+    border-radius: 12px;
+    font-size: 14px;
+    outline: none;
+}
+
+.withdraw-form-group input:focus {
+    border-color: #1F5BFF;
+}
+
+.withdraw-form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+}
+.withdraw-close-btn {
+    position: absolute;
+    top: 14px;
+    right: 16px;
+    width: 36px;
+    height: 36px;
+    border: none;
+    background: transparent;
+    font-size: 28px;
+    line-height: 1;
+    cursor: pointer;
+    color: #6b7280;
+    transition: .2s;
+}
+
+.withdraw-close-btn:hover {
+    color: #111827;
+    transform: scale(1.1);
+}
+.bank-input-wrap {
+    position: relative;
+}
+
+.bank-input-wrap input {
+    padding-left: 33px;
+}
+
+.bank-input-logo {
+    display: none;
+    position: absolute;
+    left: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 16px;
+    height: 16px;
+    object-fit: contain;
+    border-radius: 6px;
+}
+.withdraw-comment {
+    width: 100%;
+    min-height: 86px;
+    padding: 14px 16px;
+    border: 1px solid #d1d5db;
+    border-radius: 12px;
+    font-size: 14px;
+    font-family: Arial, sans-serif;
+    outline: none;
+    resize: vertical;
+}
+
+.withdraw-comment:focus {
+    border-color: #1F5BFF;
+}
+.modal-confirm-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+.withdraw-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+ }
+@keyframes modalFade {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+@media (max-width: 900px) {
+    .accruals-stats {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 560px) {
+    .accruals-stats {
+        grid-template-columns: 1fr;
+    }
+
+    .accruals-card-header {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 12px;
+    }
+}
+</style>
+
+<div class="accruals-stats">
+    <div class="accrual-stat-card">
+        <span>Всего начислено</span>
+        <strong>{{ total_accrued|space_thousands }} ₽</strong>
+    </div>
+
+    <div class="accrual-stat-card">
+        <span>Выплачено</span>
+        <strong>{{ paid_amount|space_thousands }} ₽</strong>
+    </div>
+
+    <div class="accrual-stat-card">
+        <span>В обработке</span>
+        <strong>{{ pending_amount|space_thousands }} ₽</strong>
+    </div>
+
+    <div class="accrual-stat-card primary">
+        <span>Доступно к выводу</span>
+        <strong>{{ available_amount|space_thousands }} ₽</strong>
+    </div>
+</div>
+<div class="accruals-card">
+    <div class="accruals-card-header">
+        <h2>Заявки на выплату</h2>
+
+        <button type="button"
+                class="withdraw-btn"
+                id="openWithdrawModal"
+                {% if not new_accruals_list %}disabled{% endif %}>
+            {% if new_accruals_list %}
+                Запросить выплату
+            {% else %}
+                Нет новых начислений
+            {% endif %}
+        </button>
+    </div>
+    <table class="accruals-table">
+        <thead>
+            <tr>
+                <th>Дата</th>
+                <th>Сумма</th>
+                <th>Статус</th>
+                <th>Комментарий</th>
+            </tr>
+        </thead>
+
+        <tbody>
+            {% for request_item in withdrawal_requests %}
+                <tr>
+                    <td>{{ request_item.created_at|date:"d.m.Y H:i" }}</td>
+                    <td>{{ request_item.amount|space_thousands }} ₽</td>
+                    <td>{{ request_item.get_status_display }}</td>
+                    <td>{{ request_item.comment|default:"—" }}</td>
+                </tr>
+            {% empty %}
+                <tr>
+                    <td colspan="4">Заявок пока нет</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+<div class="accruals-card">
+    <div class="accruals-card-header">
+        <h2>Новые начисления</h2>
+    </div>
+
+    <table class="accruals-table">
+        <thead>
+            <tr>
+                <th>Дата</th>
+                <th>Оффер</th>
+                <th>Лид</th>
+                <th>Сумма</th>
+            </tr>
+        </thead>
+
+        <tbody>
+            {% for accrual in new_accruals_list %}
+                <tr>
+                    <td>{{ accrual.created_at|date:"d.m.Y H:i" }}</td>
+                    <td>{{ accrual.offer.title }}</td>
+                    <td>{{ accrual.lead.title }}</td>
+                    <td>{{ accrual.amount|space_thousands }} ₽</td>
+                </tr>
+            {% empty %}
+                <tr>
+                    <td colspan="4">Новых начислений пока нет</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<div class="accruals-card">
+    <div class="accruals-card-header">
+        <h2>История начислений</h2>
+
+
+    </div>
+
+    <table class="accruals-table">
+        <thead>
+            <tr>
+                <th>Дата</th>
+                <th>Оффер</th>
+                <th>Лид</th>
+                <th>Сумма</th>
+            </tr>
+        </thead>
+
+        <tbody>
+            {% for accrual in history_accruals_list %}
+                <tr>
+                    <td>{{ accrual.created_at|date:"d.m.Y H:i" }}</td>
+                    <td>{{ accrual.offer.title }}</td>
+                    <td>{{ accrual.lead.title }}</td>
+                    <td>{{ accrual.amount|space_thousands }} ₽</td>
+                </tr>
+            {% empty %}
+                <tr>
+                    <td colspan="4">Начислений пока нет</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+<div class="withdraw-modal-overlay" id="withdrawModal">
+    
+    <div class="withdraw-modal">
+        <button type="button" class="withdraw-close-btn" id="close-withdraw-modal">
+        ×
+        </button>
+        <h3>Подтверждение выплаты</h3>
+
+        <p>
+            Вы собираетесь отправить заявку на выплату
+            <strong>{{ available_amount|space_thousands }} ₽</strong>
+        </p>
+
+        <p class="withdraw-modal-note">
+            После отправки заявка поступит администратору на обработку.
+        </p>
+
+        <div class="withdraw-modal-actions">
+
+            <form method="post" action="{% url 'request_withdrawal' %}">
+                {% csrf_token %}
+
+                {% if partner_type == 'company' %}
+                    <!-- реквизиты юрлица -->
+                        <div class="withdraw-form-group">
+                            <label>Расчётный счёт</label>
+                            <input type="text"
+                                name="settlement_account"
+                                value="{{ saved_payment_details.settlement_account|default:'' }}"
+                                maxlength="20"
+                                placeholder="40702810000000000000"
+                                required>
+                        </div>
+
+                        <div class="withdraw-form-row">
+                            <div class="withdraw-form-group">
+                                <label>БИК</label>
+                                <input type="text"
+                                    name="bik"
+                                    value="{{ saved_payment_details.bik|default:'' }}"
+                                    maxlength="9"
+                                    placeholder="044525225"
+                                    required>
+                            </div>
+
+                            <div class="withdraw-form-group">
+                                <label>Корреспондентский счёт</label>
+                                <input type="text"
+                                    name="correspondent_account"
+                                    value="{{ saved_payment_details.correspondent_account|default:'' }}"
+                                    maxlength="20"
+                                    placeholder="30101810400000000225"
+                                    required>
+                            </div>
+                        </div>
+                        <div class="withdraw-form-row">
+                            <div class="withdraw-form-group">
+                                <label>ИНН банка</label>
+                                <input type="text"
+                                    name="bank_inn"
+                                    value="{{ saved_payment_details.bank_inn|default:'' }}"
+                                    maxlength="10">
+                            </div>
+
+                            <div class="withdraw-form-group">
+                                <label>КПП банка</label>
+                                <input type="text"
+                                    name="bank_kpp"
+                                    value="{{ saved_payment_details.bank_kpp|default:'' }}"
+                                    maxlength="9">
+                            </div>
+                        </div>
+                        <div class="withdraw-form-group">
+                            <label>Полное название банка</label>
+                            <input type="text"
+                                name="legal_bank_name"
+                                value="{{ saved_payment_details.legal_bank_name|default:'' }}"
+                                placeholder="ПАО Сбербанк"
+                                required>
+                        </div>
+
+                        <div class="withdraw-form-group">
+                            <label>Получатель</label>
+                            <input type="text"
+                                name="recipient_name"
+                                value="{{ saved_payment_details.recipient_name|default:'' }}"
+                                placeholder="ООО Ромашка"
+                                required>
+                        </div>
+  
+                {% elif partner_type == 'self_employed' %}
+                <!-- реквизиты самозанятого -->                 
+                <div class="withdraw-form-group">
+                    <label>Наименование банка</label>
+                    <input type="text"
+                        name="legal_bank_name"
+                        value="{{ saved_payment_details.legal_bank_name|default:'' }}"
+                        placeholder="ПАО Сбербанк"
+                        required>
+                </div>
+
+                <div class="withdraw-form-row">
+                    <div class="withdraw-form-group">
+                        <label>БИК банка</label>
+                        <input type="text"
+                            name="bik"
+                            value="{{ saved_payment_details.bik|default:'' }}"
+                            maxlength="9"
+                            placeholder="044525225"
+                            required>
+                    </div>
+
+                    <div class="withdraw-form-group">
+                        <label>ИНН банка</label>
+                        <input type="text"
+                            name="bank_inn"
+                            value="{{ saved_payment_details.bank_inn|default:'' }}"
+                            maxlength="10"
+                            placeholder="7707083893"
+                            required>
+                    </div>
+                </div>
+
+                <div class="withdraw-form-group">
+                    <label>КПП банка</label>
+                    <input type="text"
+                        name="bank_kpp"
+                        value="{{ saved_payment_details.bank_kpp|default:'' }}"
+                        maxlength="9"
+                        placeholder="773601001"
+                        required>
+                </div>
+
+                <div class="withdraw-form-group">
+                    <label>Расчётный счёт, к которому привязана карта</label>
+                    <input type="text"
+                        name="settlement_account"
+                        value="{{ saved_payment_details.settlement_account|default:'' }}"
+                        maxlength="20"
+                        placeholder="40817810000000000000"
+                        required>
+                </div>
+
+                <div class="withdraw-form-group">
+                    <label>Корреспондентский счёт</label>
+                    <input type="text"
+                        name="correspondent_account"
+                        value="{{ saved_payment_details.correspondent_account|default:'' }}"
+                        maxlength="20"
+                        placeholder="30101810400000000225"
+                        required>
+                </div>
+
+                <div class="withdraw-form-group">
+                    <label>ФИО получателя</label>
+                    <input type="text"
+                        name="recipient_name"
+                        value="{{ saved_payment_details.recipient_name|default:'' }}"
+                        placeholder="Иванов Иван Иванович"
+                        required>
+                </div>
+
+
+
+                {% else %}
+                    <!-- реквизиты карты -->                 
+                        <div class="withdraw-form-group">
+                            <label>Номер карты</label>
+                                <input type="text"
+                                    name="card_number"
+                                    id="withdraw-card-number"
+                                    value="{{ saved_payment_details.card_number|default:'' }}"
+                                    placeholder="0000 0000 0000 0000"
+                                    maxlength="19"
+                                    required>
+                        </div>
+                    
+                        <div class="withdraw-form-row">
+                            <div class="withdraw-form-group">
+                                <label>Банк</label>
+                            <div class="bank-input-wrap">
+                                <img id="withdraw-bank-logo" class="bank-input-logo" src="" alt="">
+                                <input type="text"
+                                    name="bank_name"
+                                    id="withdraw-bank-name"
+                                    value="{{ saved_payment_details.bank_name|default:'' }}"
+                                    readonly>
+                            </div>
+                            </div>
+
+                            <div class="withdraw-form-group">
+                                <label>Платёжная система</label>
+                                    <div class="bank-input-wrap">
+                                        <img id="withdraw-payment-logo" class="bank-input-logo" src="" alt="">
+                                        <input type="text"
+                                            name="payment_system"
+                                            id="withdraw-payment-system"
+                                            value="{{ saved_payment_details.payment_system|default:'' }}"
+                                            readonly>
+                                    </div>
+                            </div>
+                        </div>
+
+                        <div class="withdraw-form-group">
+                            <label>ФИО получателя</label>
+                            <input type="text"
+                                name="recipient_name"
+                                placeholder="Иванов Иван Иванович"
+                                required>
+                        </div>
+                        <div class="withdraw-form-row">
+                            <div class="withdraw-form-group">
+                                <label>Тип карты</label>
+                                <input type="text"
+                                    name="card_type"
+                                    id="withdraw-card-type"
+                                    readonly>
+                            </div>
+
+                            <div class="withdraw-form-group">
+                                <label>Страна</label>
+                                <input type="text"
+                                    name="card_country"
+                                    id="withdraw-card-country"
+                                    readonly>
+                            </div>
+                        </div>
+                {% endif %}
+                <div class="withdraw-form-group">
+                    <label>Комментарий</label>
+                    <textarea name="comment"
+                            class="withdraw-comment"
+                            placeholder="Например: банк не определился, карта Сбербанка"></textarea>
+                </div>
+                <small class="withdraw-hint">
+                    Укажите банк вручную, если он не определился автоматически, либо добавьте важные комментарии к выплате.
+                </small>
+                <div class="withdraw-modal-actions">
+                    <button type="button"
+                            class="modal-cancel-btn"
+                            id="closeWithdrawModal">
+                        Отмена
+                    </button>
+
+                    <button type="submit"
+                        class="modal-confirm-btn"
+                        id="confirmWithdrawBtn"
+                        disabled>
+                        Подтвердить
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+<script>
+    const partnerType = "{{ partner_type }}";
+    const withdrawModal = document.getElementById('withdrawModal');
+    const openWithdrawModal = document.getElementById('openWithdrawModal');
+    const closeWithdrawModal = document.getElementById('closeWithdrawModal');
+    const confirmWithdrawBtn = document.getElementById('confirmWithdrawBtn');
+
+    openWithdrawModal.addEventListener('click', () => {
+        withdrawModal.classList.add('active');
+
+   
+        if (typeof cardInput !== 'undefined' && cardInput && cardInput.value) {
+            cardInput.dispatchEvent(new Event('input'));
+        }
+    });
+
+    closeWithdrawModal.addEventListener('click', () => {
+        withdrawModal.classList.remove('active');
+    });
+
+    withdrawModal.addEventListener('click', (e) => {
+        if (e.target === withdrawModal) {
+            withdrawModal.classList.remove('active');
+        }
+    });
+</script>
+
+<script src="https://unpkg.com/imask"></script>
+
+<script>
+// Скрипт для определения банка и платежной системы по BIN карты    
+const cardInput = document.getElementById('withdraw-card-number');
+const bankInput = document.getElementById('withdraw-bank-name');
+const systemInput = document.getElementById('withdraw-payment-system');
+const cardTypeInput = document.getElementById('withdraw-card-type');
+const cardCountryInput = document.getElementById('withdraw-card-country');
+const bankLogo = document.getElementById('withdraw-bank-logo');
+const paymentLogo = document.getElementById('withdraw-payment-logo');
+document.querySelector('[name="bank_inn"]')?.addEventListener('input', function () {
+this.value = this.value.replace(/\D/g, '').slice(0, 10);
+});
+
+document.querySelector('[name="bank_kpp"]')?.addEventListener('input', function () {
+    this.value = this.value.replace(/\D/g, '').slice(0, 9);
+});
+async function lookupBank(bin) {
+    const response = await fetch(`/partner/accruals/bank-bin-lookup/?bin=${bin}`);
+    return await response.json();
+}
+
+function detectPaymentSystem(bin) {
+    const first1 = bin.slice(0, 1);
+    const first2 = parseInt(bin.slice(0, 2));
+    const first6 = parseInt(bin.slice(0, 6));
+
+    if (first6 >= 220000 && first6 <= 220499) return 'МИР';
+    if (first1 === '4') return 'Visa';
+    if (first2 >= 51 && first2 <= 55) return 'Mastercard';
+
+    return 'Не определена';
+}
+
+
+function getPaymentLogo(system) {
+
+    switch (system.toLowerCase()) {
+        case 'мир':
+            return '/static/users/images/payment/mir.svg';
+
+        case 'visa':
+            return '/static/users/images/payment/visa.svg';
+
+        case 'mastercard':
+            return '/static/users/images/payment/mastercard.svg';
+
+        default:
+            return '';
+    }
+}
+
+if (cardInput) {
+    IMask(cardInput, {
+        mask: '0000 0000 0000 0000 000'
+    });
+
+    cardInput.addEventListener('input', async function () {
+        const digits = this.value.replace(/\D/g, '');
+        if (partnerType === 'company') {
+            confirmWithdrawBtn.disabled = false;
+        } else {
+            confirmWithdrawBtn.disabled = digits.length < 16;
+        }
+            if (digits.length < 6) {
+                bankInput.value = '';
+                systemInput.value = '';
+                cardTypeInput.value = '';
+                cardCountryInput.value = '';
+
+                bankLogo.src = '';
+                bankLogo.style.display = 'none';
+
+                paymentLogo.src = '';
+                paymentLogo.style.display = 'none';
+
+                return;
+            }
+        bankLogo.src = '';
+        bankLogo.style.display = 'none';
+        paymentLogo.src = '';
+        paymentLogo.style.display = 'none';
+
+        const bin = digits.slice(0, 6);
+
+        try {
+            const data = await lookupBank(bin);
+
+        if (data.success) {
+            bankInput.value = data.bank;
+
+            if (data.logo) {
+                bankLogo.src = data.logo;
+                bankLogo.style.display = 'block';
+            } else {
+                bankLogo.style.display = 'none';
+            }
+
+        } else {
+            bankInput.value = 'Не определён';
+            bankLogo.style.display = 'none';
+        }
+
+        } catch {
+            bankInput.value = 'Ошибка';
+        }
+
+        const paymentSystem = detectPaymentSystem(digits);
+
+        systemInput.value = paymentSystem;
+
+        const paymentLogoPath = getPaymentLogo(paymentSystem);
+
+        if (paymentLogoPath) {
+            paymentLogo.src = paymentLogoPath;
+            paymentLogo.style.display = 'block';
+        } else {
+            paymentLogo.style.display = 'none';
+        }
+        cardTypeInput.value = 'Дебетовая';
+        cardCountryInput.value = 'Россия';
+    });
+}
+</script>
+<script>
+   const withdrawModalOverlay = document.getElementById('withdrawModal');
+   const closeBtn = document.getElementById('close-withdraw-modal');
+
+    closeBtn?.addEventListener('click', () => {
+        withdrawModalOverlay.classList.remove('active');
+    });
+</script>
+<script>
+        // Включаем кнопку подтверждения для юрлиц только если все поля заполнены
+    const requiredWithdrawFields = {
+        company: [
+            'settlement_account',
+            'bik',
+            'correspondent_account',
+            'legal_bank_name',
+            'recipient_name',
+            'bank_inn',
+            'bank_kpp'
+        ],
+        self_employed: [
+            'legal_bank_name',
+            'bik',
+            'bank_inn',
+            'bank_kpp',
+            'settlement_account',
+            'correspondent_account',
+            'recipient_name'
+        ]
+    };
+
+    if (partnerType === 'company' || partnerType === 'self_employed') {
+        const requiredNames = requiredWithdrawFields[partnerType];
+
+        const legalInputs = requiredNames.map(name =>
+            document.querySelector(`[name="${name}"]`)
+        );
+
+        function validateWithdrawForm() {
+            const allFilled = legalInputs.every(input =>
+                input && input.value.trim() !== ''
+            );
+
+            const bankInnInput = document.querySelector('[name="bank_inn"]');
+            const bankKppInput = document.querySelector('[name="bank_kpp"]');
+
+            const bankInnValid =
+                !bankInnInput ||
+                bankInnInput.value.replace(/\D/g, '').length === 10;
+
+            const bankKppValid =
+                !bankKppInput ||
+                bankKppInput.value.replace(/\D/g, '').length === 9;
+
+            confirmWithdrawBtn.disabled = !(
+                allFilled &&
+                bankInnValid &&
+                bankKppValid
+            );
+        }
+
+        legalInputs.forEach(input => {
+            input?.addEventListener('input', validateWithdrawForm);
+        });
+
+        validateWithdrawForm();
+    }   
+</script>
+{% endblock %}

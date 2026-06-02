@@ -1,0 +1,935 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Регистрация партнера</title>
+    {% load static %}
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            min-height: 100vh;
+            background: url("{% static 'users/images/admin-registr.jpg' %}") no-repeat center center;
+            background-size: cover;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+            position: relative;
+        }
+
+        body::before {
+            content: "";
+            position: fixed;
+            inset: 0;
+            background: rgba(8, 10, 30, 0.50);
+            backdrop-filter: blur(2px);
+        }
+
+        .page {
+            position: relative;
+            z-index: 1;
+            width: 100%;
+            max-width: 760px;
+        }
+
+        .card {
+            width: 100%;
+            border-radius: 28px;
+            padding: 32px;
+            background: rgba(255, 255, 255, 0.14);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.35);
+            backdrop-filter: blur(18px);
+        }
+
+        .title {
+            margin: 0 0 8px;
+            text-align: center;
+            font-size: 42px;
+            font-weight: 800;
+            line-height: 1.1;
+        }
+
+        .subtitle {
+            text-align: center;
+            margin: 0 0 24px;
+            color: rgba(255, 255, 255, 0.82);
+            font-size: 14px;
+        }
+
+        .tabs {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-bottom: 22px;
+        }
+
+        .tab-link {
+            text-decoration: none;
+            color: white;
+            text-align: center;
+            padding: 12px 14px;
+            border-radius: 14px;
+            background: rgba(255, 255, 255, 0.10);
+            border: 1px solid rgba(255, 255, 255, 0.14);
+            font-size: 14px;
+            font-weight: 700;
+            transition: 0.2s;
+        }
+
+        .tab-link:hover {
+            background: rgba(255, 255, 255, 0.16);
+        }
+
+        .tab-link.active {
+            background: linear-gradient(90deg, #2f67ff, #7b3cff);
+            border-color: transparent;
+            box-shadow: 0 10px 24px rgba(63, 94, 251, 0.35);
+        }
+
+        .info-box,
+        .success-box {
+            border-radius: 14px;
+            padding: 14px 16px;
+            margin-bottom: 18px;
+            font-size: 14px;
+        }
+
+        .info-box {
+            background: rgba(59, 130, 246, 0.18);
+            border: 1px solid rgba(147, 197, 253, 0.28);
+        }
+
+        .success-box {
+            background: rgba(16, 185, 129, 0.18);
+            border: 1px solid rgba(110, 231, 183, 0.28);
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px 14px;
+        }
+
+        .form-group.full {
+            grid-column: 1 / -1;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 6px;
+            font-size: 13px;
+            font-weight: 700;
+            color: rgba(255, 255, 255, 0.92);
+        }
+
+        input,
+        textarea,
+        select {
+            width: 100%;
+            height: 50px;
+            padding: 0 16px;
+            border-radius: 14px;
+            border: 1px solid rgba(255, 255, 255, 0.16);
+            background: rgba(255, 255, 255, 0.12);
+            color: white;
+            outline: none;
+            font-size: 14px;
+            transition: 0.2s;
+        }
+
+        textarea {
+            min-height: 110px;
+            padding: 14px 16px;
+            resize: vertical;
+        }
+
+        input::placeholder,
+        textarea::placeholder {
+            color: rgba(255, 255, 255, 0.62);
+        }
+
+        input:focus,
+        textarea:focus,
+        select:focus {
+            border-color: rgba(99, 102, 241, 0.9);
+            box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.18);
+            background: rgba(255, 255, 255, 0.16);
+        }
+
+        select option {
+            color: black;
+        }
+
+        .field-errors,
+        .errorlist {
+            margin-top: 6px;
+            color: #ffd4d4;
+            font-size: 12px;
+            list-style: none;
+            padding: 0;
+        }
+
+        .submit-btn {
+            margin-top: 22px;
+            width: 100%;
+            height: 54px;
+            border: none;
+            border-radius: 14px;
+            background: linear-gradient(90deg, #2f67ff, #7b3cff);
+            color: white;
+            font-size: 15px;
+            font-weight: 800;
+            cursor: pointer;
+            box-shadow: 0 12px 28px rgba(63, 94, 251, 0.35);
+            transition: transform 0.15s ease, opacity 0.2s ease;
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-1px);
+        }
+
+        .back-link {
+            display: block;
+            text-align: center;
+            margin-top: 16px;
+            color: rgba(255, 255, 255, 0.82);
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .back-link:hover {
+            color: white;
+        }
+        /* Стили для disabled полей */
+        input:disabled,
+        textarea:disabled,
+        select:disabled {
+            background: rgb(87 125 204 / 39%); /* легкий синий */
+            border: 1px solid rgba(147, 197, 253, 0.35);
+            color: rgba(255, 255, 255, 0.85);
+            cursor: not-allowed;
+        }
+
+        /* убираем эффект фокуса */
+        input:disabled:focus,
+        textarea:disabled:focus,
+        select:disabled:focus {
+            box-shadow: none;
+            border-color: rgba(147, 197, 253, 0.35);
+        }
+        .top-bar {
+            display: flex;
+            justify-content: flex-end;
+            margin-bottom: 18px;
+        }
+
+        .add-btn {
+            border: none;
+            background: linear-gradient(90deg, #2f67ff, #7b3cff);
+            color: white;
+            padding: 12px 18px;
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: 0 12px 28px rgba(63, 94, 251, 0.25);
+        }
+
+        .add-btn:hover {
+            opacity: 0.95;
+        }
+
+        .partner-modal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(8, 10, 30, 0.55);
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+        }
+
+        .partner-modal.active {
+            display: flex;
+        }
+
+        .partner-modal-card {
+            width: 100%;
+            max-width: 900px;
+            border-radius: 28px;
+            padding: 28px;
+            background: rgba(255, 255, 255, 0.14);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.35);
+            backdrop-filter: blur(18px);
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .partner-modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 18px;
+        }
+
+        .partner-modal-title {
+            margin: 0;
+            font-size: 28px;
+            font-weight: 800;
+            color: white;
+        }
+
+        .partner-modal-subtitle {
+            margin: 6px 0 0;
+            color: rgba(255, 255, 255, 0.82);
+            font-size: 14px;
+        }
+
+        .partner-close-btn {
+            border: none;
+            background: transparent;
+            color: white;
+            font-size: 28px;
+            cursor: pointer;
+            line-height: 1;
+        }
+
+        .partner-tabs {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-bottom: 22px;
+        }
+
+        .partner-tab-btn {
+            border: none;
+            text-align: center;
+            padding: 12px 14px;
+            border-radius: 14px;
+            background: rgba(255, 255, 255, 0.10);
+            border: 1px solid rgba(255, 255, 255, 0.14);
+            color: white;
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .partner-tab-btn:hover {
+            background: rgba(255, 255, 255, 0.16);
+        }
+
+        .partner-tab-btn.active {
+            background: linear-gradient(90deg, #2f67ff, #7b3cff);
+            border-color: transparent;
+            box-shadow: 0 10px 24px rgba(63, 94, 251, 0.35);
+        }
+
+        .partner-form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px 14px;
+        }
+
+        .partner-form-group.full {
+            grid-column: 1 / -1;
+        }
+
+        .partner-form-group label {
+            display: block;
+            margin-bottom: 6px;
+            font-size: 13px;
+            font-weight: 700;
+            color: rgba(255, 255, 255, 0.92);
+        }
+
+        .partner-modal-card input,
+        .partner-modal-card textarea,
+        .partner-modal-card select {
+            width: 100%;
+            height: 50px;
+            padding: 0 16px;
+            border-radius: 14px;
+            border: 1px solid rgba(255, 255, 255, 0.16);
+            background: rgba(255, 255, 255, 0.12);
+            color: white;
+            outline: none;
+            font-size: 14px;
+            transition: 0.2s;
+        }
+
+        .partner-modal-card textarea {
+            min-height: 110px;
+            padding: 14px 16px;
+            resize: vertical;
+        }
+
+        .partner-modal-card input::placeholder,
+        .partner-modal-card textarea::placeholder {
+            color: rgba(255, 255, 255, 0.62);
+        }
+
+        .partner-modal-card input:focus,
+        .partner-modal-card textarea:focus,
+        .partner-modal-card select:focus {
+            border-color: rgba(99, 102, 241, 0.9);
+            box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.18);
+            background: rgba(255, 255, 255, 0.16);
+        }
+
+        .partner-modal-card select option {
+            color: black;
+        }
+
+        .partner-submit-btn {
+            margin-top: 22px;
+            width: 100%;
+            height: 54px;
+            border: none;
+            border-radius: 14px;
+            background: linear-gradient(90deg, #2f67ff, #7b3cff);
+            color: white;
+            font-size: 15px;
+            font-weight: 800;
+            cursor: pointer;
+            box-shadow: 0 12px 28px rgba(63, 94, 251, 0.35);
+            transition: transform 0.15s ease, opacity 0.2s ease;
+        }
+
+        .partner-submit-btn:hover {
+            transform: translateY(-1px);
+        }
+
+        .partner-field-errors,
+        .errorlist {
+            margin-top: 6px;
+            color: #ffd4d4;
+            font-size: 12px;
+            list-style: none;
+            padding: 0;
+        }
+
+        .partner-hidden {
+            display: none;
+        }
+        .form-input.error {
+            border: 1px solid rgba(246, 28, 28, 0.9) !important;
+        }
+
+        .form-input.valid {
+            border: 1px solid rgba(99, 102, 241, 0.9) !important;
+        }
+        .submit-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        .checkbox-label {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            width: 100%;
+            cursor: pointer;
+        }
+
+        .checkbox-label input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            margin: 0;
+            flex-shrink: 0;
+        }
+
+        .checkbox-label span {
+            flex: 1;
+            white-space: nowrap;
+        }
+        @media (max-width: 900px) {
+            .partner-tabs {
+                grid-template-columns: 1fr;
+            }
+
+            .partner-form-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .partner-form-group.full {
+                grid-column: auto;
+            }
+
+            .partner-modal-card {
+                padding: 22px;
+                border-radius: 22px;
+            }
+
+            .partner-modal-title {
+                font-size: 24px;
+            }
+        }
+        @media (max-width: 700px) {
+            .card {
+                padding: 22px;
+                border-radius: 22px;
+            }
+
+            .title {
+                font-size: 32px;
+            }
+
+            .tabs {
+                grid-template-columns: 1fr;
+            }
+
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .form-group.full {
+                grid-column: auto;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="page">
+        <div class="card">
+            <h1 class="title">Регистрация партнера</h1>
+            <div class="subtitle">Подключение к партнерской программе PARTNETIX</div>
+
+            <div class="tabs">
+                <a href="?type=individual{% if referral_id %}&referral={{ referral_id }}{% endif %}{% if offer_id %}&offer={{ offer_id }}{% endif %}"
+                   class="tab-link {% if partner_type == 'individual' %}active{% endif %}">
+                    Физическое лицо
+                </a>
+
+                <a href="?type=company{% if referral_id %}&referral={{ referral_id }}{% endif %}{% if offer_id %}&offer={{ offer_id }}{% endif %}"
+                   class="tab-link {% if partner_type == 'company' %}active{% endif %}">
+                    Юридическое лицо
+                </a>
+
+                <a href="?type=self_employed{% if referral_id %}&referral={{ referral_id }}{% endif %}{% if offer_id %}&offer={{ offer_id }}{% endif %}"
+                   class="tab-link {% if partner_type == 'self_employed' %}active{% endif %}">
+                    Самозанятый
+                </a>
+            </div>
+
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="success-box">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+
+            {% if offer or referral_user %}
+            {% if offer %}
+            <div class="form-group">
+                <label>Оффер</label>
+
+                <input type="text" value="{{ offer.title }}" disabled>
+
+                <div class="field-errors"></div>  <!-- 👈 ВАЖНО -->
+            </div>
+            {% endif %}
+            {% endif %}
+
+            <form method="post" autocomplete="off">
+                {% csrf_token %}
+                <input type="hidden" name="partner_type" value="{{ partner_type }}">
+
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="{{ form.status_display.id_for_label }}">Статус</label>
+                        {{ form.status_display }}
+                    </div>
+
+                    {% if referral_user %}
+                        <div class="form-group full">
+                            <label for="{{ form.inviter_name.id_for_label }}">ФИО пригласившего</label>
+                            {{ form.inviter_name }}
+                        </div>
+                    {% endif %}
+
+                    {% if partner_type == 'individual' %}
+                
+                        <div class="form-group">
+                            <label for="{{ form.full_name.id_for_label }}">ФИО</label>
+                            {{ form.full_name }}
+                            <div class="field-errors">{{ form.full_name.errors }}</div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="{{ form.email.id_for_label }}">Email</label>
+                            {{ form.email }}
+                            <div class="field-errors">{{ form.email.errors }}</div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="{{ form.phone.id_for_label }}">Телефон</label>
+                            {{ form.phone }}
+                            <div class="field-errors">{{ form.phone.errors }}</div>
+                        </div>
+
+                        <div class="form-group full">
+                            <label for="{{ form.activity_type.id_for_label }}">Вид деятельности</label>
+                            {{ form.activity_type }}
+                            <div class="field-errors">{{ form.activity_type.errors }}</div>
+                        </div>
+                        <div class="form-group">
+                        
+                        <label for="{{ form.password1.id_for_label }}">Пароль</label>
+                        {{ form.password1 }}
+                        <div class="field-errors">{{ form.password1.errors }}</div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="{{ form.password2.id_for_label }}">Подтверждение пароля</label>
+                        {{ form.password2 }}
+                        <div class="field-errors">{{ form.password2.errors }}</div>
+                    </div>
+                    {% elif partner_type == 'company' %}
+                        <div class="form-group">
+                            <label for="{{ form.email.id_for_label }}">Email</label>
+                            {{ form.email }}
+                            <div class="field-errors">{{ form.email.errors }}</div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="{{ form.phone.id_for_label }}">Телефон</label>
+                            {{ form.phone }}
+                            <div class="field-errors">{{ form.phone.errors }}</div>
+                        </div>
+                        <div class="form-group">
+                            <label for="{{ form.activity_type.id_for_label }}">Вид деятельности</label>
+                            {{ form.activity_type }}
+                            <div class="field-errors">{{ form.activity_type.errors }}</div>
+                        </div>
+
+                        
+                        <div class="form-group">
+                            <label for="{{ form.company_full_name.id_for_label }}">Полное название организации</label>
+                            {{ form.company_full_name }}
+                            <div class="field-errors">{{ form.company_full_name.errors }}</div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="{{ form.company_short_name.id_for_label }}">Сокращенное название организации</label>
+                            {{ form.company_short_name }}
+                            <div class="field-errors">{{ form.company_short_name.errors }}</div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="{{ form.postal_address.id_for_label }}">Почтовый адрес</label>
+                            {{ form.postal_address }}
+                            <div class="field-errors">{{ form.postal_address.errors }}</div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="{{ form.legal_address.id_for_label }}">Юридический адрес</label>
+                            {{ form.legal_address }}
+                            <div class="field-errors">{{ form.legal_address.errors }}</div>
+                        </div>
+                        <div class="form-group full">
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="same-address-checkbox">
+                                <span>Почтовый адрес совпадает с юридическим</span>
+                            </label>
+                        </div> 
+                        <div class="form-group">
+                            <label for="{{ form.inn.id_for_label }}">ИНН</label>
+                            {{ form.inn }}
+                            <div class="field-errors">{{ form.inn.errors }}</div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="{{ form.kpp.id_for_label }}">КПП</label>
+                            {{ form.kpp }}
+                            <div class="field-errors">{{ form.kpp.errors }}</div>
+                        </div>
+
+                        <div class="form-group full">
+                            <label for="{{ form.contact_person_name.id_for_label }}">ФИО контактного лица</label>
+                            {{ form.contact_person_name }}
+                            <div class="field-errors">{{ form.contact_person_name.errors }}</div>
+                        </div>
+
+                        <div class="form-group">
+                        <label for="{{ form.password1.id_for_label }}">Пароль</label>
+                        {{ form.password1 }}
+                        <div class="field-errors">{{ form.password1.errors }}</div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="{{ form.password2.id_for_label }}">Подтверждение пароля</label>
+                        {{ form.password2 }}
+                        <div class="field-errors">{{ form.password2.errors }}</div>
+                    </div>
+                    {% elif partner_type == 'self_employed' %}
+                        <div class="form-group">
+                            <label for="{{ form.full_name.id_for_label }}">ФИО</label>
+                            {{ form.full_name }}
+                            <div class="field-errors">{{ form.full_name.errors }}</div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="{{ form.email.id_for_label }}">Email</label>
+                            {{ form.email }}
+                            <div class="field-errors">{{ form.email.errors }}</div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="{{ form.phone.id_for_label }}">Телефон</label>
+                            {{ form.phone }}
+                            <div class="field-errors">{{ form.phone.errors }}</div>
+                        </div>
+
+                        <div class="form-group full">
+                            <label for="{{ form.activity_type.id_for_label }}">Вид деятельности</label>
+                            {{ form.activity_type }}
+                            <div class="field-errors">{{ form.activity_type.errors }}</div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="{{ form.company_name.id_for_label }}">Название компании</label>
+                            {{ form.company_name }}
+                            <div class="field-errors">{{ form.company_name.errors }}</div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="{{ form.inn.id_for_label }}">ИНН</label>
+                            {{ form.inn }}
+                            <div class="field-errors">{{ form.inn.errors }}</div>
+                        </div>
+
+
+                        <div class="form-group">
+                    <label for="{{ form.password1.id_for_label }}">Пароль</label>
+                    {{ form.password1 }}
+                    <div class="field-errors">{{ form.password1.errors }}</div>
+                </div>
+
+                <div class="form-group">
+                    <label for="{{ form.password2.id_for_label }}">Подтверждение пароля</label>
+                    {{ form.password2 }}
+                    <div class="field-errors">{{ form.password2.errors }}</div>
+                </div>
+                    {% endif %}
+                </div>
+
+                <button type="submit" class="submit-btn" id="submit-btn" disabled>Отправить заявку</button>
+            </form>
+
+            <a href="/" class="back-link">На главную</a>
+        </div>
+    </div>
+<script src="https://unpkg.com/imask"></script>
+
+<script>
+    const partnerType = "{{ partner_type }}";
+    const phoneInput = document.getElementById('phone-input');
+    const innInput = document.getElementById('inn-input');
+    const kppInput = document.getElementById('kpp-input');
+
+    if (phoneInput) {
+        IMask(phoneInput, {
+            mask: '+{7} (000) 000-00-00'
+        });
+    }
+
+    function getInnMaxLength() {
+        return partnerType === 'company' ? 10 : 12;
+    }
+
+    function updateInnPlaceholder() {
+        if (!innInput) return;
+
+        innInput.placeholder = partnerType === 'company'
+            ? 'ИНН (10 цифр)'
+            : 'ИНН (12 цифр)';
+
+        innInput.setAttribute('maxlength', String(getInnMaxLength()));
+    }
+
+    function validateInn() {
+        if (!innInput) return;
+
+        let value = innInput.value.replace(/\D/g, '');
+        const maxLength = getInnMaxLength();
+
+        if (value.length > maxLength) {
+            value = value.slice(0, maxLength);
+        }
+
+        innInput.value = value;
+        innInput.classList.remove('error', 'valid');
+
+        if (!value) return;
+
+        if (value.length < maxLength) {
+            innInput.classList.add('error');
+        } else {
+            innInput.classList.add('valid');
+        }
+    }
+
+    function validateKpp() {
+        if (!kppInput) return;
+
+        let value = kppInput.value.replace(/\D/g, '');
+
+        if (value.length > 9) {
+            value = value.slice(0, 9);
+        }
+
+        kppInput.value = value;
+        kppInput.classList.remove('error', 'valid');
+
+        if (!value) return;
+
+        if (value.length < 9) {
+            kppInput.classList.add('error');
+        } else {
+            kppInput.classList.add('valid');
+        }
+    }
+
+    updateInnPlaceholder();
+
+    if (innInput) {
+        innInput.addEventListener('input', validateInn);
+    }
+
+    if (kppInput) {
+        kppInput.addEventListener('input', validateKpp);
+    }
+</script>
+
+<script>
+const submitBtn = document.getElementById('submit-btn');
+
+function isFilled(id) {
+    const el = document.getElementById(id);
+    return el && el.value.trim() !== '';
+}
+
+function validateForm() {
+    let isValid = true;
+
+    // общие поля
+    if (!isFilled('id_email')) isValid = false;
+    if (!isFilled('phone-input')) isValid = false;
+
+    if (partnerType === 'individual') {
+        if (!isFilled('id_full_name')) isValid = false;
+        if (!isFilled('id_activity_type')) isValid = false;
+    }
+
+    if (partnerType === 'self_employed') {
+        if (!isFilled('id_full_name')) isValid = false;
+        if (!isFilled('id_activity_type')) isValid = false;
+        if (!isFilled('id_company_name')) isValid = false;
+
+        const inn = document.getElementById('inn-input');
+        if (!inn || inn.value.length !== 12 || inn.classList.contains('error')) {
+            isValid = false;
+        }
+    }
+
+    if (partnerType === 'company') {
+        if (!isFilled('id_company_full_name')) isValid = false;
+        if (!isFilled('id_company_short_name')) isValid = false;
+        if (!isFilled('id_postal_address')) isValid = false;
+        if (!isFilled('id_legal_address')) isValid = false;
+        if (!isFilled('id_contact_person_name')) isValid = false;
+
+        const inn = document.getElementById('inn-input');
+        const kpp = document.getElementById('kpp-input');
+
+        if (!inn || inn.value.length !== 10 || inn.classList.contains('error')) {
+            isValid = false;
+        }
+
+        if (!kpp || kpp.value.length !== 9 || kpp.classList.contains('error')) {
+            isValid = false;
+        }
+    }
+
+    // пароли
+    if (!isFilled('id_password1')) isValid = false;
+    if (!isFilled('id_password2')) isValid = false;
+
+    submitBtn.disabled = !isValid;
+  }
+   //  Обработчики событий  
+    document.querySelectorAll('input, select').forEach(function(el) {
+        el.addEventListener('input', validateForm);
+        el.addEventListener('change', validateForm);
+    });
+    validateForm();
+</script>
+<script>
+    const postalInput = document.getElementById('id_postal_address');
+    const legalInput = document.getElementById('id_legal_address');
+    const sameAddressCheckbox = document.getElementById('same-address-checkbox');
+
+    function syncAddress() {
+        if (!postalInput || !legalInput || !sameAddressCheckbox) return;
+
+        if (sameAddressCheckbox.checked) {
+            legalInput.value = postalInput.value;
+            legalInput.setAttribute('readonly', 'readonly');
+        } else {
+            legalInput.removeAttribute('readonly');
+        }
+
+        if (typeof validateForm === 'function') {
+            validateForm();
+        }
+    }
+
+    if (sameAddressCheckbox) {
+        sameAddressCheckbox.addEventListener('change', syncAddress);
+    }
+
+    if (postalInput) {
+        postalInput.addEventListener('input', function() {
+            if (sameAddressCheckbox && sameAddressCheckbox.checked) {
+                legalInput.value = postalInput.value;
+            }
+
+            if (typeof validateForm === 'function') {
+                validateForm();
+            }
+        });
+    }
+</script>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+
+        function replaceQuotes(value) {
+            return value
+                .replace(/"([^"]*)"/g, '«$1»')
+                .replace(/"(?=\S)/g, '«')
+                .replace(/(?<=\S)"/g, '»')
+                .replace(/'([^']*)'/g, '«$1»');
+        }
+
+        const inputs = document.querySelectorAll('input[type="text"], textarea');
+
+        inputs.forEach(input => {
+            input.addEventListener('blur', function () {
+                this.value = replaceQuotes(this.value);
+            });
+        });
+
+    });
+</script>
+</body>
+</html>

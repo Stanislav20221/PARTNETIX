@@ -1,0 +1,319 @@
+{% extends 'users/base.html' %}
+{% load static %}
+{% load number_format %}
+{% block title %}Тарифы{% endblock %}
+{% block page_title %}ТАРИФЫ{% endblock %}
+
+{% block content %}
+
+<head>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #f4f7fb;
+            color: #111827;
+        }
+
+        .tariffs-page {
+            min-height: 100vh;
+            padding: 48px 24px;
+        }
+
+        .tariffs-header {
+            max-width: 1120px;
+            margin: 0 auto 36px;
+            text-align: center;
+        }
+
+        .tariffs-header h1 {
+            margin: 0 0 12px;
+            font-size: 36px;
+            font-weight: 800;
+        }
+
+        .tariffs-header p {
+            margin: 0;
+            color: #6b7280;
+            font-size: 16px;
+        }
+
+        .tariffs-grid {
+            max-width: 1280px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 26px;
+        }
+
+        .tariff-card {
+            grid-column: span 2;
+            background: white;
+            border-radius: 24px;
+            padding: 34px;
+            box-shadow: 0 12px 34px rgba(15, 23, 42, 0.08);
+            border: 1px solid #e5e7eb;
+            display: flex;
+            flex-direction: column;
+            min-height: 360px;
+        }
+
+        .tariff-card:nth-child(4) {
+            grid-column: 1 / span 3;
+        }
+
+        .tariff-card:nth-child(5) {
+            grid-column: 4 / span 3;
+        }
+
+        .tariff-name {
+            font-size: 22px;
+            font-weight: 800;
+            margin-bottom: 10px;
+        }
+
+        .tariff-period {
+            color: #6b7280;
+            font-size: 14px;
+            margin-bottom: 26px;
+        }
+
+        .tariff-price {
+            font-size: 34px;
+            font-weight: 900;
+            color: #2563eb;
+            margin-bottom: 8px;
+        }
+
+        .tariff-note {
+            color: #6b7280;
+            font-size: 13px;
+            margin-bottom: 28px;
+        }
+
+        .tariff-actions {
+            margin-top: auto;
+        }
+
+        .tariff-btn {
+            width: 100%;
+            height: 48px;
+            border: none;
+            border-radius: 14px;
+            background: #2563eb;
+            color: white;
+            font-size: 15px;
+            font-weight: 800;
+            cursor: pointer;
+            transition: .2s;
+        }
+
+        .tariff-btn:hover {
+            background: #1d4ed8;
+            transform: translateY(-1px);
+        }
+
+        .empty-tariffs {
+            max-width: 720px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 18px;
+            padding: 28px;
+            text-align: center;
+            color: #6b7280;
+            box-shadow: 0 8px 25px rgba(15,23,42,0.06);
+        }
+        .tariffs-section {
+            max-width: 1280px;
+            margin: 0 auto 52px;
+        }
+
+        .tariffs-section-title {
+            max-width: 1280px;
+            margin: 0 auto 22px;
+            font-size: 24px;
+            font-weight: 800;
+            color: #111827;
+        }
+        .tariffs-section:last-child .tariff-card:first-child {
+    grid-column: 1 / span 3;
+    }
+
+    .tariffs-section:last-child .tariff-card:last-child {
+        grid-column: 4 / span 3;
+    }
+    .tariff-card.active-tariff {
+        background: #1F5BFF;
+        border-color: #1F5BFF;
+    }
+
+    .tariff-card.active-tariff .tariff-name,
+    .tariff-card.active-tariff .tariff-period,
+    .tariff-card.active-tariff .tariff-price,
+    .tariff-card.active-tariff .tariff-note {
+        color: white;
+    }
+
+    .tariff-card.active-tariff .tariff-btn {
+        background: #1F5BFF;
+        color: white;
+        cursor: not-allowed;
+    }
+
+    .tariff-card.active-tariff .tariff-btn:hover {
+        background: #1F5BFF;
+        transform: none;
+    }
+        
+    @media (max-width: 1000px) {
+        .tariffs-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+
+    @media (max-width: 640px) {
+        .tariffs-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .tariffs-header h1 {
+            font-size: 28px;
+        }
+
+        .tariffs-page {
+            padding: 28px 16px;
+        }
+
+        .tariffs-header {
+            margin-bottom: 28px;
+        }
+
+        .tariffs-header h1 {
+            font-size: 28px;
+        }
+
+        .tariffs-section {
+            margin-bottom: 34px;
+        }
+
+        .tariffs-section-title {
+            font-size: 22px;
+            margin-bottom: 16px;
+        }
+
+        .tariffs-grid {
+            grid-template-columns: 1fr;
+            gap: 18px;
+        }
+
+        .tariff-card,
+        .tariffs-section:last-child .tariff-card:first-child,
+        .tariffs-section:last-child .tariff-card:last-child {
+            grid-column: 1 / -1;
+            min-height: auto;
+            padding: 24px;
+        }
+
+        .tariff-name {
+            font-size: 22px;
+        }
+
+        .tariff-price {
+            font-size: 34px;
+        }
+
+        .tariff-btn {
+            height: 46px;
+        }
+}        
+    @media (max-width: 430px) {
+        .content {
+            margin-left: 0px;
+        }
+}
+
+</style>
+</head>
+<body>
+    <main class="tariffs-page">
+        <div class="tariffs-header">
+            <h1>Выберите тариф</h1>
+            <p>После пробного периода вы сможете подключить подходящий тарифный план.</p>
+        </div>
+
+                <div class="tariffs-section">
+                    <h2 class="tariffs-section-title">Тарифы на месяц</h2>
+
+                    <div class="tariffs-grid">
+                        {% for tariff in tariffs %}
+                            {% if tariff.period == 'monthly' or tariff.period == 'month' %}
+                                <div class="tariff-card {% if tariff.id == active_tariff_id %}active-tariff{% endif %}">
+                                    <div class="tariff-name">{{ tariff.name }}</div>
+                                   <div class="tariff-period">
+                                        {% if tariff.name == 'Базовый' %}
+                                            14 дней БЕСПЛАТНО
+                                        {% else %}
+                                            {{ tariff.get_period_display }}
+                                        {% endif %}
+                                    </div>
+                                    <div class="tariff-price">{{ tariff.price|space_thousands }} ₽</div>
+                                    <div class="tariff-note">Оплата тарифа будет подключена на следующем шаге.</div>
+
+                                    <div class="tariff-actions">
+                                        <form method="post" action="#">
+                                            {% csrf_token %}
+                                            <input type="hidden" name="tariff" value="{{ tariff.id }}">
+                                            <button class="tariff-btn"
+                                                    {% if tariff.id == active_tariff_id %}disabled{% endif %}>
+                                                {% if tariff.id == active_tariff_id %}
+                                                    Активный тариф
+                                                {% else %}
+                                                    Выбрать тариф
+                                                {% endif %}
+                                            </button>
+                                        </form>
+                                    </div>
+                                </div>
+                            {% endif %}
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <div class="tariffs-section">
+                    <h2 class="tariffs-section-title">Тарифы на год</h2>
+
+                    <div class="tariffs-grid">
+                        {% for tariff in tariffs %}
+                            {% if tariff.period == 'yearly' or tariff.period == 'year' %}
+                                <div class="tariff-card {% if tariff.id == active_tariff_id %}active-tariff{% endif %}">
+                                    <div class="tariff-name">{{ tariff.name }}</div>
+                                    <div class="tariff-period">{{ tariff.get_period_display }}</div>
+                                    <div class="tariff-price">{{ tariff.price|space_thousands }} ₽</div>
+                                    <div class="tariff-note">Оплата тарифа будет подключена на следующем шаге.</div>
+
+                                    <div class="tariff-actions">
+                                        <form method="post" action="#">
+                                            {% csrf_token %}
+                                            <input type="hidden" name="tariff" value="{{ tariff.id }}">
+                                            <button class="tariff-btn"
+                                                    {% if tariff.id == active_tariff_id %}disabled{% endif %}>
+                                                {% if tariff.id == active_tariff_id %}
+                                                    Активный тариф
+                                                {% else %}
+                                                    Выбрать тариф
+                                                {% endif %}
+                                            </button>
+                                        </form>
+                                    </div>
+                                </div>
+                            {% endif %}
+                        {% endfor %}
+                    </div>
+                </div>
+    </main>
+{% endblock %}

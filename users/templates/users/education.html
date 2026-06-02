@@ -1,0 +1,1274 @@
+{% extends 'users/base.html' %}
+{% load static %}
+{% block title %}Обучение{% endblock %}
+{% block page_title %}ОБУЧЕНИЕ{% endblock %}
+
+{% block content %}
+
+{% if messages %}
+    <div class="messages">
+        {% for message in messages %}
+            <div class="message {{ message.tags }}">
+                {{ message }}
+            </div>
+        {% endfor %}
+    </div>
+{% endif %}
+<style>
+    .messages {
+    margin: 0 24px 18px;
+}
+
+.message {
+    padding: 12px 14px;
+    border-radius: 12px;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.message.success {
+    background: #dcfce7;
+    color: #166534;
+}
+
+.message.error {
+    background: #fee2e2;
+    color: #991b1b;
+}
+
+.message.warning {
+    background: #fef3c7;
+    color: #92400e;
+}
+    .education-wrapper {
+        padding: 0 24px 24px;
+        display: flex;
+        flex-direction: column;
+        gap: 28px;
+    }
+
+    .education-section {
+        background: white;
+        border-radius: 24px;
+        padding: 26px;
+        box-shadow: 0 8px 25px rgba(15,23,42,0.06);
+        border: 1px solid #eef2f7;
+    }
+
+    .education-section-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 26px;
+    }
+
+    .education-title-wrap {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+    }
+
+    .education-icon {
+        width: 56px;
+        height: 56px;
+        border-radius: 16px;
+
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        font-size: 22px;
+    }
+
+    .education-icon.video {
+        background: rgba(37,99,235,.12);
+        color: #2563eb;
+    }
+
+    .education-title {
+        font-size: 28px;
+        font-weight: 600;
+        color: #111827;
+    }
+
+    .education-subtitle {
+        font-size: 14px;
+        color: #6b7280;
+        margin-top: 4px;
+    }
+
+    .education-add-btn {
+        border: none;
+        background: #2563eb;
+        color: white;
+
+        height: 46px;
+        padding: 0 20px;
+
+        border-radius: 14px;
+
+        font-weight: 700;
+        font-size: 14px;
+
+        cursor: pointer;
+
+        display: flex;
+        align-items: center;
+        gap: 10px;
+
+        transition: .2s;
+    }
+
+    .education-add-btn:hover {
+        background: #1d4ed8;
+    }
+
+    .education-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    .education-table thead th {
+        text-align: left;
+        padding: 16px 14px;
+
+        font-size: 13px;
+        font-weight: 700;
+
+        color: #6b7280;
+        border-bottom: 1px solid #eef2f7;
+    }
+
+    .education-table tbody td {
+        padding: 18px 14px;
+        border-bottom: 1px solid #f1f5f9;
+
+        font-size: 15px;
+        color: #111827;
+    }
+
+    .video-title-cell {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+    }
+
+    .video-preview {
+        width: 90px;
+        height: 52px;
+
+        border-radius: 14px;
+
+        background: linear-gradient(
+            135deg,
+            #2563eb,
+            #1e40af
+        );
+
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        color: white;
+        font-size: 20px;
+    }
+
+    .video-title {
+        font-size: 16px;
+        font-weight: 700;
+        color: #111827;
+    }
+
+    .education-actions {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .action-btn {
+        width: 42px;
+        height: 42px;
+        border-radius: 12px;
+        border: none;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-decoration: none;
+        cursor: pointer;
+    }
+    .action-btn {
+        width: 42px;
+        height: 42px;
+
+        border-radius: 12px;
+
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        text-decoration: none;
+
+        transition: .2s;
+    }
+
+    .action-btn.view {
+        background: rgba(37,99,235,.08);
+        color: #2563eb;
+    }
+
+    .action-btn.replace {
+        background: rgba(15,23,42,.06);
+        color: #111827;
+    }
+
+    .action-btn.delete {
+        background: rgba(239,68,68,.08);
+        color: #ef4444;
+    }
+
+    .action-btn:hover {
+        transform: translateY(-2px);
+    }
+
+    .actions-column {
+        width: 180px;
+    }
+.education-icon.text {
+    background: rgba(16,185,129,.12);
+    color: #10b981;
+}
+
+.document-preview {
+    width: 90px;
+    height: 52px;
+
+    border-radius: 14px;
+
+    background: linear-gradient(
+        135deg,
+        #10b981,
+        #059669
+    );
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    color: white;
+    font-size: 20px;
+}    
+.education-modal {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(8, 10, 30, 0.55);
+    z-index: 3000;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+
+.education-modal.active {
+    display: flex;
+}
+
+.education-modal-card {
+    width: 100%;
+    max-width: 520px;
+    background: white;
+    border-radius: 22px;
+    padding: 24px;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.25);
+}
+
+.education-modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 22px;
+}
+
+.education-modal-header h3 {
+    margin: 0;
+    font-size: 22px;
+}
+
+.education-modal-close {
+    border: none;
+    background: transparent;
+    font-size: 28px;
+    cursor: pointer;
+    color: #6b7280;
+}
+
+.education-modal-form {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.education-form-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-size: 13px;
+    font-weight: 700;
+    color: #374151;
+}
+
+.education-input {
+    width: 100%;
+    height: 46px;
+    border: 1px solid #d1d5db;
+    border-radius: 12px;
+    padding: 0 14px;
+    font-size: 14px;
+}
+
+.education-input[type="file"] {
+    padding: 11px 14px;
+}
+
+.education-save-btn {
+    height: 46px;
+    border: none;
+    border-radius: 12px;
+    background: #2563eb;
+    color: white;
+    font-weight: 700;
+    cursor: pointer;
+}
+.video-player-card {
+    width: 100%;
+    max-width: 950px;
+
+    background: white;
+    border-radius: 24px;
+
+    padding: 24px;
+
+    box-shadow: 0 20px 50px rgba(0,0,0,0.25);
+}
+
+#education-video-player {
+    width: 100%;
+    border-radius: 18px;
+    background: black;
+}
+.video-preview-player {
+    width: 150px;
+    height: 104px;
+
+    border-radius: 14px;
+
+    object-fit: cover;
+
+    background: #111827;
+
+    display: block;
+}
+.education-actions form {
+    margin: 0;
+}
+
+.video-preview-player:hover {
+    transform: scale(1.04);
+}
+.video-cards-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 22px;
+}
+
+.video-card {
+    background: #f8fafc;
+    border: 1px solid #eef2f7;
+    border-radius: 22px;
+    overflow: hidden;
+    transition: .2s;
+}
+
+.video-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 14px 30px rgba(37,99,235,.10);
+}
+
+.video-card-preview {
+    position: relative;
+    height: 180px;
+    background: #111827;
+    overflow: hidden;
+}
+
+.video-card-preview .video-preview-player {
+    width: 100%;
+    height: 100%;
+    border-radius: 0;
+    object-fit: cover;
+}
+
+.video-play-overlay {
+    position: absolute;
+    inset: 0;
+    margin: auto;
+
+    width: 58px;
+    height: 58px;
+
+    border: none;
+    border-radius: 999px;
+
+    background: rgba(255,255,255,.92);
+    color: #2563eb;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    font-size: 20px;
+    cursor: pointer;
+}
+
+.video-card-body {
+    padding: 18px;
+}
+
+.video-card-title {
+    font-size: 16px;
+    font-weight: 800;
+    color: #111827;
+    margin-bottom: 12px;
+    line-height: 1.35;
+}
+.video-card-description {
+    margin: 0;
+    padding: 0;
+    position: relative;
+    top: -7px;
+}
+.video-card-meta {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    color: #6b7280;
+    font-size: 13px;
+    margin-bottom: 16px;
+}
+
+.video-card-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 38px;
+}
+
+.video-card-actions form {
+    margin: 0;
+}
+
+.education-empty {
+    grid-column: 1 / -1;
+    padding: 24px;
+    border-radius: 16px;
+    background: #f8fafc;
+    color: #6b7280;
+    font-weight: 600;
+}
+.education-textarea {
+    width: 100%;
+    min-height: 110px;
+
+    padding: 14px;
+
+    border: 1px solid #d1d5db;
+    border-radius: 14px;
+
+    resize: vertical;
+
+    font-size: 14px;
+
+    outline: none;
+}
+
+.education-textarea:focus {
+    border-color: #2563eb;
+    box-shadow: 0 0 0 4px rgba(37,99,235,.10);
+}
+.documents-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 22px;
+}
+
+.document-card {
+    background: #f8fafc;
+    border: 1px solid #eef2f7;
+    border-radius: 22px;
+    padding: 20px;
+    transition: .2s;
+}
+
+.document-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 14px 30px rgba(16,185,129,.10);
+}
+
+.document-card-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 18px;
+}
+
+.document-file-icon {
+    width: 58px;
+    height: 58px;
+    border-radius: 18px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    font-size: 24px;
+
+    background: rgba(16,185,129,.12);
+    color: #10b981;
+}
+
+.document-file-type {
+    font-size: 12px;
+    font-weight: 800;
+    color: #6b7280;
+    letter-spacing: .08em;
+}
+
+.document-card-title {
+    font-size: 17px;
+    font-weight: 800;
+    color: #111827;
+    margin-bottom: 10px;
+    line-height: 1.4;
+}
+
+.document-card-description {
+    font-size: 14px;
+    color: #6b7280;
+    line-height: 1.5;
+    margin-bottom: 16px;
+}
+
+.document-card-meta {
+    display: flex;
+    justify-content: space-between;
+    font-size: 13px;
+    color: #94a3b8;
+    margin-bottom: 18px;
+}
+
+.document-card-actions {
+    display: flex;
+    gap: 10px;
+}
+.education-toolbar {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    margin-bottom: 24px;
+}
+
+.education-filters {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+.education-search-row {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+}
+
+#educationSearch {
+    flex: 1;
+    padding: 14px 18px;
+    border-radius: 14px;
+    border: 1px solid #e5e7eb;
+    background: white;
+    font-weight: 600;
+}
+.reset-search-btn {
+    border: none;
+    border-radius: 12px;
+    padding: 14px 18px;
+    background: #eef2ff;
+    color: #2563eb;
+    font-weight: 800;
+    cursor: pointer;
+}
+
+.filter-btn {
+    border: none;
+    border-radius: 12px;
+    padding: 13px 18px;
+    background: white;
+    font-weight: 800;
+    cursor: pointer;
+}
+
+.filter-btn.active {
+    background: #2563eb;
+    color: white;
+}
+.search-input-wrap {
+    position: relative;
+    flex: 1;
+}
+
+.search-input-wrap input {
+    width: 100%;
+    padding: 14px 52px 14px 18px;
+    border-radius: 14px;
+    border: 1px solid #e5e7eb;
+    background: white;
+    font-weight: 600;
+}
+
+.search-icon-btn {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    padding: 4px;
+}
+
+.search-icon-btn img {
+    width: 18px;
+    height: 18px;
+    opacity: 0.7;
+}
+
+@media (max-width: 1200px) {
+    .video-cards-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    .documents-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+}
+
+@media (max-width: 700px) {
+    .video-cards-grid {
+        grid-template-columns: 1fr;
+    }
+    .documents-grid {
+        grid-template-columns: 1fr;
+    }    
+}
+@media (max-width: 430px) {
+    .education-section {
+        width: 399px;
+    }
+    .education-icon {
+        width: 94px;
+        height: 40px;
+    } 
+    .education-title {
+       font-size: 22px;
+    }
+    .video-card-description {
+       font-size: 14px;
+    }
+    .education-add-btn {
+       font-weight: 300;
+    }
+    .page-title {
+        font-size: 24px;
+        font-weight: 600;
+         padding-left: 24px;
+    }
+}    
+</style>
+<div class="education-wrapper">
+         <div class="education-toolbar">
+
+            <div class="education-filters">
+
+                <button class="filter-btn active"
+                        data-filter="all">
+                    Все
+                </button>
+
+                <button class="filter-btn"
+                        data-filter="video">
+                    Видео
+                </button>
+
+                <button class="filter-btn"
+                        data-filter="text">
+                    Текстовые
+                </button>
+
+            </div>
+
+            <div class="education-search-row">
+
+                <div class="search-input-wrap">
+
+                    <input type="text"
+                        id="educationSearch"
+                        placeholder="Поиск по обучению...">
+
+                    <button type="button"
+                            id="searchEducationBtn"
+                            class="search-icon-btn">
+
+                        <img src="{% static 'users/images/search.svg' %}"
+                            alt="Поиск">
+
+                    </button>
+
+                </div>
+
+                <button type="button"
+                        id="resetEducationSearch"
+                        class="reset-search-btn">
+                    Сброс
+                </button>
+
+            </div>
+
+        </div> 
+    <div class="education-section" id="videoSection">
+ 
+        <div class="education-section-header">
+            <div class="education-title-wrap">
+                <div class="education-icon video">
+                    <i class="fa-solid fa-play"></i>
+                </div>
+
+                <div>
+                    <div class="education-title">
+                        Видео
+                    </div>
+
+                    <div class="education-subtitle">
+                        Видео материалы для партнеров
+                    </div>
+                </div>
+            </div>
+
+            <button type="button" class="education-add-btn" id="open-video-modal">
+                <i class="fa-solid fa-plus"></i>
+                Добавить видео
+            </button>
+
+        </div>
+
+        <div class="video-cards-grid">
+            {% for video in videos %}
+                <div class="video-card education-item"
+                    data-type="video"
+                    data-title="{{ video.title|lower }} {{ video.description|default:''|lower }}">
+                    <div class="video-card-preview">
+                        <video class="video-preview-player"
+                            muted
+                            preload="metadata">
+                            <source src="{{ video.video_file.url }}">
+                        </video>
+
+                        <button type="button"
+                                class="video-play-overlay open-video-player"
+                                data-video-url="{{ video.video_file.url }}">
+                            <i class="fa-solid fa-play"></i>
+                        </button>
+                    </div>
+
+                    <div class="video-card-body">
+                        <div class="video-card-title">{{ video.title }}</div>
+                        <div class="video-card-description">{{ video.description|default:"Описание не добавлено" }}</div>
+                        <div class="video-card-actions">
+                            <button type="button"
+                                    class="action-btn view open-video-player"
+                                    data-video-url="{{ video.video_file.url }}">
+                                <i class="fa-solid fa-eye"></i>
+                            </button>
+
+                            <form method="post"
+                                action="{% url 'replace_education_video' video.id %}"
+                                enctype="multipart/form-data">
+                                {% csrf_token %}
+                                <input type="file"
+                                    name="video_file"
+                                    accept="video/*"
+                                    hidden
+                                    onchange="this.form.submit()"
+                                    id="replace-video-{{ video.id }}">
+
+                                <button type="button"
+                                        class="action-btn replace"
+                                        onclick="document.getElementById('replace-video-{{ video.id }}').click()">
+                                    <i class="fa-solid fa-rotate"></i>
+                                </button>
+                            </form>
+
+                            <form method="post"
+                                action="{% url 'delete_education_video' video.id %}"
+                                onsubmit="return confirm('Удалить видео?');">
+                                {% csrf_token %}
+                                <button type="submit" class="action-btn delete">
+                                    <i class="fa-solid fa-trash"></i>
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            {% empty %}
+                <div class="education-empty">Видео пока нет</div>
+            {% endfor %}
+        </div>
+
+    </div>
+    <div class="education-section" id="textSection">
+
+        <div class="education-section-header">
+
+            <div class="education-title-wrap">
+
+                <div class="education-icon text">
+                    <i class="fa-solid fa-file-lines"></i>
+                </div>
+
+                <div>
+                    <div class="education-title">
+                        Текстовые материалы
+                    </div>
+
+                    <div class="education-subtitle">
+                        Инструкции и документация
+                    </div>
+                </div>
+
+            </div>
+
+            <button class="education-add-btn"
+                id="open-document-modal">
+                Добавить материал
+            </button>
+
+        </div>
+
+        <div class="documents-grid">
+
+            {% for doc in documents %}
+            <div class="document-card education-item"
+                data-type="text"
+                data-title="{{ doc.title|lower }} {{ doc.description|default:''|lower }}">
+
+                <div class="document-card-top">
+
+                    <div class="document-file-type">
+                        {{ doc.file_extension }}
+                    </div>
+
+                </div>
+
+                <div class="document-card-body">
+
+                    <div class="document-card-title">
+                        {{ doc.title }}
+                    </div>
+
+                    <div class="document-card-description">
+                        {{ doc.description|default:"Описание не добавлено" }}
+                    </div>
+
+                    <div class="document-card-meta">
+                        <span>{{ doc.created_at|date:"d.m.Y" }}</span>
+                    </div>
+
+                </div>
+
+                <div class="document-card-actions">
+
+                    <a href="{{ doc.document_file.url }}"
+                    target="_blank"
+                    class="action-btn view">
+                        <i class="fa-solid fa-eye"></i>
+                    </a>
+
+                    <a href="{{ doc.document_file.url }}"
+                    download
+                    class="action-btn replace">
+                        <i class="fa-solid fa-download"></i>
+                    </a>
+
+                    <form method="post"
+                        action="{% url 'delete_education_document' doc.id %}"
+                        onsubmit="return confirm('Удалить материал?');">
+                        {% csrf_token %}
+
+                        <button type="submit"
+                                class="action-btn delete">
+                            <i class="fa-solid fa-trash"></i>
+                        </button>
+                    </form>
+
+                </div>
+
+            </div>
+
+            {% empty %}
+                <div class="education-empty">
+                    Материалов пока нет
+                </div>
+            {% endfor %}
+
+        </div>
+
+    </div>
+    <div class="education-modal" id="video-modal">
+        <div class="education-modal-card">
+            <div class="education-modal-header">
+                <h3>Добавить видео</h3>
+                <button type="button" class="education-modal-close" id="close-video-modal">
+                    &times;
+                </button>
+            </div>
+
+            <form method="post"
+                action="{% url 'add_education_video' %}"
+                enctype="multipart/form-data"
+                class="education-modal-form">
+                {% csrf_token %}
+
+                <div class="education-form-group">
+                    <label>Название видео</label>
+                    <input type="text" name="title" class="education-input" required>
+                </div>
+                <div class="education-form-group">
+                    <label>Описание видео</label>
+
+                    <textarea name="description"
+                            class="education-textarea"
+                            placeholder="Описание видео"></textarea>
+                </div>
+                <div class="education-form-group">
+                    <label>Длительность</label>
+                    <input type="hidden" name="duration" id="video-duration">
+                </div>
+
+                <div class="education-form-group">
+                    <label>Файл видео</label>
+                    <input type="file"
+                        name="video_file"
+                        class="education-input"
+                        accept="video/*"
+                        required>
+                </div>
+
+                <button type="submit" class="education-save-btn">
+                    Сохранить видео
+                </button>
+            </form>
+        </div>
+    </div>  
+    <div class="education-modal" id="document-modal">
+
+    <div class="education-modal-card">
+
+        <div class="education-modal-header">
+            <h3>Добавить материал</h3>
+
+            <button type="button"
+                    class="education-modal-close"
+                    id="close-document-modal">
+                &times;
+            </button>
+        </div>
+
+        <form method="post"
+              action="{% url 'add_education_document' %}"
+              enctype="multipart/form-data"
+              class="education-modal-form">
+
+            {% csrf_token %}
+
+            <div class="education-form-group">
+                <label>Название</label>
+
+                <input type="text"
+                       name="title"
+                       class="education-input"
+                       required>
+            </div>
+
+            <div class="education-form-group">
+                <label>Описание</label>
+
+                <textarea name="description"
+                          class="education-textarea"></textarea>
+            </div>
+
+            <div class="education-form-group">
+                <label>Файл</label>
+
+                <input type="file"
+                       name="document_file"
+                       class="education-input"
+                       required>
+            </div>
+
+            <button type="submit"
+                    class="education-save-btn">
+                Сохранить материал
+            </button>
+
+        </form>
+
+    </div>
+
+</div>
+    <div class="education-modal" id="video-player-modal">
+
+    <div class="video-player-card">
+
+        <div class="education-modal-header">
+            <h3>Просмотр видео</h3>
+
+            <button type="button"
+                    class="education-modal-close"
+                    id="close-video-player">
+                &times;
+            </button>
+        </div>
+
+        <video id="education-video-player"
+               controls
+               width="100%">
+            <source src="" type="video/mp4">
+        </video>
+
+    </div>
+
+</div>  
+</div>   
+<script>
+    const videoModal = document.getElementById('video-modal');
+    const openVideoModal = document.getElementById('open-video-modal');
+    const closeVideoModal = document.getElementById('close-video-modal');
+
+    openVideoModal.addEventListener('click', function () {
+        videoModal.classList.add('active');
+    });
+
+    closeVideoModal.addEventListener('click', function () {
+        videoModal.classList.remove('active');
+    });
+
+    videoModal.addEventListener('click', function (event) {
+        if (event.target === videoModal) {
+            videoModal.classList.remove('active');
+        }
+    });
+</script>
+<script>
+    const openVideoButtons = document.querySelectorAll('.open-video-player');
+
+    const videoPlayerModal = document.getElementById('video-player-modal');
+    const educationVideoPlayer = document.getElementById('education-video-player');
+    const closeVideoPlayer = document.getElementById('close-video-player');
+
+    openVideoButtons.forEach(button => {
+
+        button.addEventListener('click', function () {
+
+            const videoUrl = this.dataset.videoUrl;
+
+            educationVideoPlayer.src = videoUrl;
+
+            videoPlayerModal.classList.add('active');
+
+            educationVideoPlayer.load();
+
+            educationVideoPlayer.play();
+        });
+
+    });
+
+    function closeVideoPlayerModal() {
+
+        videoPlayerModal.classList.remove('active');
+
+        educationVideoPlayer.pause();
+
+        educationVideoPlayer.removeAttribute('src');
+
+        educationVideoPlayer.load();
+    }
+
+    closeVideoPlayer.addEventListener(
+        'click',
+        closeVideoPlayerModal
+    );
+
+    videoPlayerModal.addEventListener('click', function (event) {
+
+        if (event.target === videoPlayerModal) {
+            closeVideoPlayerModal();
+        }
+
+    });
+</script>
+<script>
+    // Определение длительности видео
+    const videoFileInput = document.getElementById('video-file-input');
+    const videoDurationInput = document.getElementById('video-duration');
+
+    function formatVideoDuration(seconds) {
+        const totalSeconds = Math.floor(seconds);
+        const minutes = Math.floor(totalSeconds / 60);
+        const restSeconds = totalSeconds % 60;
+
+        return `${minutes}:${String(restSeconds).padStart(2, '0')}`;
+    }
+
+    if (videoFileInput && videoDurationInput) {
+        videoFileInput.addEventListener('change', function () {
+            const file = this.files[0];
+
+            if (!file) return;
+
+            const video = document.createElement('video');
+            video.preload = 'metadata';
+
+            video.onloadedmetadata = function () {
+                URL.revokeObjectURL(video.src);
+                videoDurationInput.value = formatVideoDuration(video.duration);
+            };
+
+            video.src = URL.createObjectURL(file);
+        });
+    }
+</script>
+<script>
+    //  Прокрутка видео при наведении
+    document.querySelectorAll('.video-preview-player').forEach(video => {
+
+        video.addEventListener('mouseenter', async function () {
+
+            this.muted = true;
+
+            try {
+                await this.play();
+            } catch (e) {
+                console.log(e);
+            }
+
+        });
+
+        video.addEventListener('mouseleave', function () {
+
+            this.pause();
+
+            this.currentTime = 0;
+
+        });
+
+    });
+</script>
+<script>
+    //  Добавление текстовых файлов
+    const documentModal = document.getElementById('document-modal');
+
+    const openDocumentModal = document.getElementById('open-document-modal');
+
+    const closeDocumentModal = document.getElementById('close-document-modal');
+
+    openDocumentModal.addEventListener('click', function () {
+        documentModal.classList.add('active');
+    });
+
+    closeDocumentModal.addEventListener('click', function () {
+        documentModal.classList.remove('active');
+    });
+
+    documentModal.addEventListener('click', function (event) {
+
+        if (event.target === documentModal) {
+            documentModal.classList.remove('active');
+        }
+
+    });
+</script>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const searchInput = document.getElementById('educationSearch');
+    const buttons = document.querySelectorAll('.filter-btn');
+    const videoSection = document.getElementById('videoSection');
+    const textSection = document.getElementById('textSection');
+    const items = document.querySelectorAll('.education-item');
+    const searchButton = document.getElementById('searchEducationBtn');
+    let currentFilter = 'all';
+
+    function applyFilters() {
+        const query = searchInput.value.toLowerCase().trim();
+
+        if (currentFilter === 'all') {
+            videoSection.style.display = '';
+            textSection.style.display = '';
+        } else if (currentFilter === 'video') {
+            videoSection.style.display = '';
+            textSection.style.display = 'none';
+        } else if (currentFilter === 'text') {
+            videoSection.style.display = 'none';
+            textSection.style.display = '';
+        }
+
+        items.forEach(item => {
+            const title = item.dataset.title || '';
+            const type = item.dataset.type;
+
+            const matchesFilter = currentFilter === 'all' || type === currentFilter;
+            const matchesSearch = title.includes(query);
+
+            item.style.display = matchesFilter && matchesSearch ? '' : 'none';
+        });
+    }
+
+    buttons.forEach(button => {
+        button.addEventListener('click', function () {
+            buttons.forEach(btn => btn.classList.remove('active'));
+            this.classList.add('active');
+            currentFilter = this.dataset.filter;
+            applyFilters();
+        });
+    });
+
+    searchInput.addEventListener('keydown', function (event) {
+        if (event.key === 'Enter') {
+            event.preventDefault();
+            applyFilters();
+        }
+    });
+    searchButton.addEventListener('click', function () {
+        applyFilters();
+    });
+    const resetButton = document.getElementById('resetEducationSearch');
+
+    resetButton.addEventListener('click', function () {
+        searchInput.value = '';
+
+        buttons.forEach(btn => {
+            btn.classList.remove('active');
+        });
+
+        document.querySelector('[data-filter="all"]').classList.add('active');
+
+        currentFilter = 'all';
+
+        applyFilters();
+    });
+});
+</script>
+{% endblock %}

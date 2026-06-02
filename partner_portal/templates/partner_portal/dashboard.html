@@ -1,0 +1,969 @@
+{% extends 'partner_portal/base.html' %}
+{% load number_format %}
+{% block title %}Кабинет партнера{% endblock %}
+{% block page_title %}КАБИНЕТ ПАРТНЕРА{% endblock %}
+
+{% block content %}
+<style>
+    .partner-stats-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 18px;
+        margin-bottom: 24px; 
+    }
+
+    .partner-stat-card {
+        background: #fff;
+        border-radius: 18px;
+        padding: 22px;
+        box-shadow: 0 8px 25px rgba(15,23,42,0.06);
+        border: 1px solid #eef2f7;
+    }
+
+    .stat-label {
+        font-size: 12px;
+        font-weight: 600;
+        color: #000;
+        text-transform: uppercase;
+        margin-bottom: 12px;
+    }
+
+    .stat-value {
+        font-size: 28px;
+        font-weight: 900;
+        color: #1F5BFF;
+    }
+    .partner-chart-card {
+        background: #fff;
+        border-radius: 18px;
+        padding: 24px;
+        box-shadow: 0 8px 25px rgba(15,23,42,0.06);
+        border: 1px solid #eef2f7;
+        margin-bottom: 24px;
+    }
+
+    .partner-chart-card h2 {
+        margin: 0 0 18px;
+        font-size: 24px;
+    }
+
+    .chart-wrapper {
+        width: 100%;
+        height: 320px;
+        position: relative;
+    }
+    .partner-chart-card {
+    overflow-x: auto;
+    }
+    .partner-links-card {
+        background: #fff;
+        border-radius: 20px;
+        padding: 24px;
+        margin: 0 0px 24px;
+        box-shadow: 0 8px 25px rgba(15,23,42,0.06);
+        border: 1px solid #eef2f7;
+    }
+
+    .partner-links-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+    }
+
+    .partner-links-header h2 {
+        margin: 0;
+        font-size: 24px;
+        font-weight: 600;
+    }
+
+    .partner-links-btn {
+        background: #2563eb;
+        color: white;
+        padding: 10px 18px;
+        border-radius: 12px;
+        text-decoration: none;
+        font-weight: 700;
+    }
+
+    .partner-links-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    .partner-links-table th,
+    .partner-links-table td {
+        padding: 16px 12px;
+        border-bottom: 1px solid #eef2f7;
+        text-align: left;
+        vertical-align: middle;
+    }
+    .dashboard-link-box {
+        max-width: 520px;
+        background: #f8fafc;
+        border: 1px solid #dbe3f0;
+        border-radius: 12px;
+        padding: 12px 14px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+    .dashboard-link-box span {
+        flex: 1;
+        overflow-wrap: anywhere;
+        font-weight: 500;
+    }
+
+    .copy-link-btn {
+        border: none;
+        background: transparent;
+        color: #64748b;
+        cursor: pointer;
+        font-size: 18px;
+    }
+
+    .partner-links-table th {
+        font-size: 12px;
+        color: #6b7280;
+        text-transform: uppercase;
+    }
+
+    .dashboard-link-input {
+        width: 100%;
+        border: 1px solid #dbe3f0;
+        border-radius: 10px;
+        padding: 10px 12px;
+        background: #f8fafc;
+    }
+    .copy-link-btn {
+        width: 38px;
+        height: 38px;
+        border: none;
+        border-radius: 10px;
+        background: #edf4ff;
+        color: #2563eb;
+        cursor: pointer;
+
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        transition: all 0.2s ease;
+    }
+
+    .copy-link-btn:hover {
+        background: #2563eb;
+        color: white;
+        transform: translateY(-1px);
+    }
+    .copy-toast {
+        position: fixed;
+        right: 24px;
+        bottom: 24px;
+
+        background: #111827;
+        color: white;
+
+        padding: 14px 18px;
+        border-radius: 14px;
+
+        font-weight: 700;
+        font-size: 14px;
+
+        opacity: 0;
+        visibility: hidden;
+        transform: translateY(20px);
+
+        transition: all .25s ease;
+
+        z-index: 9999;
+    }
+
+    .copy-toast.show {
+        opacity: 1;
+        visibility: visible;
+        transform: translateY(0);
+    }
+    .hidden-link-row {
+    display: none;
+    }
+
+    .show-more-wrapper {
+        margin-top: 20px;
+        display: flex;
+        justify-content: center;
+    }
+
+    .show-more-btn {
+        border: none;
+        background: #2563eb;
+        color: white;
+        height: 46px;
+        padding: 0 22px;
+        border-radius: 12px;
+        font-weight: 700;
+        cursor: pointer;
+        transition: .2s;
+    }
+
+    .show-more-btn:hover {
+        background: #1d4ed8;
+    }
+    .partner-link-card {
+    background: #fff;
+    border: 1px solid #eef2f7;
+    border-radius: 18px;
+    padding: 16px;
+    box-shadow: 0 4px 15px rgba(15, 23, 42, 0.04);
+}
+
+    .partner-link-card-top {
+        margin-bottom: 14px;
+    }
+
+    .partner-link-card-title {
+        font-size: 16px;
+        font-weight: 600;
+        color: #111827;
+    }
+
+    .partner-link-card-offer {
+        margin-top: 4px;
+        font-size: 13px;
+        color: #6b7280;
+    }
+
+    .partner-link-card-link {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 14px;
+    }
+
+    .partner-link-card-link span {
+        flex: 1;
+        font-size: 12px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .partner-link-card-stats {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+        font-size: 13px;
+    }
+    .partner-news-card {
+        background: white;
+        border-radius: 20px;
+        padding: 24px;
+        margin-top: 24px;
+        border: 1px solid #eef2f7;
+        box-shadow: 0 8px 25px rgba(15,23,42,0.05);
+    }
+
+    .partner-news-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+        gap: 16px;
+    }
+
+    .partner-news-header h3 {
+        margin: 0;
+        font-size: 22px;
+        font-weight: 600;
+    }
+
+    .partner-news-header p {
+        margin: 4px 0 0;
+        color: #64748b;
+        font-size: 14px;
+    }
+
+    .partner-news-btn {
+        background: #2563eb;
+        color: white;
+        text-decoration: none;
+        padding: 12px 18px;
+        border-radius: 12px;
+        font-weight: 700;
+    }
+
+    .partner-news-list {
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+    }
+
+    .partner-news-item {
+        background: #f8fafc;
+        border: 1px solid #eef2f7;
+        border-radius: 14px;
+        padding: 16px;
+    }
+
+    .partner-news-date {
+        color: #2563eb;
+        font-size: 12px;
+        font-weight: 700;
+        margin-bottom: 8px;
+    }
+
+    .partner-news-content {
+        color: #0f172a;
+        line-height: 1.6;
+        font-size: 15px;
+    }
+    .news-toast {
+        position: fixed;
+        right: 24px;
+        bottom: 24px;
+        background: #111827;
+        color: white;
+        padding: 14px 18px;
+        border-radius: 14px;
+        font-weight: 700;
+        opacity: 0;
+        visibility: hidden;
+        transform: translateY(20px);
+        transition: .25s;
+        z-index: 9999;
+    }
+
+    .news-toast.show {
+        opacity: 1;
+        visibility: visible;
+        transform: translateY(0);
+    }  
+    .partner-news-more {
+        display: flex;
+        justify-content: center;
+        margin-top: 16px;
+    }
+
+    #toggle-news-btn {
+        border: none;
+        background: #1F5BFF;
+        color: white;
+
+        padding: 12px 22px;
+        border-radius: 12px;
+
+        font-weight: 700;
+        cursor: pointer;
+
+        transition: .2s;
+    }
+
+    #toggle-news-btn:hover {
+        background: #1749d1;
+    }     
+    .partner-news-more {
+        display: none;
+        justify-content: center;
+        margin-top: 16px;
+    }
+    @media (max-width: 900px) {
+        .partner-stats-grid {
+            grid-template-columns: 1fr 1fr;
+        }
+    .partner-links-table {
+            display: block;
+            overflow-x: auto;
+        }
+
+    }
+    @media (max-width: 768px) {
+        .partner-links-table {
+            display: none;
+        }
+
+        .partner-links-cards {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            margin-top: 20px;
+        }
+    }
+
+    @media (min-width: 769px) {
+        .partner-links-cards {
+            display: none;
+        }
+    }
+    @media (max-width: 560px) {
+        .partner-stats-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .partner-chart-card {
+            padding-left: 10px;
+            padding-right: 10px;
+        }
+
+        .chart-wrapper {
+            width: 100%;
+            overflow-x: hidden;
+
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        #partnerFunnelChart {
+            width: 100% !important;
+            max-width: 100% !important;
+            margin: 0 auto;
+        }
+        .partner-links-header {
+            align-items: flex-start;
+            gap: 12px;
+        }
+        .partner-links-header h2 {
+            font-size: 19px;
+            line-height: 1.1;
+            font-weight: 600;
+        }
+        .partner-links-btn {
+            min-width: 100px;
+            padding: 10px 12px;
+            font-size: 12px;
+            text-align: center;
+        }
+
+        .dashboard-link-box {
+            width: 220px;
+            max-width: 220px;
+        }
+
+        .dashboard-link-box span {
+            white-space: normal;
+            word-break: break-all;
+            font-size: 12px;
+            line-height: 1.25;
+        }
+
+        .copy-link-btn {
+            flex: 0 0 36px;
+        }
+        .partner-news-header h3 {
+            margin: 0;
+            font-size: 19px;
+            font-weight: 600;
+        }
+    }
+</style>
+<div class="partner-stats-grid">
+
+    <div class="partner-stat-card">
+        <div class="stat-label">БАЛАНС (₽)</div>
+        <div class="stat-value">{{ balance|space_thousands }}</div>
+    </div>
+
+    <div class="partner-stat-card">
+        <div class="stat-label">НАЧИСЛЕНО (₽)</div>
+        <div class="stat-value">{{ total_accrued|space_thousands }}</div>
+    </div>
+
+    <div class="partner-stat-card">
+        <div class="stat-label">ВСЕГО ЛИДОВ</div>
+        <div class="stat-value">{{ total_leads }}</div>
+    </div>
+
+    <div class="partner-stat-card">
+        <div class="stat-label">ВСЕГО СДЕЛОК</div>
+        <div class="stat-value">{{ total_deals }}</div>
+    </div>    
+</div>
+<div class="partner-chart-card">
+    <h2>Воронка продаж по лидам</h2>
+
+    <div class="chart-wrapper">
+        <canvas id="leadsFunnelChart"></canvas>
+    </div>
+</div>
+<div class="partner-links-card">
+    <div class="partner-links-header">
+        <h2>РЕФЕРАЛЬНАЯ ПРОГРАММА</h2>
+
+        <a href="{% url 'partner_referral_program' %}" class="partner-links-btn">
+            Все ссылки
+        </a>
+    </div>
+
+        <table class="partner-links-table">
+            <thead>
+                <tr>
+                    <th>Название ссылки</th>
+                    <th>Ссылка</th>
+                    <th>Оффер</th>
+                    <th>Переходы</th>
+                    <th>Регистрации</th>
+                    <th>Сделки</th>
+                    <th>Сумма</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                {% for link in referral_links %}
+                <tr class="dashboard-link-row {% if forloop.counter > 5 %}hidden-link-row{% endif %}">
+
+                    <td>{{ link.title }}</td>
+
+                    <td>
+                        <div class="dashboard-link-box">
+                            <span>{{ link.url }}</span>
+
+                            <button type="button"
+                                    class="copy-link-btn"
+                                    onclick="copyPartnerLink(this, '{{ link.url }}')">
+                                <i class="fas fa-copy"></i>
+                            </button>
+                        </div>
+                    </td>
+
+                    <td>{{ link.offer.title }}</td>
+                    <td>{{ link.visits.count }}</td>
+                    <td>{{ link.registrations_count }}</td>
+                    <td>{{ link.deals_count }}</td>
+                    <td>{{ link.deals_amount|space_thousands }} ₽</td>
+
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="7">
+                        Ссылок пока нет
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        <div class="partner-links-cards">
+        {% for link in referral_links|slice:":5" %}
+        <div class="partner-link-card">
+
+            <div class="partner-link-card-top">
+                <div class="partner-link-card-title">
+                    {{ link.title }}
+                </div>
+
+                <div class="partner-link-card-offer">
+                    {{ link.offer.title }}
+                </div>
+            </div>
+
+            <div class="partner-link-card-link">
+                <span>{{ link.url }}</span>
+
+                <button type="button"
+                        class="copy-link-btn"
+                        onclick="copyPartnerLink(this, '{{ link.url }}')">
+                    <i class="fas fa-copy"></i>
+                </button>
+            </div>
+
+            <div class="partner-link-card-stats">
+                <div>
+                    <strong>Переходы:</strong>
+                    {{ link.visits.count }}
+                </div>
+
+                <div>
+                    <strong>Регистрации:</strong>
+                    {{ link.registrations_count }}
+                </div>
+
+                <div>
+                    <strong>Сделки:</strong>
+                    {{ link.deals_count }}
+                </div>
+
+                <div>
+                    <strong>Сумма:</strong>
+                    {{ link.deals_amount|space_thousands }} ₽
+                </div>
+            </div>
+
+        </div>
+        {% empty %}
+            <div class="partner-empty-links">
+                Ссылок пока нет
+            </div>
+        {% endfor %}
+    </div>
+        {% if referral_links.count > 5 %}
+            <div class="show-more-wrapper">
+                <button type="button"
+                        id="showMoreLinksBtn"
+                        class="show-more-btn">
+                    Показать еще
+                </button>
+            </div>
+        {% endif %}
+</div>
+<div id="copy-toast" class="copy-toast">
+    Ссылка скопирована
+</div>
+<div class="partner-news-card">
+    <div class="partner-news-header">
+        <div>
+            <h3>НОВОСТИ КОМПАНИИ</h3>
+            <p>Последние обновления платформы</p>
+        </div>
+
+        <a href="https://t.me/partnetix"
+           target="_blank"
+           class="partner-news-btn">
+            Telegram
+        </a>
+    </div>
+
+    <div class="partner-news-list">
+        {% for news in news_list %}
+            <div class="partner-news-item">
+                <div class="partner-news-date">
+                    {{ news.published_at|date:"d.m.Y H:i" }}
+                </div>
+
+                <div class="partner-news-content">
+                    {{ news.text|linebreaksbr }}
+                </div>
+            </div>
+        {% empty %}
+            <div class="partner-news-empty">
+                Новостей пока нет
+            </div>
+        {% endfor %}
+    </div>
+    <div class="partner-news-more">
+    <button type="button" id="toggle-news-btn">
+        Показать больше
+    </button>
+</div>
+</div>
+<div id="news-toast" class="news-toast">
+    Новая новость компании
+</div>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels"></script>
+{{ funnel_data|json_script:"funnel-data" }}
+<script>
+    const rawData = JSON.parse(document.getElementById('funnel-data').textContent);
+
+   
+const rawLabels = window.innerWidth < 768
+    ? ['Всего', 'Новые', 'Работа', 'Отмена', 'Сделки']
+    : ['Всего лидов', 'Новый лид', 'В работе', 'Отмена', 'Сделка'];
+
+const labels = rawLabels;
+const filteredLabels = [];
+const filteredData = [];
+
+rawData.forEach((value, index) => {
+    if (value > 0) {
+        filteredLabels.push(rawLabels[index]);
+        filteredData.push(value);
+    }
+});
+
+const maxValue = Math.max(...filteredData);
+
+const displayData = filteredData.map(value => {
+    if (window.innerWidth < 768 && value > 0 && value < 2) {
+        return 3;
+    }
+
+    return value;
+});
+
+const floatingData = displayData.map(value => {
+    const start = (maxValue - value) / 2;
+    return [start, start + value];
+});
+
+const ctx = document.getElementById('leadsFunnelChart').getContext('2d');
+const chartWrapper = document.querySelector('.chart-wrapper');
+const isMobile = window.innerWidth < 768;
+if (chartWrapper) {
+    chartWrapper.style.height = isMobile
+        ? `${filteredData.length * 90}px`
+        : `${filteredData.length * 70}px`;
+}  
+new Chart(ctx, {
+    type: 'bar',
+
+    data: {
+        labels: filteredLabels,
+
+        datasets: [{
+            data: floatingData,
+            align: 'center',
+            
+            backgroundColor: function(context) {
+                const chart = context.chart;
+                const {ctx, chartArea} = chart;
+
+                if (!chartArea) {
+                    return '#3b82f6';
+                }
+
+                const gradient = ctx.createLinearGradient(
+                    chartArea.left,
+                    0,
+                    chartArea.right,
+                    0
+                );
+
+                gradient.addColorStop(0, '#2563eb');
+                gradient.addColorStop(0.5, '#3b82f6');
+                gradient.addColorStop(1, '#60a5fa');
+
+                return gradient;
+            },
+
+            borderRadius: 14,
+            borderSkipped: false,
+            barThickness: window.innerWidth < 768 ? 54 : 46,
+            categoryPercentage: window.innerWidth < 768 ? 0.8 : 0.75,
+            barPercentage: window.innerWidth < 768 ? 0.95 : 0.85,
+        }]
+    },
+
+    options: {
+        indexAxis: 'y',
+        responsive: true,
+        maintainAspectRatio: false,
+
+        layout: {
+            padding: {
+                right: 0
+            }
+        },
+
+        plugins: {
+            legend: {
+                display: false
+            },
+
+            tooltip: {
+                callbacks: {
+                    label: function(context) {
+                        return filteredData[context.dataIndex] + ' лидов';
+                    }
+                }
+            },
+
+            datalabels: {
+                color: '#ffffff',
+                anchor: 'center',
+                align: 'center',
+
+            font: {
+                size: window.innerWidth < 768 ? 10 : 16,
+                weight: 'bold'
+            },
+
+                formatter: function(value, context) {
+                    const currentValue = filteredData[context.dataIndex];
+                    const percent = Math.round((currentValue / maxValue) * 100);
+
+                    return `${filteredLabels[context.dataIndex]} (${percent}%)`;
+                }
+                
+            }
+        },
+
+        scales: {            
+            x: {
+                display: false,
+                min: 0,
+                max: maxValue,
+                offset: true,
+            },
+
+            y: {
+                display: false
+            }
+        }
+    },
+
+    plugins: [ChartDataLabels]
+});
+</script>
+<script>
+// Уведомление о том, что ссылка скопирована    
+    function copyPartnerLink(button, text) {
+        navigator.clipboard.writeText(text);
+
+        const oldHtml = button.innerHTML;
+
+        button.innerHTML = '<i class="fas fa-check"></i>';
+
+        button.style.background = '#16a34a';
+        button.style.color = '#fff';
+
+        const toast = document.getElementById('copy-toast');
+
+        toast.classList.add('show');
+
+        setTimeout(() => {
+            toast.classList.remove('show');
+
+            button.innerHTML = oldHtml;
+            button.style.background = '';
+            button.style.color = '';
+        }, 1500);
+    }
+</script>
+<script>
+// Кнопка "Показать еще" для ссылок    
+    const hiddenRows = document.querySelectorAll('.hidden-link-row');
+    const showMoreBtn = document.getElementById('showMoreLinksBtn');
+
+    let visibleCount = 5;
+
+    if (showMoreBtn) {
+        showMoreBtn.addEventListener('click', () => {
+
+            for (let i = visibleCount; i < visibleCount + 5; i++) {
+                if (hiddenRows[i - 5]) {
+                    hiddenRows[i - 5].style.display = 'table-row';
+                }
+            }
+
+            visibleCount += 5;
+
+            const visibleRows = document.querySelectorAll(
+                '.hidden-link-row[style="display: table-row;"]'
+            );
+
+            if (visibleRows.length >= hiddenRows.length) {
+                showMoreBtn.style.display = 'none';
+            }
+        });
+    }
+</script>
+<script>
+    let expandedNews = false;
+
+    function updateNewsVisibility() {
+
+        const items = document.querySelectorAll('.partner-news-item');
+
+        const btn = document.getElementById('toggle-news-btn');
+
+        if (!btn) return;
+
+        items.forEach((item, index) => {
+
+            if (!expandedNews && index >= 5) {
+                item.style.display = 'none';
+            } else {
+                item.style.display = 'block';
+            }
+
+        });
+
+        // скрыть кнопку если новостей <= 5
+        if (items.length <= 5) {
+            btn.parentElement.style.display = 'none';
+            return;
+        }
+
+        // показать кнопку
+        btn.parentElement.style.display = 'flex';
+
+        btn.innerText = expandedNews
+            ? 'Свернуть'
+            : 'Показать больше';
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+
+        updateNewsVisibility();
+
+        const btn = document.getElementById('toggle-news-btn');
+
+        if (btn) {
+            btn.addEventListener('click', () => {
+                expandedNews = !expandedNews;
+                updateNewsVisibility();
+            });
+        }
+
+    });
+</script>
+<script>
+    let currentLatestNewsId = Number('{{ latest_news_id|default:0 }}') || null;
+
+    function renderNews(newsList) {
+        const container = document.querySelector('.partner-news-list');
+
+        if (!container) return;
+
+        container.innerHTML = '';
+
+        if (newsList.length === 0) {
+            container.innerHTML = '<div class="partner-news-empty">Новостей пока нет</div>';
+            return;
+        }
+
+        newsList.forEach(news => {
+            const item = document.createElement('div');
+            item.className = 'partner-news-item';
+
+            item.innerHTML = `
+                <div class="partner-news-date">${news.published_at}</div>
+                <div class="partner-news-content">${news.text.replace(/\n/g, '<br>')}</div>
+            `;
+
+            container.appendChild(item);
+        });
+        updateNewsVisibility();
+    }
+
+    function showNewsToast() {
+        const toast = document.getElementById('news-toast');
+
+        if (!toast) return;
+
+        toast.classList.add('show');
+
+        setTimeout(() => {
+            toast.classList.remove('show');
+        }, 2500);
+    }
+
+    function checkTelegramNews() {
+        fetch("{% url 'partner_news_ajax' %}")
+            .then(response => response.json())
+            .then(data => {
+                if (!data.news) return;
+
+                const hasNewNews =
+                    data.latest_id &&
+                    currentLatestNewsId &&
+                    data.latest_id !== currentLatestNewsId;
+
+                renderNews(data.news);
+
+                if (hasNewNews) {
+                    showNewsToast();
+                }
+
+                if (data.latest_id) {
+                    currentLatestNewsId = data.latest_id;
+                }
+            })
+            .catch(error => {
+                console.log('Ошибка обновления новостей:', error);
+            });
+    }
+
+    checkTelegramNews();
+    setInterval(checkTelegramNews, 30000);
+</script>
+
+{% endblock %}

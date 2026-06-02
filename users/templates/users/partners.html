@@ -1,0 +1,1489 @@
+{% extends 'users/base.html' %}
+{% load humanize %}
+{% load static %}
+{% block title %}Партнеры{% endblock %}
+{% block page_title %}ПАРТНЕРЫ{% endblock %}
+
+{% block content %}
+{% if messages %}
+    <div class="messages">
+        {% for message in messages %}
+            <div class="message {{ message.tags }}">
+                {{ message }}
+            </div>
+        {% endfor %}
+    </div>
+{% endif %}
+<style>
+ .page-title {
+    margin-left: 24px;
+  }
+   .partners-wrapper {
+        padding: 0 20px;
+    }
+
+    .top-bar {
+        display: flex;
+        justify-content: flex-end;
+        margin-bottom: 18px;
+    }
+
+    .add-btn {
+        border: none;
+        background: linear-gradient(90deg, #2f67ff, #7b3cff);
+        color: white;
+        padding: 12px 18px;
+        border-radius: 12px;
+        font-size: 14px;
+        font-weight: 700;
+        cursor: pointer;
+        box-shadow: 0 12px 28px rgba(63, 94, 251, 0.25);
+    }
+
+    .add-btn:hover {
+        opacity: 0.95;
+    }
+
+    .partners-grid {
+        display: grid;
+        gap: 16px;
+    }
+
+    .partner-card {
+        background: white;
+        border-radius: 18px;
+        padding: 20px;
+        box-shadow: 0 10px 24px rgba(0, 0, 0, 0.05);
+    }
+
+    .partner-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 16px;
+        margin-bottom: 14px;
+        flex-wrap: wrap;
+    }
+
+    .partner-title {
+        font-size: 20px;
+        font-weight: 800;
+        color: #111827;
+    }
+
+    .partner-subtitle {
+        color: #6b7280;
+        font-size: 14px;
+        margin-top: 4px;
+    }
+
+    .badge {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 8px 12px;
+        border-radius: 999px;
+        font-size: 13px;
+        font-weight: 700;
+        white-space: nowrap;
+    }
+
+    .badge-approved {
+        background: #dcfce7;
+        color: #166534;
+    }
+
+    .badge-pending {
+        background: #fee2e2;
+        color: #991b1b;
+    }
+
+    .partner-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 14px;
+    }
+
+    .partner-item {
+        background: #f9fafb;
+        border-radius: 14px;
+        padding: 14px;
+    }
+
+    .partner-label {
+        font-size: 12px;
+        color: #6b7280;
+        margin-bottom: 6px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.4px;
+    }
+
+    .partner-value {
+        font-size: 14px;
+        color: #111827;
+        font-weight: 600;
+        word-break: break-word;
+    }
+
+    .partner-footer {
+        margin-top: 18px;
+        justify-content: start;
+    }
+
+    .details-btn {
+        border: none;
+        border-radius: 12px;
+        padding: 12px 18px;
+        font-size: 14px;
+        font-weight: 700;
+        cursor: default;
+        background: #111827;
+        color: white;
+        opacity: 0.92;
+    }
+
+    .details-btn:hover {
+        opacity: 1;
+    }
+
+    .empty-box {
+        background: white;
+        border-radius: 18px;
+        padding: 32px;
+        text-align: center;
+        color: #6b7280;
+        box-shadow: 0 10px 24px rgba(0, 0, 0, 0.05);
+    }
+
+    .filters-tabs {
+        display: grid;
+        grid-template-columns: repeat(6, 1fr);
+        gap: 10px;
+        margin-bottom: 18px;
+    }
+
+    .filter-tab {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 12px 14px;
+        border: 0;
+        border-radius: 12px;
+        background: #e5e7eb;
+        color: #111827;
+        text-decoration: none;
+        font-size: 14px;
+        font-weight: 700;
+        transition: 0.2s;
+        cursor: pointer;
+    }
+
+    .filter-tab:hover {
+        background: #d1d5db;
+    }
+
+    .filter-tab.active {
+        background: #2563eb;
+        color: white;
+    }
+
+    .filters-panel {
+        width: 100%;
+        background: white;
+        border-radius: 18px;
+        padding: 18px;
+        box-shadow: 0 10px 24px rgba(0, 0, 0, 0.05);
+        margin-bottom: 18px;
+    }
+
+    .filters-form {
+        width: 100%;
+        display: grid;
+        grid-template-columns: 1fr 1fr 2fr auto;
+        gap: 14px;
+        align-items: end;
+    }
+
+    .filters-form.period-mode {
+        grid-template-columns: 1fr 1fr 1fr 1fr 2fr auto;
+    }
+
+    .filter-group {
+        min-width: 0;
+    }
+
+    .filter-group label {
+        display: block;
+        margin-bottom: 6px;
+        font-size: 13px;
+        font-weight: 700;
+        color: #6b7280;
+    }
+
+    .filter-group input,
+    .filter-group select {
+        width: 100%;
+        height: 46px;
+        padding: 0 14px;
+        border: 1px solid #d1d5db;
+        border-radius: 12px;
+        background: #f9fafb;
+        font-size: 14px;
+        outline: none;
+    }
+
+    .filter-actions {
+        display: flex;
+        align-items: end;
+        justify-content: flex-end;
+    }
+
+    .filter-reset {
+        width: 120px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        height: 46px;
+        padding: 0 18px;
+        border-radius: 12px;
+        text-decoration: none;
+        font-size: 14px;
+        font-weight: 700;
+        background: #111827;
+        color: white;
+        white-space: nowrap;
+    }
+
+    .partner-modal {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(8, 10, 30, 0.55);
+        z-index: 2000;
+        align-items: center;
+        justify-content: center;
+        padding: 24px;
+    }
+
+    .partner-modal.active {
+        display: flex;
+    }
+
+    .partner-modal-card {
+        width: 100%;
+        max-width: 900px;
+        border-radius: 28px;
+        padding: 28px;
+        background: rgba(255, 255, 255, 0.14);
+        border: 1px solid rgba(255, 255, 255, 0.18);
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.35);
+        backdrop-filter: blur(18px);
+        max-height: 90vh;
+        overflow-y: auto;
+    }
+
+    .partner-modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 18px;
+    }
+
+    .partner-modal-title {
+        margin: 0;
+        font-size: 28px;
+        font-weight: 800;
+        color: white;
+    }
+
+    .partner-modal-subtitle {
+        margin: 6px 0 0;
+        color: rgba(255, 255, 255, 0.82);
+        font-size: 14px;
+    }
+
+    .partner-close-btn {
+        border: none;
+        background: transparent;
+        color: white;
+        font-size: 28px;
+        cursor: pointer;
+        line-height: 1;
+    }
+
+    .partner-tabs {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 10px;
+        margin-bottom: 22px;
+    }
+
+    .partner-tab-btn {
+        border: none;
+        text-align: center;
+        padding: 12px 14px;
+        border-radius: 14px;
+        background: rgba(255, 255, 255, 0.10);
+        border: 1px solid rgba(255, 255, 255, 0.14);
+        color: white;
+        font-size: 14px;
+        font-weight: 700;
+        cursor: pointer;
+        transition: 0.2s;
+    }
+
+    .partner-tab-btn:hover {
+        background: rgba(255, 255, 255, 0.16);
+    }
+
+    .partner-tab-btn.active {
+        background: linear-gradient(90deg, #2f67ff, #7b3cff);
+        border-color: transparent;
+        box-shadow: 0 10px 24px rgba(63, 94, 251, 0.35);
+    }
+
+    .partner-form-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 16px 14px;
+    }
+    .partner-form-grid.company-layout {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    .partner-form-group.full {
+        grid-column: 1 / -1;
+    }
+
+    .partner-modal-card .partner-form-group label {
+        display: block;
+        margin-bottom: 6px;
+        font-size: 13px;
+        font-weight: 700;
+        color: rgba(255, 255, 255, 0.92);
+    }
+.partner-modal-card .custom-select {
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'/></svg>");
+    background-repeat: no-repeat;
+    background-position: right 14px center;
+    background-size: 14px;
+    padding-right: 42px;
+}
+.partner-modal-card select,
+.partner-modal-card select:focus {
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'/></svg>");
+    
+    background-repeat: no-repeat;
+    background-position: right 14px center;
+    background-size: 14px;
+
+    padding-right: 42px;
+}
+.partner-modal-card input,
+.partner-modal-card textarea,
+.partner-modal-card select {
+    width: 100%;
+    height: 50px;
+    padding: 0 16px;
+    border-radius: 14px;
+    border: 1px solid rgba(255, 255, 255, 0.35);
+    background: rgba(255, 255, 255, 0.22);
+    color: white;
+    outline: none;
+    font-size: 14px;
+    transition: 0.2s;
+    padding: 0 36px 0 14px; /* ← добавили справа */
+}
+
+.partner-modal-card textarea {
+    min-height: 110px;
+    padding: 14px 16px;
+    resize: vertical;
+}
+
+.partner-modal-card input:focus,
+.partner-modal-card textarea:focus,
+.partner-modal-card select:focus {
+    border-color: #93c5fd;
+    box-shadow: 0 0 0 4px rgba(147, 197, 253, 0.18);
+    background: rgba(255, 255, 255, 0.28);
+}
+    .partner-modal-card textarea {
+        min-height: 110px;
+        padding: 14px 16px;
+        resize: vertical;
+    }
+
+    .partner-modal-card input::placeholder,
+    .partner-modal-card textarea::placeholder {
+        color: rgba(255, 255, 255, 0.62);
+    }
+
+    .partner-modal-card input:focus,
+    .partner-modal-card textarea:focus,
+    .partner-modal-card select:focus {
+        border-color: rgba(99, 102, 241, 0.9);
+        box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.18);
+        background: rgba(255, 255, 255, 0.16);
+    }
+
+    .partner-modal-card select option {
+        color: black;
+    }
+
+    .partner-submit-btn {
+        margin-top: 22px;
+        width: 100%;
+        height: 54px;
+        border: none;
+        border-radius: 14px;
+        background: linear-gradient(90deg, #2f67ff, #7b3cff);
+        color: white;
+        font-size: 15px;
+        font-weight: 800;
+        cursor: pointer;
+        box-shadow: 0 12px 28px rgba(63, 94, 251, 0.35);
+    }
+
+    .partner-field-errors,
+    .errorlist {
+        margin-top: 6px;
+        color: #ffd4d4;
+        font-size: 12px;
+        list-style: none;
+        padding: 0;
+    }
+
+        .partner-hidden {
+            display: none !important;
+        }  
+        
+        
+        
+        .partner-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            grid-column: 1 / -1; /* занимает всю ширину формы */
+    }
+    .messages {
+    margin-bottom: 16px;
+}
+
+    .message {
+        padding: 12px 16px;
+        border-radius: 12px;
+        font-size: 14px;
+        font-weight: 600;
+    }
+
+    /* success */
+    .message.success {
+        background: #dcfce7;
+        color: #166534;
+    }
+
+    /* error */
+    .message.error {
+        background: #fee2e2;
+        color: #991b1b;
+    }
+    .partner-modal-card .custom-select {
+        appearance: none;
+        -webkit-appearance: none;
+        -moz-appearance: none;
+        padding-right: 42px;
+        background-image: none !important;
+    }
+    .select-wrap {
+    position: relative;
+}
+
+    .select-wrap::after {
+        content: "";
+        position: absolute;
+        right: 14px;
+        top: 60%;
+        width: 18px;
+        height: 18px;
+        transform: translateY(-50%);
+        pointer-events: none;
+        background-repeat: no-repeat;
+        background-position: center;
+        background-size: 14px;
+        background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'/></svg>");
+    }
+    .partner-modal-card .form-input.error {
+        border: 1px solid rgba(246, 28, 28, 0.9) !important; /* красный с opacity 0.5 */
+        background: transparent; /* убрали заливку */
+    }
+
+    .partner-modal-card .form-input.valid {
+        border: 1px solid rgba(99, 102, 241, 0.9) !important;
+    }
+    .form-input.valid {
+        border: 1px solid rgba(99, 102, 241, 0.9);
+    }
+    .partner-submit-btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+    .checkbox-label {
+
+    max-width: 100%;
+    flex-wrap: wrap;
+
+   }
+    .checkbox-label input {
+        flex-shrink: 0;
+        width: 20px;
+        margin: 0;
+        padding: 0;
+    }
+   .partner-modal-card .partner-form-group label {
+        display: flex;
+        margin-bottom: 6px;
+        font-size: 13px;
+        font-weight: 700;
+        color: rgba(255, 255, 255, 0.92);
+        border-radius: 14px;
+    }
+    .checkbox-label {
+        display: flex;
+        align-items: center;
+        gap: 10px;              /* расстояние между чекбоксом и текстом */
+        width: 100%;            /* растянуть на всю ширину */
+        cursor: pointer;
+    }
+
+    .checkbox-label input {
+        flex-shrink: 0;         /* чекбокс не сжимается */
+    }
+
+    .checkbox-label span {
+        flex: 1;                /* текст растягивается */
+    }
+    .checkbox-label span {
+    white-space: nowrap; /* если хочешь в одну строку */
+  }
+    .checkbox-label {
+        display: flex !important;
+        align-items: center;
+        gap: 10px;
+        width: 100%;
+    }
+    label.checkbox-label {
+        margin-top: -20px;
+    }
+
+
+    .checkbox-label span {
+        display: inline-block;
+        flex: 1;
+    }
+    .search-wrap {
+        position: relative;
+    }
+
+    .search-wrap input {
+        padding-right: 42px;
+    }
+
+    .search-btn {
+        position: absolute;
+        right: 10px;
+        top: 57%;
+        transform: translateY(-50%);
+        border: none;
+        background: transparent;
+        cursor: pointer;
+        padding: 4px;
+    }
+
+    .search-btn img {
+        width: 22px;
+        height: 22px;
+        opacity: 0.7;
+    }
+
+    .search-btn:hover img {
+        opacity: 1;
+    }
+    .partners-sticky-panel {
+        position: sticky;
+        top: 0;
+        z-index: 500;
+        width: 100%;
+        border-radius: 10px;
+        background: white;
+        padding: 0 14px;
+        box-shadow: 0 8px 18px rgba(0, 0, 0, 0.05);
+    }
+    @media (max-width: 1200px) {
+        .partner-grid {
+            grid-template-columns: repeat(3, 1fr);
+        }
+
+        .filters-tabs {
+            grid-template-columns: repeat(3, 1fr);
+        }
+
+        .filters-form,
+        .filters-form.period-mode {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+
+    @media (max-width: 700px) {
+        .partners-wrapper {
+            padding: 0 12px;
+        }
+
+        .partner-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .filters-tabs {
+            grid-template-columns: 1fr 1fr;
+        }
+
+        .filters-form,
+        .filters-form.period-mode {
+            grid-template-columns: 1fr;
+        }
+
+        .filter-actions {
+            flex-direction: column;
+        }
+
+        .partner-tabs {
+            grid-template-columns: 1fr;
+        }
+
+        .partner-form-grid {
+            grid-template-columns: 1fr;
+        }
+
+
+        .partner-form-grid,
+        .partner-form-grid.company-layout {
+            grid-template-columns: 1fr !important;
+        }
+
+        .partner-row {
+            grid-template-columns: 1fr !important;
+        }
+
+    .partner-form-group.full {
+        grid-column: auto;
+    }
+        .partner-form-group.full {
+            grid-column: auto;
+        }
+
+        .partner-modal-card {
+            padding: 22px;
+            border-radius: 22px;
+        }
+
+        .partner-modal-title {
+            font-size: 24px;
+        }
+        partner-form-grid.company-layout {
+        grid-template-columns: 1fr;
+        }
+
+        .partner-row {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+
+<div class="partners-wrapper">
+  <div class="partners-sticky-panel">
+    <form method="get" id="partners-filters-form">
+        <input type="hidden" name="date_filter" id="date_filter_input" value="{{ date_filter }}">
+
+        <div class="filters-tabs">
+            <button type="button"
+                    class="filter-tab {% if date_filter == 'all' %}active{% endif %}"
+                    data-date-filter="all">
+                Все время ({{ count_all }})
+            </button>
+
+            <button type="button"
+                    class="filter-tab {% if date_filter == 'today' %}active{% endif %}"
+                    data-date-filter="today">
+                Сегодня ({{ count_today }})
+            </button>
+
+            <button type="button"
+                    class="filter-tab {% if date_filter == 'yesterday' %}active{% endif %}"
+                    data-date-filter="yesterday">
+                Вчера ({{ count_yesterday }})
+            </button>
+
+            <button type="button"
+                    class="filter-tab {% if date_filter == 'week' %}active{% endif %}"
+                    data-date-filter="week">
+                Неделя ({{ count_week }})
+            </button>
+
+            <button type="button"
+                    class="filter-tab {% if date_filter == 'month' %}active{% endif %}"
+                    data-date-filter="month">
+                Месяц ({{ count_month }})
+            </button>
+
+            <button type="button"
+                    class="filter-tab {% if date_filter == 'period' %}active{% endif %}"
+                    data-date-filter="period">
+                Период ({{ count_period }})
+            </button>
+        </div>
+
+        <div class="filters-panel">
+            <div class="filters-form {% if date_filter == 'period' %}period-mode{% endif %}" id="filters-form-block">
+                <div class="filter-group">
+                    <label for="partner_activity">Активность партнера</label>
+                    <select name="partner_activity" id="partner_activity">
+                        <option value="">Все ({{ total_count }})</option>
+                        <option value="active" {% if partner_activity == 'active' %}selected{% endif %}>
+                            Активные ({{ active_count }})
+                        </option>
+                        <option value="inactive" {% if partner_activity == 'inactive' %}selected{% endif %}>
+                            Неактивные ({{ inactive_count }})
+                        </option>
+                    </select>
+                </div>
+
+                <div class="filter-group">
+                    <label for="offer">Оффер</label>
+                    <select name="offer" id="offer">
+                        <option value="">Все офферы ({{ total_count }})</option>
+                        {% for offer in user_offers %}
+                            <option value="{{ offer.id }}" {% if selected_offer == offer.id|stringformat:"s" %}selected{% endif %}>
+                                {{ offer.title }} ({{ offer.partners_count }})
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="filter-group period-only" {% if date_filter != 'period' %}style="display:none;"{% endif %}>
+                    <label for="start_date">Начало периода</label>
+                    <input type="date" name="start_date" id="start_date" value="{{ start_date }}">
+                </div>
+
+                <div class="filter-group period-only" {% if date_filter != 'period' %}style="display:none;"{% endif %}>
+                    <label for="end_date">Конец периода</label>
+                    <input type="date" name="end_date" id="end_date" value="{{ end_date }}">
+                </div>
+
+                <div class="filter-group search-group">
+                    <label for="search">Поиск партнера</label>
+
+                    <div class="search-wrap">
+                        <input type="text"
+                            name="search"
+                            id="search"
+                            placeholder="ФИО, email, телефон"
+                            value="{{ search }}">
+
+                        <button type="button" id="search-btn" class="search-btn">
+                            <img src="{% static 'users/images/search.svg' %}" alt="Поиск">
+                        </button>
+                    </div>
+                </div>
+                <div class="filter-actions">
+                    <a href="{% url 'partners' %}" class="filter-reset">Сброс</a>
+                </div>
+            </div>
+        </div>
+    </form>
+    </div>
+
+    <div class="partner-modal" id="partner-modal">
+        <div class="partner-modal-card">
+            <div class="partner-modal-header">
+                <div>
+                    <h2 class="partner-modal-title">Добавить партнера</h2>
+                    <div class="partner-modal-subtitle">Быстрое добавление партнера без модерации</div>
+                </div>
+                <button type="button" class="partner-close-btn" id="close-partner-modal">&times;</button>
+            </div>
+
+            <form method="post" action="{% url 'create_partner_by_user' %}" id="partner-create-form">
+                {% csrf_token %}
+
+                <div class="partner-tabs">
+                    <button type="button" class="partner-tab-btn active" data-partner-type="individual">
+                        Физическое лицо
+                    </button>
+                    <button type="button" class="partner-tab-btn" data-partner-type="company">
+                        Юридическое лицо
+                    </button>
+                    <button type="button" class="partner-tab-btn" data-partner-type="self_employed">
+                        Самозанятый
+                    </button>
+                </div>
+
+                <input type="hidden" name="partner_type" id="partner_type_input" value="individual">
+
+                <div class="partner-form-grid" id="partner-form-grid">
+                    <div class="partner-form-group full select-wrap">
+                        <label for="{{ partner_create_form.offer.id_for_label }}">Оффер</label>
+                        {{ partner_create_form.offer }}
+                        <div class="partner-field-errors">{{ partner_create_form.offer.errors }}</div>
+                    </div>
+                         <div class="partner-form-group partner-field partner-field-individual partner-field-self_employed">
+                        <label for="{{ partner_create_form.full_name.id_for_label }}">ФИО</label>
+                        {{ partner_create_form.full_name }}
+                        <div class="partner-field-errors">{{ partner_create_form.full_name.errors }}</div>
+                    </div>
+                    <div class="partner-form-group">
+                        <label for="{{ partner_create_form.email.id_for_label }}">Email</label>
+                        {{ partner_create_form.email }}
+                        <div class="partner-field-errors">{{ partner_create_form.email.errors }}</div>
+                    </div>
+
+                    <div class="partner-form-group">
+                        <label for="{{ partner_create_form.phone.id_for_label }}">Телефон</label>
+                        {{ partner_create_form.phone }}
+                        <div class="partner-field-errors">{{ partner_create_form.phone.errors }}</div>
+                    </div>
+
+                  
+
+                   <div class="partner-form-group partner-field partner-field-individual partner-field-company partner-field-self_employed full">
+                        <label for="{{ partner_create_form.activity_type.id_for_label }}">Вид деятельности</label>
+                        {{ partner_create_form.activity_type }}
+                        <div class="partner-field-errors">{{ partner_create_form.activity_type.errors }}</div>
+                    </div>
+
+                    <div class="partner-row partner-field partner-field-self_employed partner-hidden">
+                        <div class="partner-form-group">
+                            <label for="{{ partner_create_form.company_name.id_for_label }}">Название компании</label>
+                            {{ partner_create_form.company_name }}
+                            <div class="partner-field-errors">{{ partner_create_form.company_name.errors }}</div>
+                        </div>
+
+                        <div class="partner-form-group">
+                            <label for="{{ partner_create_form.inn.id_for_label }}">ИНН</label>
+                            {{ partner_create_form.inn }}
+                            <div class="partner-field-errors">{{ partner_create_form.inn.errors }}</div>
+                        </div>
+                    </div>
+
+                    <div class="partner-form-group full partner-field partner-field-company partner-hidden">
+                        <label for="{{ partner_create_form.company_full_name.id_for_label }}">Полное название организации</label>
+                        {{ partner_create_form.company_full_name }}
+                        <div class="partner-field-errors">{{ partner_create_form.company_full_name.errors }}</div>
+                    </div>
+
+                    <div class="partner-form-group full partner-field partner-field-company partner-hidden">
+                        <label for="{{ partner_create_form.company_short_name.id_for_label }}">Сокращенное название организации</label>
+                        {{ partner_create_form.company_short_name }}
+                        <div class="partner-field-errors">{{ partner_create_form.company_short_name.errors }}</div>
+                    </div>
+
+                    <div class="partner-form-group full partner-field partner-field-company partner-hidden">
+                        <label for="{{ partner_create_form.postal_address.id_for_label }}">Почтовый адрес</label>
+                        {{ partner_create_form.postal_address }}
+                        <div class="partner-field-errors">{{ partner_create_form.postal_address.errors }}</div>
+                    </div>
+
+                    <div class="partner-form-group full partner-field partner-field-company partner-hidden">
+                        <label for="{{ partner_create_form.legal_address.id_for_label }}">Юридический адрес</label>
+                        {{ partner_create_form.legal_address }}
+                        <div class="partner-field-errors">{{ partner_create_form.legal_address.errors }}</div>
+                    </div>
+                    <div class="partner-form-group full partner-field partner-field-company">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="same-address-checkbox">
+                            <span>Почтовый адрес совпадает с юридическим</span>
+                        </label>
+                    </div>
+                   <!-- ИНН: для юрлица-->
+                    <div class="partner-row partner-field partner-field-company partner-hidden">
+                        <div class="partner-form-group">
+                            <label for="{{ partner_create_form.inn.id_for_label }}">ИНН</label>
+                            {{ partner_create_form.inn }}
+                            <div class="partner-field-errors">{{ partner_create_form.inn.errors }}</div>
+                        </div>
+
+                        <div class="partner-form-group">
+                            <label for="{{ partner_create_form.kpp.id_for_label }}">КПП</label>
+                            {{ partner_create_form.kpp }}
+                            <div class="partner-field-errors">{{ partner_create_form.kpp.errors }}</div>
+                        </div>
+                    </div>
+              
+
+                    <div class="partner-form-group full partner-field partner-field-company partner-hidden">
+                        <label for="{{ partner_create_form.contact_person_name.id_for_label }}">ФИО контактного лица</label>
+                        {{ partner_create_form.contact_person_name }}
+                        <div class="partner-field-errors">{{ partner_create_form.contact_person_name.errors }}</div>
+                    </div>
+                </div>
+
+                <button type="submit" class="partner-submit-btn" id="submit-partner-btn" disabled>Добавить партнера</button>
+            </form>
+        </div>
+    </div>
+
+    <div class="top-bar">
+        <button type="button" class="add-btn" id="open-partner-modal">Добавить партнера</button>
+    </div>
+
+    {% if partners_list %}
+        <div class="partners-grid">
+            {% for partner in partners_list %}
+                <div class="partner-card">
+                    <div class="partner-header">
+                        <div>
+                            <div class="partner-title">
+                                {% if partner.partner_type == 'company' %}
+                                    {{ partner.company_short_name|default:partner.company_full_name|default:"Юридическое лицо" }}
+                                {% else %}
+                                    {{ partner.full_name|default:"Партнер" }}
+                                {% endif %}
+                            </div>
+
+                            <div class="partner-subtitle">
+                                {{ partner.get_partner_type_display }}
+                            </div>
+                        </div>
+
+                        {% if partner.is_approved %}
+                            <div class="badge badge-approved">Подтвержден</div>
+                        {% else %}
+                            <div class="badge badge-pending">На модерации</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="partner-grid">
+                        <div class="partner-item">
+                            <div class="partner-label">Email</div>
+                            <div class="partner-value">{{ partner.email }}</div>
+                        </div>
+
+                        <div class="partner-item">
+                            <div class="partner-label">Телефон</div>
+                            <div class="partner-value">{{ partner.phone }}</div>
+                        </div>
+
+                        <div class="partner-item">
+                            <div class="partner-label">Статус</div>
+                            <div class="partner-value">
+                                {% if partner.status %}
+                                    {{ partner.status.name }}
+                                {% else %}
+                                    —
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="partner-item">
+                            <div class="partner-label">Дата регистрации</div>
+                            <div class="partner-value">{{ partner.created_at|date:"d.m.Y H:i" }}</div>
+                        </div>
+
+                        <div class="partner-item">
+                            <div class="partner-label">Количество лидов</div>
+                            <div class="partner-value">{{ partner.real_leads_count|default:0 }}</div>
+                        </div>
+                        <div class="partner-item">
+                            <div class="partner-label">Количество сделок</div>
+                            <div class="partner-value">{{ partner.real_deals_count|default:0 }}</div>
+                        </div>
+
+                        <div class="partner-item">
+                            <div class="partner-label">Сумма вознаграждения</div>
+                            <div class="partner-value">{{ partner.real_reward_amount|floatformat:0|intcomma }} ₽</div>
+                        </div>
+
+                        <div class="partner-item">
+                            <div class="partner-label">Баланс</div>
+                            <div class="partner-value">{{ partner.real_balance|floatformat:0|intcomma }} ₽</div>
+                        </div>
+
+                        <div class="partner-item">
+                            <div class="partner-label">Вид деятельности</div>
+                            <div class="partner-value">{{ partner.activity_type|default:"—" }}</div>
+                       </div>
+                        
+
+                        {% if partner.partner_type == 'self_employed' %}
+                            <div class="partner-item">
+                                <div class="partner-label">Компания</div>
+                                <div class="partner-value">{{ partner.company_name|default:"—" }}</div>
+                            </div>
+                        {% endif %}
+
+                        {% if partner.partner_type == 'company' %}
+                            <div class="partner-item">
+                                <div class="partner-label">Полное название</div>
+                                <div class="partner-value">{{ partner.company_full_name|default:"—" }}</div>
+                            </div>
+
+                            <div class="partner-item">
+                                <div class="partner-label">ИНН</div>
+                                <div class="partner-value">{{ partner.inn|default:"—" }}</div>
+                            </div>
+
+                            <div class="partner-item">
+                                <div class="partner-label">КПП</div>
+                                <div class="partner-value">{{ partner.kpp|default:"—" }}</div>
+                            </div>
+
+                            <div class="partner-item">
+                                <div class="partner-label">Контактное лицо</div>
+                                <div class="partner-value">{{ partner.contact_person_name|default:"—" }}</div>
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="partner-footer">
+                        <button type="button" class="details-btn">Подробнее</button>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="empty-box">
+            У вас пока нет зарегистрированных партнеров
+        </div>
+    {% endif %}
+</div>
+<script src="https://unpkg.com/imask"></script>
+<script>
+    const partnersFiltersForm = document.getElementById('partners-filters-form');
+    const tabs = document.querySelectorAll('.filter-tab');
+    const dateFilterInput = document.getElementById('date_filter_input');
+    const partnerActivityField = document.getElementById('partner_activity');
+    const offerField = document.getElementById('offer');
+    const startDateField = document.getElementById('start_date');
+    const endDateField = document.getElementById('end_date');
+    const searchField = document.getElementById('search');
+    const periodFields = document.querySelectorAll('.period-only');
+    const filtersFormBlock = document.getElementById('filters-form-block');
+
+    tabs.forEach(function(tab) {
+        tab.addEventListener('click', function() {
+            const value = this.dataset.dateFilter;
+            dateFilterInput.value = value;
+
+            tabs.forEach(t => t.classList.remove('active'));
+            this.classList.add('active');
+
+            if (value === 'period') {
+                periodFields.forEach(field => field.style.display = 'block');
+                filtersFormBlock.classList.add('period-mode');
+            } else {
+                periodFields.forEach(field => field.style.display = 'none');
+                filtersFormBlock.classList.remove('period-mode');
+
+                if (startDateField) startDateField.value = '';
+                if (endDateField) endDateField.value = '';
+            }
+
+            partnersFiltersForm.submit();
+        });
+    });
+
+    if (partnerActivityField) {
+        partnerActivityField.addEventListener('change', function() {
+            partnersFiltersForm.submit();
+        });
+    }
+
+    if (offerField) {
+        offerField.addEventListener('change', function() {
+            partnersFiltersForm.submit();
+        });
+    }
+
+    if (startDateField) {
+        startDateField.addEventListener('change', function() {
+            if (dateFilterInput.value === 'period') {
+                partnersFiltersForm.submit();
+            }
+        });
+    }
+
+    if (endDateField) {
+        endDateField.addEventListener('change', function() {
+            if (dateFilterInput.value === 'period') {
+                partnersFiltersForm.submit();
+            }
+        });
+    }
+
+    if (searchField) {
+        searchField.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                partnersFiltersForm.submit();
+            }
+        });
+    }
+</script>
+
+<script>
+    const partnerModal = document.getElementById('partner-modal');
+    const openPartnerModalBtn = document.getElementById('open-partner-modal');
+    const closePartnerModalBtn = document.getElementById('close-partner-modal');
+    const partnerTypeInput = document.getElementById('partner_type_input');
+    const partnerTabButtons = document.querySelectorAll('.partner-tab-btn');
+    const allPartnerFields = document.querySelectorAll('.partner-field');
+    const partnerFormGrid = document.getElementById('partner-form-grid');
+    const innInputs = document.querySelectorAll('#inn-input');
+    const kppInputs = document.querySelectorAll('#kpp-input');
+    const postalInput = document.getElementById('id_postal_address');
+    const legalInput = document.getElementById('id_legal_address');
+    const sameAddressCheckbox = document.getElementById('same-address-checkbox');
+
+// Подстановка почтового адреса при совпадении с юридическим
+    function syncAddress() {
+        if (!postalInput || !legalInput || !sameAddressCheckbox) return;
+
+        if (sameAddressCheckbox.checked) {
+            legalInput.value = postalInput.value;
+            legalInput.setAttribute('readonly', 'readonly');
+        } else {
+            legalInput.removeAttribute('readonly');
+        }
+         validateForm();
+    }
+
+// Функция валидации ИНН    
+    function validateInn() {
+        const maxLength = getInnMaxLength();
+
+        innInputs.forEach(function(input) {
+            const value = input.value.replace(/\D/g, '');
+
+            input.classList.remove('error', 'valid');
+
+            if (!value) return;
+
+            if (value.length < maxLength) {
+                input.classList.add('error');
+            } else if (value.length === maxLength) {
+                input.classList.add('valid');
+            }
+        });
+        
+    }
+    // Функция управления кнопкой отправки формы
+    const submitBtn = document.getElementById('submit-partner-btn');
+
+    function isFieldFilled(input) {
+        return input && input.value && input.value.trim() !== '';
+    }
+
+function isVisibleElement(el) {
+    return !!(el.offsetWidth || el.offsetHeight || el.getClientRects().length);
+}
+
+function isFilled(selector) {
+    const fields = document.querySelectorAll(selector);
+
+    for (const field of fields) {
+        if (isVisibleElement(field) && field.value.trim() !== '') {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+function validateForm() {
+    if (!submitBtn) return;
+
+    const type = partnerTypeInput.value;
+    let isValid = true;
+
+    if (!isFilled('#id_offer')) isValid = false;
+    if (!isFilled('#id_email')) isValid = false;
+    if (!isFilled('#phone-input')) isValid = false;
+
+    if (type === 'individual') {
+        if (!isFilled('#id_full_name')) isValid = false;
+        if (!isFilled('#id_activity_type')) isValid = false;
+    }
+
+    if (type === 'self_employed') {
+        if (!isFilled('#id_full_name')) isValid = false;
+        if (!isFilled('#id_activity_type')) isValid = false;
+        if (!isFilled('#id_company_name')) isValid = false;
+
+        const visibleInn = Array.from(innInputs).find(isVisibleElement);
+        if (!visibleInn || visibleInn.value.trim().length !== 12 || visibleInn.classList.contains('error')) {
+            isValid = false;
+        }
+    }
+
+    if (type === 'company') {
+        if (!isFilled('#id_company_full_name')) isValid = false;
+        if (!isFilled('#id_company_short_name')) isValid = false;
+        if (!isFilled('#id_postal_address')) isValid = false;
+        if (!isFilled('#id_legal_address')) isValid = false;
+        if (!isFilled('#id_contact_person_name')) isValid = false;
+
+        const visibleInn = Array.from(innInputs).find(isVisibleElement);
+        if (!visibleInn || visibleInn.value.trim().length !== 10 || visibleInn.classList.contains('error')) {
+            isValid = false;
+        }
+
+        const visibleKpp = Array.from(kppInputs).find(isVisibleElement);
+        if (!visibleKpp || visibleKpp.value.trim().length !== 9 || visibleKpp.classList.contains('error')) {
+            isValid = false;
+        }
+    }
+
+    submitBtn.disabled = !isValid;
+}
+
+
+// Функция валидации КПП
+    function validateKpp() {
+    kppInputs.forEach(function(input) {
+        const value = input.value.replace(/\D/g, '');
+
+        input.classList.remove('error', 'valid');
+
+        if (!value) return;
+
+        if (value.length < 9) {
+            input.classList.add('error');
+        } else if (value.length === 9) {
+            input.classList.add('valid');
+        }
+    });
+   }
+    function getInnMaxLength() {
+        const currentType = partnerTypeInput ? partnerTypeInput.value : 'individual';
+        return currentType === 'company' ? 10 : 12;
+    }
+    function updateInnPlaceholder() {
+        const type = partnerTypeInput.value;
+
+        innInputs.forEach(function(input) {
+            input.placeholder = type === 'company'
+                ? 'ИНН (10 цифр)'
+                : 'ИНН (12 цифр)';
+        });
+    }
+    function updateInnMaxLength() {
+        const maxLength = getInnMaxLength();
+
+        innInputs.forEach(function(input) {
+            input.setAttribute('maxlength', String(maxLength));
+        });
+    }
+
+    function normalizeInnValue() {
+        const maxLength = getInnMaxLength();
+
+        innInputs.forEach(function(input) {
+            let value = input.value.replace(/\D/g, '');
+
+            if (value.length > maxLength) {
+                value = value.slice(0, maxLength);
+            }
+
+            input.value = value;
+        });
+    }
+
+    function updatePartnerFields(type) {
+        allPartnerFields.forEach(function(field) {
+            field.classList.add('partner-hidden');
+        });
+
+        document.querySelectorAll('.partner-field-' + type).forEach(function(field) {
+            field.classList.remove('partner-hidden');
+        });
+
+        if (partnerFormGrid) {
+            if (type === 'company') {
+                partnerFormGrid.classList.add('company-layout');
+            } else {
+                partnerFormGrid.classList.remove('company-layout');
+            }
+        }
+
+        if (partnerTypeInput) {
+            partnerTypeInput.value = type;
+        }
+        if (sameAddressCheckbox) {
+            sameAddressCheckbox.checked = false;
+        }
+        if (legalInput) {
+            legalInput.removeAttribute('readonly');
+        }
+        updateInnMaxLength();
+        normalizeInnValue();
+        updateInnPlaceholder();
+        validateInn();
+        validateKpp();
+        validateForm();
+    }
+// Обработчики событий
+    if (sameAddressCheckbox) {
+        sameAddressCheckbox.addEventListener('change', syncAddress);
+    }
+
+    if (postalInput) {
+        postalInput.addEventListener('input', function() {
+            if (sameAddressCheckbox.checked) {
+                legalInput.value = postalInput.value;
+            }
+        });
+         validateForm();
+    }
+    if (openPartnerModalBtn) {
+        openPartnerModalBtn.addEventListener('click', function() {
+            if (partnerModal) {
+                partnerModal.classList.add('active');
+            }
+        });
+    }
+
+    if (closePartnerModalBtn) {
+        closePartnerModalBtn.addEventListener('click', function() {
+            if (partnerModal) {
+                partnerModal.classList.remove('active');
+            }
+        });
+    }
+
+    if (partnerModal) {
+        partnerModal.addEventListener('click', function(event) {
+            if (event.target === partnerModal) {
+                partnerModal.classList.remove('active');
+            }
+        });
+    }
+
+    partnerTabButtons.forEach(function(button) {
+        button.addEventListener('click', function() {
+            const type = this.dataset.partnerType;
+
+            partnerTabButtons.forEach(function(btn) {
+                btn.classList.remove('active');
+            });
+
+            this.classList.add('active');
+            updatePartnerFields(type);
+        });
+    });
+
+    innInputs.forEach(function(input) {
+        input.addEventListener('input', function() {
+            let value = this.value.replace(/\D/g, '');
+            const maxLength = getInnMaxLength();
+
+            if (value.length > maxLength) {
+                value = value.slice(0, maxLength);
+            }
+
+            this.value = value;
+            validateInn();
+            validateForm();
+        });
+    });
+    kppInputs.forEach(function(input) {
+    input.addEventListener('input', function() {
+        let value = this.value.replace(/\D/g, '');
+
+        if (value.length > 9) {
+            value = value.slice(0, 9);
+        }
+
+        this.value = value;
+
+        validateKpp(); // 👈 проверка
+        validateForm();
+    });
+  });
+    document.querySelectorAll('#partner-create-form input, #partner-create-form select').forEach(function(el) {
+        el.addEventListener('input', validateForm);
+        el.addEventListener('change', validateForm);
+    });
+    updatePartnerFields('individual');
+</script>
+
+<script>
+    const phoneInput = document.getElementById('phone-input');
+
+    if (phoneInput) {
+        IMask(phoneInput, {
+            mask: '+{7} (000) 000-00-00'
+        });
+    }
+</script>
+<script>
+    const searchBtn = document.getElementById('search-btn');
+
+    if (searchField) {
+        searchField.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                partnersFiltersForm.submit();
+            }
+        });
+    }
+
+    if (searchBtn) {
+        searchBtn.addEventListener('click', function() {
+            partnersFiltersForm.submit();
+        });
+    }
+</script>    
+<script>
+// Скрипт для замены кавычек в текстовых полях на типографские    
+    document.addEventListener('DOMContentLoaded', function () {
+
+        function replaceQuotes(value) {
+            // заменяем "..." → «...»
+            return value
+                .replace(/"([^"]*)"/g, '«$1»')   // двойные
+                .replace(/"(?=\S)/g, '«')        // открывающая
+                .replace(/(?<=\S)"/g, '»')       // закрывающая
+                .replace(/'([^']*)'/g, '«$1»');  // одинарные
+        }
+
+        const inputs = document.querySelectorAll('input[type="text"], textarea');
+
+        inputs.forEach(input => {
+            input.addEventListener('blur', function () {
+                this.value = replaceQuotes(this.value);
+            });
+        });
+
+    });
+</script>
+<script>
+    document.querySelectorAll('.filter-tab').forEach(tab => {
+    tab.addEventListener('click', function () {
+        const filter = this.dataset.dateFilter;
+
+        if (filter === 'period') {
+            document.querySelector('.period-filter').style.display = 'flex';
+            return;
+        }
+
+        window.location.href = `?date_filter=${filter}`;
+    });
+  });
+</script>
+{% endblock %}

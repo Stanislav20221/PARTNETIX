@@ -1,0 +1,187 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Вход в систему</title>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            position: relative;
+            background: url("{% static 'users/images/admin-registr.jpg' %}") no-repeat center center;
+            background-size: cover;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        body::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.55);
+            z-index: 0;
+        }
+
+        .card {
+            position: relative;
+            z-index: 1;
+            width: 100%;
+            max-width: 430px;
+            background: rgba(255, 255, 255, 0.14);
+            backdrop-filter: blur(14px);
+            -webkit-backdrop-filter: blur(14px);
+            border: 1px solid rgba(255, 255, 255, 0.22);
+            border-radius: 22px;
+            padding: 32px;
+            box-shadow: 0 20px 45px rgba(0, 0, 0, 0.28);
+        }
+
+        .title {
+            margin: 0 0 8px;
+            font-size: 30px;
+            font-weight: 700;
+            text-align: center;
+            color: #ffffff;
+        }
+
+        .subtitle {
+            margin: 0 0 28px;
+            text-align: center;
+            color: rgba(255, 255, 255, 0.82);
+            font-size: 14px;
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 6px;
+            font-size: 14px;
+            font-weight: 600;
+            color: #ffffff;
+        }
+
+        .form-input,
+        input {
+            width: 100%;
+            padding: 13px 14px;
+            border: 1px solid rgba(255, 255, 255, 0.22);
+            border-radius: 12px;
+            outline: none;
+            font-size: 14px;
+            transition: 0.2s;
+            background: rgba(255, 255, 255, 0.12);
+            color: white;
+        }
+
+        .form-input::placeholder,
+        input::placeholder {
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .form-input:focus,
+        input:focus {
+            border-color: #60a5fa;
+            background: rgba(255, 255, 255, 0.18);
+            box-shadow: 0 0 0 4px rgba(96, 165, 250, 0.16);
+        }
+
+        .btn {
+            width: 100%;
+            border: none;
+            border-radius: 12px;
+            padding: 14px;
+            font-size: 15px;
+            font-weight: 700;
+            cursor: pointer;
+            background: linear-gradient(135deg, #2563eb, #7c3aed);
+            color: white;
+            transition: 0.2s;
+            margin-top: 10px;
+        }
+
+        .btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 10px 24px rgba(37, 99, 235, 0.28);
+        }
+
+        .field-errors,
+        .errorlist {
+            margin-top: 6px;
+            color: #fecaca;
+            font-size: 13px;
+            list-style: none;
+            padding: 0;
+        }
+
+        .non-field-errors {
+            background: rgba(127, 29, 29, 0.55);
+            color: #fee2e2;
+            padding: 12px 14px;
+            border-radius: 10px;
+            margin-bottom: 18px;
+            font-size: 14px;
+        }
+
+        .bottom-link {
+            text-align: center;
+            margin-top: 18px;
+        }
+
+        .bottom-link a {
+            color: #bfdbfe;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .bottom-link a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h1 class="title">Вход</h1>
+        <p class="subtitle">Авторизация в системе PARTNETIX</p>
+
+        {% if form.non_field_errors %}
+            <div class="non-field-errors">
+                {{ form.non_field_errors }}
+            </div>
+        {% endif %}
+
+        <form method="post">
+            {% csrf_token %}
+
+            <div class="form-group">
+                <label for="{{ form.username.id_for_label }}">Логин</label>
+                {{ form.username }}
+                <div class="field-errors">{{ form.username.errors }}</div>
+            </div>
+
+            <div class="form-group">
+                <label for="{{ form.password.id_for_label }}">Пароль</label>
+                {{ form.password }}
+                <div class="field-errors">{{ form.password.errors }}</div>
+            </div>
+
+            <button type="submit" class="btn">Войти</button>
+        </form>
+
+        <div class="bottom-link">
+            <a href="/">На главную</a>
+        </div>
+    </div>
+</body>
+</html>

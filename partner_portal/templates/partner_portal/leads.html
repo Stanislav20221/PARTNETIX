@@ -1,0 +1,1888 @@
+{% extends 'partner_portal/base.html' %}
+{% load static %}
+{% load number_format %}
+{% load humanize %}
+{% block title %}Лиды{% endblock %}
+{% block page_title %}ЛИДЫ{% endblock %}
+{% block content %}
+{% if messages %}
+    <div class="messages">
+        {% for message in messages %}
+            <div class="message {{ message.tags }}">
+                {{ message }}
+            </div>
+        {% endfor %}
+    </div>
+{% endif %}
+<style>
+    .messages {
+        margin-bottom: 18px;
+        }
+
+        .message {
+        padding: 12px 14px;
+        border-radius: 12px;
+        font-size: 14px;
+        font-weight: 600;
+        }
+
+        .message.error {
+        background: #fee2e2;
+        color: #991b1b;
+        }
+
+        .message.success {
+        background: #dcfce7;
+        color: #166534;
+        }
+
+        .message.info {
+        background: #dbeafe;
+        color: #1e40af;
+        }
+    .leads-card {
+        background: white;
+        border-radius: 18px;
+        padding: 24px;
+        box-shadow: 0 8px 25px rgba(15,23,42,0.06);
+    }
+
+    .leads-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    .leads-table th,
+    .leads-table td {
+        padding: 14px;
+        border-bottom: 1px solid #e5e7eb;
+        text-align: left;
+    }
+
+    .leads-table th {
+        font-size: 12px;
+        text-transform: uppercase;
+        color: #6b7280;
+    }
+.leads-header {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 20px;
+}
+
+.add-lead-btn {
+    background: #2563eb;
+    color: white;
+    border: none;
+    border-radius: 12px;
+    padding: 12px 18px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.add-lead-btn:hover {
+    background: #1d4ed8;
+}    
+
+.lead-modal {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(8, 10, 30, 0.55);
+    z-index: 3000;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+
+.lead-modal.active {
+    display: flex;
+}
+
+.lead-modal-card {
+    width: 100%;
+    max-width: 720px;
+    background: white;
+    border-radius: 18px;
+    padding: 24px;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.25);
+}
+
+.lead-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.lead-modal-header h3 {
+    margin: 0;
+}
+
+#close-lead-modal {
+    border: none;
+    background: transparent;
+    font-size: 26px;
+    cursor: pointer;
+}
+
+.lead-step {
+    display: none;
+}
+
+.lead-step.active {
+    display: block;
+}
+
+.lead-primary-btn,
+.lead-secondary-btn {
+    border: none;
+    border-radius: 12px;
+    padding: 12px 18px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.lead-primary-btn {
+    background: #2563eb;
+    color: white;
+}
+
+/* Блок под кнопкой Далее */
+.lead-step-1 .lead-primary-btn {
+    margin-top: 24px;
+    margin-left: auto;
+    display: block;
+}
+
+.lead-step.active {
+    display: block;
+}
+
+.next-step-btn,
+.back-step-btn,
+.save-lead-btn {
+    border: none;
+    border-radius: 12px;
+    padding: 12px 18px;
+    font-weight: 700;
+    cursor: pointer;
+    margin-top: 18px;
+}
+
+.next-step-btn,
+.save-lead-btn {
+    background: #2563eb;
+    color: white;
+}
+
+.back-step-btn {
+    background: #e5e7eb;
+    color: #111827;
+    margin-right: 10px;
+}
+.lead-form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+}
+
+.lead-form-group.full {
+    grid-column: 1 / -1;
+}
+
+.lead-form-group label {
+    display: block;
+    margin-bottom: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #374151;
+}
+
+.lead-input {
+    width: 100%;
+    height: 44px;
+    padding: 0 14px;
+    border: 1px solid #d1d5db;
+    border-radius: 12px;
+    font-size: 14px;
+    outline: none;
+    transition: .2s;
+}
+
+.lead-input:focus {
+    border-color: #2563eb;
+    box-shadow: 0 0 0 4px rgba(37,99,235,.10);
+}
+
+.lead-actions {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 24px;
+}
+
+.lead-primary-btn,
+.lead-secondary-btn {
+    border: none;
+    border-radius: 12px;
+    padding: 12px 18px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.lead-primary-btn {
+    background: #1F5BFF;
+    color: white;
+}
+
+.lead-secondary-btn {
+    background: #e5e7eb;
+    color: #111827;
+    width: 106px;
+    text-align: left;
+}
+.lead-calc-box {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    width: 100%;
+    margin-top: 18px;
+}
+
+.lead-calc-box.full {
+    grid-column: 1 / -1;
+}
+
+.lead-calc-box > div {
+    position: relative;
+    overflow: hidden;
+
+    min-height: 150px;
+    padding: 22px;
+
+    border-radius: 20px;
+
+    background:
+        linear-gradient(135deg, #1F5BFF 0%, #2563EB 55%, #3B82F6 100%);
+
+    box-shadow:
+        0 12px 30px rgba(31, 91, 255, 0.28),
+        inset 0 1px 0 rgba(255,255,255,0.12);
+
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.lead-calc-box > div::before {
+    content: "";
+    position: absolute;
+    right: -20px;
+    bottom: -20px;
+    width: 140px;
+    height: 140px;
+    border-radius: 50%;
+
+    background: rgba(255,255,255,0.08);
+    filter: blur(4px);
+}
+.lead-calc-box span {
+    font-size: 13px;
+    font-weight: 600;
+    color: rgba(255,255,255,0.78);
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    position: relative;
+    z-index: 2;
+}
+
+.lead-calc-box strong {
+    font-size: 23px;
+    line-height: 1;
+    font-weight: 800;
+    color: #ffffff;
+    position: relative;
+    z-index: 2;
+}
+
+#calc-payout-type {
+    font-size: 24px;
+    line-height: 1.2;
+}
+.lead-calc-box.full {
+    grid-column: 1 / -1;
+}
+.lead-input:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    background: #f3f4f6;
+}
+.lead-primary-btn:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+    transform: none;
+}
+.leads-header {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    margin-bottom: 20px;
+}
+
+.edit-lead-btn {
+    background: #111827;
+    color: white;
+    border: none;
+    border-radius: 12px;
+    padding: 12px 18px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.edit-lead-btn:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+}
+
+.lead-title-cell {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+
+.edit-lead-card .lead-actions {
+    align-items: center;
+}
+.edit-lead-card {
+    max-width: 849px;
+}
+
+.modal-close-btn {
+    border: none;
+    background: transparent;
+    font-size: 26px;
+    cursor: pointer;
+    color: #6b7280;
+    line-height: 1;
+}
+.edit-lead-step {
+    display: none;
+}
+
+.edit-lead-step.active {
+    display: block;
+}
+.edit-step-actions {
+    justify-content: flex-end;
+    margin-top: 24px;
+}
+.edit-next-wrap {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 24px;
+    width: 100%;
+}
+.date-tabs {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-bottom: 16px;
+}
+
+.date-tabs a {
+    padding: 9px 14px;
+    border-radius: 10px;
+    background: #f3f4f6;
+    color: #374151;
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 700;
+}
+
+.date-tabs a.active {
+    background: #1F5BFF;
+    color: white;
+}
+.filters-tabs {
+    display: flex;
+    gap: 12px;
+    width: 100%;
+    margin-bottom: 20px;
+}
+
+.filter-tab {
+    flex: 1;
+    border: none;
+    background: #e5e7eb;
+    color: #111827;
+    padding: 14px 16px;
+    border-radius: 12px;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: .2s;
+    text-align: center;
+}
+
+.filter-tab:hover {
+    background: #d1d5db;
+}
+
+.filter-tab.active {
+    background: #2563eb;
+    color: white;
+}
+.hidden {
+    display: none !important;
+}
+
+.leads-filters {
+    display: grid;
+    gap: 12px;
+    margin-bottom: 16px;
+}
+
+.leads-filters.no-period {
+    grid-template-columns: 1fr 1fr;
+}
+
+.leads-filters.has-period {
+    grid-template-columns: 1fr 1fr 1fr 1fr;
+}
+
+.search-group {
+    grid-column: 1 / -1;
+}
+
+.leads-filters > select {
+    grid-column: span 1;
+}
+
+.leads-filters.no-period {
+    grid-template-columns: 1fr 1fr;
+}
+
+.leads-filters.has-period {
+    grid-template-columns: 1fr 1fr 1fr 1fr;
+}
+
+.search-group {
+    grid-column: 1 / -1;
+}
+.search-group {
+    grid-column: 1 / -1;
+    width: 100%;
+}
+.search-wrap {
+    display: flex;
+    gap: 12px;
+    width: 100%;
+}
+
+.search-wrap > div,
+.search-wrap > input {
+    flex: 1;
+}
+.search-group {
+    grid-column: 1 / -1;
+    width: 100%;
+}
+
+.search-wrap input {
+    width: 100%;
+    height: 44px;
+    padding-left: 14px;
+    padding-right: 44px;
+    border: 1px solid #d1d5db;
+    border-radius: 12px;
+    font-size: 14px;
+    outline: none;
+    box-sizing: border-box;
+}
+
+.search-icon-btn {
+    position: absolute;
+    top: 50%;
+    right: 14px;
+    transform: translateY(-50%);
+
+    width: 20px;
+    height: 20px;
+
+    border: none;
+    background: transparent;
+    padding: 0;
+    margin: 0;
+    cursor: pointer;
+}
+
+.search-icon-btn img {
+    width: 16px;
+    height: 16px;
+    display: block;
+    opacity: 0.65;
+}
+.filter-group label {
+    display: block;
+    margin-bottom: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #374151;
+}
+.filter-group input, .filter-group select {
+    width: 100%;
+    height: 46px;
+    padding: 0 14px;
+    border: 1px solid #d1d5db;
+    border-radius: 12px;
+    background: #f9fafb;
+    font-size: 14px;
+    outline: none;
+}
+.search-input-wrap {
+    position: relative;
+    flex: 1;
+}
+.reset-filters-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    height: 44px;
+    padding: 0 18px;
+
+    border: none;
+    border-radius: 12px;
+
+    background: #2563eb;
+    color: white;
+
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 700;
+
+    transition: .2s;
+    white-space: nowrap;
+}
+
+.reset-filters-btn:hover {
+    background: #1d4ed8;
+}
+
+.pagination {
+    margin-top: 20px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 16px;
+}
+
+.pagination a {
+    padding: 10px 14px;
+    border-radius: 10px;
+    background: #2563eb;
+    color: white;
+    text-decoration: none;
+    font-weight: 700;
+}
+
+.pagination span {
+    font-weight: 600;
+    color: #374151;
+}
+.leads-stats-grid {
+    left: 350px;
+    right: 24px;
+    bottom: 20px;
+    z-index: 1000;
+    position: sticky;
+    bottom: 0;
+    padding-top: 27px;
+    z-index: 50;
+    padding-left: 18px;
+    padding-right: 26px;
+    padding-bottom: 16px;
+    border-radius: 10px;
+    display: grid;
+    background: rgb(255 255 255);
+    backdrop-filter: blur(14px);
+    grid-template-columns: repeat(8, 1fr);
+    gap: 16px;
+}
+.lead-stat-card {
+    min-height: 105px;
+    padding: 18px;
+    border-radius: 20px;
+    background: linear-gradient(135deg, #1F5BFF 0%, #2563EB 55%, #3B82F6 100%);
+    box-shadow: 0 12px 30px rgba(31, 91, 255, 0.22);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+.leads-card {
+    margin-bottom: 160px;
+}
+
+.lead-stat-card span {
+    font-size: 12px;
+    font-weight: 700;
+    color: rgba(255,255,255,0.8);
+    text-transform: uppercase;
+}
+
+.lead-stat-card strong {
+    font-size: 28px;
+    font-weight: 800;
+    color: white;
+}
+.offer-warning {
+    display: none;
+    margin-top: 8px;
+    padding: 10px 12px;
+    border-radius: 10px;
+    background: #fee2e2;
+    color: #991b1b;
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.offer-warning.active {
+    display: block;
+}
+.paid-lead-warning {
+    margin-top: 8px;
+    color: #dc2626;
+    font-size: 13px;
+    font-weight: 700;
+}
+
+#edit-lead-btn.disabled,
+#edit-lead-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+#edit-step-next {
+    margin-left: auto;
+}
+#save-edit-lead {
+    margin-left: auto;
+}
+.lead-mobile-card {
+    background: #ffffff;
+
+    border-radius: 18px;
+    padding: 16px;
+
+    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
+
+    border: 1px solid #eef2f7;
+}
+
+.lead-mobile-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    margin-bottom: 14px;
+}
+
+.lead-mobile-header strong {
+    font-size: 16px;
+    color: #111827;
+}
+
+.lead-mobile-header span {
+    padding: 6px 10px;
+
+    border-radius: 999px;
+
+    background: #eef4ff;
+    color: #2563eb;
+
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.lead-mobile-row {
+    display: flex;
+    justify-content: space-between;
+
+    margin-bottom: 10px;
+}
+
+.lead-mobile-row small {
+    color: #6b7280;
+    font-size: 13px;
+}
+
+.lead-mobile-row b {
+    color: #111827;
+    font-size: 14px;
+}
+
+.lead-mobile-money {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+
+    gap: 12px;
+
+    margin-top: 16px;
+}
+
+.lead-mobile-money div {
+    background: #f8fafc;
+
+    border-radius: 14px;
+    padding: 12px;
+}
+
+.lead-mobile-money small {
+    display: block;
+
+    color: #6b7280;
+    font-size: 12px;
+
+    margin-bottom: 4px;
+}
+
+.lead-mobile-money b {
+    font-size: 16px;
+    color: #111827;
+}
+.lead-mobile-title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.lead-mobile-title input[type="radio"] {
+    width: 18px;
+    height: 18px;
+    accent-color: #1d4ed8;
+    cursor: pointer;
+}
+.leads-mobile-list {
+    display: none;
+}
+@media (max-width: 1400px) {
+
+    .leads-table th, .leads-table td {
+        font-size: 13px;
+    }
+    .leads-stats-grid {
+        grid-template-columns: repeat(4, 1fr); 
+    }
+    .filter-tab {
+        font-size: 12px;    
+    }    
+    .lead-stat-card strong {
+      font-size: 20px;
+     font-weight: 600;
+
+  }
+}
+@media (max-width: 680px) {
+    .content {
+        margin-left: 0px;
+    }
+    .filters-tabs {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+    }
+      .leads-table-wrapper {
+        display: none;
+    }
+
+    .leads-mobile-list {
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+        padding-bottom: 21px;
+    }
+    .lead-mobile-row {
+        display: block;    
+    }
+    .lead-mobile-row b {
+        font-weight: 400;
+    }
+    .lead-mobile-row small {
+        color: #000;
+        font-weight: 800;
+    }
+    .lead-mobile-title {
+        margin-bottom: 11px;
+    }
+        .lead-form-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .lead-form-group.full {
+        grid-column: auto;
+    }
+
+}
+
+    @media (max-width: 430px) {
+        .leads-stats-grid {
+            grid-template-columns: repeat(1, 1fr);
+        }
+        .leads-filters:not(:has(.period-fields:not(.hidden))) {
+            grid-template-columns: repeat(1, 1fr);
+        }  
+        .leads-stats-grid {
+           left: 17px;
+           position: relative;
+        }
+        .lead-stat-card{
+          left: -10px;
+          position: relative;
+        }
+        .lead-calc-box strong {
+            font-size: 12px;        
+        }
+        .leads-header {
+            margin-right: 17px;
+        }
+    }  
+    @media (max-width: 390px) {
+    .search-icon-btn img {
+        margin-left: 7px;
+    }
+    .filters-tabs {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+    }  
+    .leads-header {
+        margin-right: 0px;
+    }
+}
+
+</style>
+
+    <div class="filters-tabs">
+        <button type="button"
+                class="filter-tab {% if date_filter == 'all' %}active{% endif %}"
+                data-date-filter="all">
+            Все время ({{ count_all }})
+        </button>
+
+        <button type="button"
+                class="filter-tab {% if date_filter == 'today' %}active{% endif %}"
+                data-date-filter="today">
+            Сегодня ({{ count_today }})
+        </button>
+
+        <button type="button"
+                class="filter-tab {% if date_filter == 'yesterday' %}active{% endif %}"
+                data-date-filter="yesterday">
+            Вчера ({{ count_yesterday }})
+        </button>
+
+        <button type="button"
+                class="filter-tab {% if date_filter == 'week' %}active{% endif %}"
+                data-date-filter="week">
+            Неделя ({{ count_week }})
+        </button>
+
+        <button type="button"
+                class="filter-tab {% if date_filter == 'month' %}active{% endif %}"
+                data-date-filter="month">
+            Месяц ({{ count_month }})
+        </button>
+
+        <button type="button"
+                class="filter-tab {% if date_filter == 'period' %}active{% endif %}"
+                data-date-filter="period">
+            {% if start_date or end_date %}
+                Период ({{ count_period }})
+            {% else %}
+                Период
+            {% endif %}
+        </button>
+    </div>
+
+    <form method="get" class="leads-filters-form">
+        <input type="hidden" name="date_filter" id="date-filter-input" value="{{ date_filter }}">
+
+        <div class="leads-filters {% if date_filter == 'period' %}has-period{% else %}no-period{% endif %}">
+            <div class="filter-group">
+                <label>Оффер</label>
+                    <select name="offer" class="lead-input">
+                        <option value="">Все офферы ({{ count_all }})</option>
+                            {% for offer in offers %}
+                                <option value="{{ offer.id }}"
+                                        {% if selected_offer == offer.id|stringformat:"s" %}selected{% endif %}>
+                                    {{ offer.title }} ({{ offer.leads_count }})
+                                </option>
+                            {% endfor %}
+                    </select>
+            </div>
+            <div class="filter-group">
+              <label>Статус</label>
+                <select name="status" class="lead-input">
+                    <option value="" {% if not selected_status %}selected{% endif %}>Все статусы ({{ count_status_all }})</option>
+                    <option value="new" {% if selected_status == 'new' %}selected{% endif %}>Новый лид ({{ count_status_new }})</option>
+                    <option value="in_progress" {% if selected_status == 'in_progress' %}selected{% endif %}>В работе ({{ count_status_in_progress }})</option>
+                    <option value="cancelled" {% if selected_status == 'cancelled' %}selected{% endif %}>Отмена ({{ count_status_cancelled }})</option>
+                    <option value="deal" {% if selected_status == 'deal' %}selected{% endif %}>Сделка ({{ count_status_deal }})</option>
+                </select>
+            </div>
+            <div class="filter-group period-field {% if date_filter != 'period' %}hidden{% endif %}">
+                <label>Дата с</label>
+                <input type="date" name="start_date" value="{{ start_date }}" class="lead-input">
+            </div>
+
+            <div class="filter-group period-field {% if date_filter != 'period' %}hidden{% endif %}">
+                <label>Дата по</label>
+                <input type="date" name="end_date" value="{{ end_date }}" class="lead-input">
+            </div>
+                <div class="filter-group search-group">
+                    <label for="search">Поиск лида</label>
+
+                      <div class="search-wrap">
+                            <div class="search-input-wrap">
+                                <input type="text"
+                                    name="search"
+                                    id="search"
+                                    placeholder="Название лида, партнер, оффер, статус"
+                                    value="{{ search }}">
+
+                                <button type="submit" class="search-icon-btn">
+                                    <img src="{% static 'users/images/search.svg' %}" alt="Поиск">
+                                </button>
+                            </div>
+
+                        <a href="{% url 'partner_leads' %}" class="reset-filters-btn">
+                            Сброс
+                        </a>
+                        </div>
+                    
+                </div>
+
+        </div>
+    </form>
+    <div class="leads-card">
+    <div class="leads-header">
+        <div id="paid-lead-warning" class="paid-lead-warning" style="display:none;">
+            Лид нельзя редактировать: по нему уже произведена выплата.
+        </div>
+        <button type="button" class="edit-lead-btn" id="edit-lead-btn" disabled>
+            Редактировать
+        </button>
+        <button type="button" class="add-lead-btn" id="open-lead-modal">
+            Добавить лида
+        </button>
+    </div>
+    
+    <div class="leads-table-wrapper">
+
+            <table class="leads-table">
+                <thead>
+                    <tr>
+                        <th>Название лида</th>
+                        <th>Дата</th>
+                        <th>Оффер</th>
+                        <th>Сумма сделки, ₽</th>
+                        <th>Вознаграждение, ₽</th>
+                        <th>Статус</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {% for lead in leads_list %}
+                        <tr>
+                            <td class="lead-title-cell">
+                                <input type="radio"
+                                    name="selected_lead"
+                                    class="lead-select-radio"
+                                    value="{{ lead.id }}"
+                                    data-title="{{ lead.title }}"
+                                    data-status="{{ lead.status }}"
+                                    data-tariff="{{ lead.tariff.id|default:'' }}"
+                                    data-created="{{ lead.created_at|date:'Y-m-d' }}"
+                                    data-partner-id="{{ lead.partner.id }}"
+                                    data-offer-id="{{ lead.offer.id }}"
+                                    data-deal-amount="{{ lead.deal_amount }}"
+                                    data-reward="{{ lead.partner_reward }}"
+                                    data-client-name="{{ lead.client.first_name }}"
+                                    data-client-email="{{ lead.client.email }}"
+                                    data-client-phone="{{ lead.client.phone }}"
+                                    data-client-company="{{ lead.client.company }}"
+                                    data-paid-out="{{ lead.is_paid_out|yesno:'1,0' }}">
+                                <span>{{ lead.title }}</span>
+                            </td>
+                            <td>{{ lead.created_at|date:"d.m.Y" }}</td>
+                            <td>{{ lead.offer.title }}</td>
+                            <td>{{ lead.deal_amount|space_thousands }}</td>
+                            <td>{{ lead.partner_reward|space_thousands }}</td>
+                            <td>{{ lead.get_status_display }}</td>                    
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="7">Лидов пока нет</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+       </div>
+    <div class="leads-mobile-list">
+
+    {% for lead in leads_list %}
+        <div class="lead-mobile-card">
+
+        <div class="lead-mobile-title">
+                <input type="radio"
+                    name="selected_lead"
+                    class="lead-select-radio"
+                    value="{{ lead.id }}"
+                    data-title="{{ lead.title }}"
+                    data-status="{{ lead.status }}"
+                    data-tariff="{{ lead.tariff.id|default:'' }}"
+                    data-created="{{ lead.created_at|date:'Y-m-d' }}"
+                    data-partner-id="{{ lead.partner.id }}"
+                    data-offer-id="{{ lead.offer.id }}"
+                    data-deal-amount="{{ lead.deal_amount }}"
+                    data-reward="{{ lead.partner_reward }}"
+                    data-client-name="{{ lead.client.first_name }}"
+                    data-client-email="{{ lead.client.email }}"
+                    data-client-phone="{{ lead.client.phone }}"
+                    data-client-company="{{ lead.client.company }}"
+                    data-paid-out="{{ lead.is_paid_out|yesno:'1,0' }}">
+
+                <strong>{{ lead.title }}</strong>
+            </div>
+
+
+            <div class="lead-mobile-row">
+                <small>Дата</small>
+                <b>{{ lead.created_at|date:"d.m.Y" }}</b>
+            </div>          
+
+            <div class="lead-mobile-row">
+                <small>Оффер</small>
+                <b>{{ lead.offer.title }}</b>
+            </div>
+
+            <div class="lead-mobile-money">
+                <div>
+                    <small>Сделка</small>
+                    <b>{{ lead.deal_amount|floatformat:0 }} ₽</b>
+                </div>
+
+                <div>
+                    <small>Вознаграждение</small>
+                    <b>{{ lead.partner_reward|floatformat:0 }} ₽</b>
+                </div>
+            </div>
+
+        </div>
+    {% endfor %}
+
+</div>    
+    
+    <div class="pagination">
+        {% if leads_list.has_previous %}
+            <a href="?{% if pagination_query %}{{ pagination_query }}&{% endif %}page={{ leads_list.previous_page_number }}">
+                ← Назад
+            </a>
+        {% endif %}
+
+        <span>
+            Страница {{ leads_list.number }} из {{ leads_list.paginator.num_pages }}
+        </span>
+
+        {% if leads_list.has_next %}
+            <a href="?{% if pagination_query %}{{ pagination_query }}&{% endif %}page={{ leads_list.next_page_number }}">
+                Вперёд →
+            </a>
+        {% endif %}
+    </div>
+        <div class="leads-stats-grid">
+        <div class="lead-stat-card">
+        <span>
+            {% if selected_offer or selected_status or search or date_filter != 'all' %}
+                Выбрано
+            {% else %}
+                Всего лидов
+            {% endif %}
+        </span>
+            <strong>{{ total_leads }}</strong>
+        </div>
+
+        <div class="lead-stat-card">
+            <span>Новых лидов</span>
+            <strong>{{ new_leads }}</strong>
+        </div>
+
+        <div class="lead-stat-card">
+            <span>Лидов в работе</span>
+            <strong>{{ in_progress_leads }}</strong>
+        </div>
+
+        <div class="lead-stat-card">
+            <span>Отменённых лидов</span>
+            <strong>{{ cancelled_leads }}</strong>
+        </div>
+
+        <div class="lead-stat-card">
+            <span>Сделок по лидам</span>
+            <strong>{{ deal_leads }}</strong>
+        </div>
+        <div class="lead-stat-card">
+            <span>Сумма сделок</span>
+            <strong>{{ total_deal_amount|space_thousands }} ₽</strong>
+        </div>
+       <div class="lead-stat-card">
+            <span>Вознаграждение</span>
+            <strong>{{ total_partner_reward|space_thousands }} ₽</strong>
+        </div>
+
+        <div class="lead-stat-card">
+            <span>Общая конверсия</span>
+            <strong>{{ conversion }}%</strong>
+        </div>
+    </div>
+    <div class="lead-modal" id="lead-modal">
+        <div class="lead-modal-card">
+            <div class="lead-modal-header">
+                <h3>Добавить лида</h3>
+                <button type="button" class="modal-close-btn" id="close-lead-modal">&times;</button>
+            </div>
+
+
+
+
+
+           <form method="post" action="{% url 'partner_create_lead' %}" id="lead-form">
+                {% csrf_token %}
+
+            <div class="lead-step lead-step-1 active">
+                <div class="lead-form-grid">
+                    <div class="lead-form-group full">
+                        <label>Название лида</label>
+                        <input type="text" name="title" value="Новый лид" id="lead-title" class="lead-input">
+                    </div>
+
+                    <div class="lead-form-group full">
+                        <label>Оффер</label>
+
+                        <select name="offer" id="lead-offer" class="lead-input" required>
+                            <option value="">Выберите оффер</option>
+
+                        {% for reg in partner_registrations %}
+                            <option value="{{ reg.offer.id }}"
+                                    data-payout-type="{{ reg.offer.payout_type }}"
+                                    data-offer-reward="{{ reg.offer.reward|stringformat:'f' }}"
+                                    data-status-percent="{{ reg.status.reward_percent|stringformat:'f' }}">
+                                {{ reg.offer.title }}
+                            </option>
+                        {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="lead-form-group">
+                        <label>Статус</label>
+                        <select name="status" id="lead-status" class="lead-input" required>
+                            <option value="new">Новый лид</option>
+                            <option value="in_progress">В работе</option>
+                            <option value="cancelled">Отмена</option>
+                            <option value="deal" disabled style="color:#9ca3af;">
+                                Сделка (добавлять может только администратор)
+                            </option>
+                        </select>
+                    </div>
+
+                    <div class="lead-form-group">
+                        <label>Тарифный план</label>
+                        <select name="tariff" id="lead-tariff" class="lead-input">
+                            {% for tariff in tariffs %}
+                           <option value="{{ tariff.id }}"
+                                data-price="{{ tariff.price|stringformat:'f' }}">
+                            {% if tariff.price == 0 %}
+                                Базовый (14 дней бесплатно)
+                            {% else %}
+                                {{ tariff.name }} ({{ tariff.get_period_display }}) {{ tariff.price|space_thousands }} ₽
+                            {% endif %}
+                            </option>
+                                {% endfor %}
+                        </select>
+                    </div>
+                    <div class="lead-calc-box full">
+                    <div>
+                        <span>Форма выплаты</span>
+                        <strong id="calc-payout-type">—</strong>
+                    </div>
+
+                    <div>
+                        <span>Доход партнёру</span>
+                        <strong id="calc-partner-income">—</strong>
+                    </div>
+
+                    <div>
+                        <span>Доход партнёра</span>
+                        <strong id="calc-partner-reward">0 ₽</strong>
+                    </div>
+                </div>
+                </div>
+
+                <button type="button" class="lead-primary-btn" id="go-step-2" disabled>
+                    Далее →
+                </button>
+            </div>
+
+            <div class="lead-step lead-step-2">
+                <div class="lead-form-grid">
+                    <div class="lead-form-group full">
+                        <label>Имя клиента</label>
+                        <input type="text" name="client_name" class="lead-input" required>
+                    </div>
+
+                    <div class="lead-form-group">
+                        <label>Email клиента</label>
+                        <input type="email" name="client_email" class="lead-input" required>
+                    </div>
+
+                    <div class="lead-form-group">
+                        <label>Телефон клиента</label>
+                        <input type="text" name="client_phone" class="lead-input" placeholder="Телефон">
+                    </div>
+
+                    <div class="lead-form-group full">
+                        <label>Компания клиента</label>
+                        <input type="text" name="client_company" class="lead-input">
+                    </div>
+                </div>
+
+                <div class="lead-actions">
+                    <button type="button" class="lead-secondary-btn" id="go-step-1">
+                        ← Назад
+                    </button>
+
+                    <button type="submit" class="lead-primary-btn" id="submit-lead-btn" disabled>
+                        Добавить лида
+                    </button>
+                </div>
+            </div>
+            </form>
+        </div>
+    </div>
+    <div class="lead-modal" id="edit-lead-modal">
+            <div class="lead-modal-card edit-lead-card">
+                <div class="lead-modal-header">
+                    <h3>Редактировать лида</h3>
+                   <button type="button" class="modal-close-btn" id="close-edit-lead-modal">&times;</button>
+                </div>
+
+                <form method="post" id="edit-lead-form">
+                    {% csrf_token %}
+                     <div class="edit-lead-step edit-lead-step-1 active">
+                        <div class="lead-form-grid">
+                            <div class="lead-form-group full">
+                                <label>Название лида</label>
+                                <input type="text" name="title" id="edit-lead-title" class="lead-input">
+                            </div>
+                                <div class="lead-form-group">
+                                    <label>Дата создания</label>
+                                    <input type="date"
+                                        name="created_at"
+                                        id="edit-lead-created"
+                                        class="lead-input">
+                                </div>
+
+                            <div class="lead-form-group">
+                                <label>Оффер</label>
+                                <select name="offer" id="edit-lead-offer" class="lead-input">
+                                    {% for reg in partner_registrations %}
+                                        <option value="{{ reg.offer.id }}"
+                                                data-payout-type="{{ reg.offer.payout_type }}"
+                                                data-offer-reward="{{ reg.offer.reward|stringformat:'f' }}"
+                                                data-status-percent="{{ reg.status.reward_percent|stringformat:'f' }}">
+                                            {{ reg.offer.title }}
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+
+                            <div class="lead-form-group">
+                                <label>Сумма сделки</label>
+                                <input type="text" id="edit-lead-deal-amount" class="lead-input" disabled>
+                            </div>
+
+                            <div class="lead-form-group">
+                                <label>Вознаграждение</label>
+                                <input type="text" id="edit-lead-reward" class="lead-input" disabled>
+                            </div>
+                            <div class="lead-form-group">
+                                <label>Статус</label>
+                                <select name="status" id="edit-lead-status" class="lead-input">
+                                    <option value="new">Новый лид</option>
+                                    <option value="in_progress">В работе</option>
+                                    <option value="cancelled">Отмена</option>
+                                    <option value="deal">Сделка</option>
+                                </select>
+                            </div>
+                            
+                            <div class="lead-form-group">
+                                <label>Тарифный план</label>
+                                <select name="tariff" id="edit-lead-tariff" class="lead-input">
+                                    <option value="">Выберите тариф</option>
+                                    {% for tariff in tariffs %}
+                                        <option value="{{ tariff.id }}"
+                                            data-price="{{ tariff.price|stringformat:'f' }}">
+                                            {{ tariff.name }} ({{ tariff.get_period_display }}) {{ tariff.price|space_thousands }} ₽
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+
+                                <div class="lead-calc-box full">
+                                    <div>
+                                        <span>Форма выплаты</span>
+                                        <strong id="edit-calc-payout-type">—</strong>
+                                    </div>
+
+                                    <div>
+                                        <span>Доход партнёру</span>
+                                        <strong id="edit-calc-partner-income">—</strong>
+                                    </div>
+
+                                    <div>
+                                        <span>Доход партнёра</span>
+                                        <strong id="edit-calc-partner-reward">0 ₽</strong>
+                                    </div>
+                                </div>
+
+
+                        </div>
+                     </div>
+                     <div class="edit-lead-step edit-lead-step-2">
+                        <div class="lead-form-grid">
+                            <div class="lead-form-group full">
+                                <label>Имя клиента</label>
+                                <input type="text" name="client_name" id="edit-client-name" class="lead-input">
+                            </div>
+
+                            <div class="lead-form-group">
+                                <label>Email клиента</label>
+                                <input type="email" name="client_email" id="edit-client-email" class="lead-input">
+                            </div>
+
+                            <div class="lead-form-group">
+                                <label>Телефон клиента</label>
+                                <input type="text" name="client_phone" id="edit-client-phone" class="lead-input">
+                            </div>
+
+                            <div class="lead-form-group full">
+                                <label>Компания клиента</label>
+                                <input type="text" name="client_company" id="edit-client-company" class="lead-input">
+                            </div>
+                        </div>
+                    </div>
+              
+                    <div class="lead-actions">
+                        <button type="button" class="lead-secondary-btn" id="edit-step-back">
+                            ← Назад
+                        </button>
+
+                        <button type="button" class="lead-primary-btn" id="edit-step-next">
+                            Далее →
+                        </button>
+
+                        <button type="submit" class="lead-primary-btn hidden" id="save-edit-lead" disabled>
+                            Сохранить
+                        </button>
+                    </div>
+                    
+                </form>
+            </div>
+        </div>
+</div>
+<script>
+    const editStep1 = document.querySelector('.edit-lead-step-1');
+    const editStep2 = document.querySelector('.edit-lead-step-2');
+
+    const editStepNextBtn = document.getElementById('edit-step-next');
+    const editStepBackBtn = document.getElementById('edit-step-back');
+
+    const saveEditLeadBtn = document.getElementById('save-edit-lead');
+    editStepBackBtn.classList.add('hidden');
+    editStepNextBtn?.addEventListener('click', () => {
+
+        editStep1.classList.remove('active');
+        editStep2.classList.add('active');
+
+        editStepNextBtn.classList.add('hidden');
+
+        saveEditLeadBtn.classList.remove('hidden');
+
+        editStepBackBtn.classList.remove('hidden');
+    });
+
+    editStepBackBtn?.addEventListener('click', () => {
+
+        editStep2.classList.remove('active');
+        editStep1.classList.add('active');
+
+        editStepNextBtn.classList.remove('hidden');
+
+        saveEditLeadBtn.classList.add('hidden');
+
+        editStepBackBtn.classList.add('hidden');
+    });
+</script>
+<script>
+    const filterTabs = document.querySelectorAll('.filter-tab');
+    const dateFilterInput = document.getElementById('date-filter-input');
+    const leadsFiltersForm = document.querySelector('.leads-filters-form');
+    const periodFields = document.querySelectorAll('.period-field');
+    const leadsFilters = document.querySelector('.leads-filters');
+
+    filterTabs.forEach(tab => {
+        tab.addEventListener('click', function () {
+            const value = this.dataset.dateFilter;
+
+            filterTabs.forEach(item => item.classList.remove('active'));
+            this.classList.add('active');
+
+            dateFilterInput.value = value;
+
+            if (value === 'period') {
+                periodFields.forEach(field => {
+                    field.classList.remove('hidden');
+                });
+
+                leadsFilters.classList.remove('no-period');
+                leadsFilters.classList.add('has-period');
+
+                return;
+            }
+
+            leadsFiltersForm.submit();
+        });
+    });
+</script>
+<script>
+ //  Работа фильтров   
+    const leadSelectFilters = document.querySelectorAll(
+        '.leads-filters-form select, .leads-filters-form input[type="date"]'
+    );
+
+    leadSelectFilters.forEach(field => {
+        field.addEventListener('change', function () {
+            leadsFiltersForm.submit();
+        });
+    });
+</script>
+<script>
+//  Открытие попапа добавления лида    
+    const leadModal = document.getElementById('lead-modal');
+    const openLeadModal = document.getElementById('open-lead-modal');
+    const closeLeadModal = document.getElementById('close-lead-modal');
+
+    openLeadModal?.addEventListener('click', () => {
+        leadModal?.classList.add('active');
+    });
+
+    closeLeadModal?.addEventListener('click', () => {
+        leadModal?.classList.remove('active');
+    });
+
+    leadModal?.addEventListener('click', (event) => {
+        if (event.target === leadModal) {
+            leadModal.classList.remove('active');
+        }
+    });
+</script>
+<script>
+    const leadOffer = document.getElementById('lead-offer');
+    const leadTariff = document.getElementById('lead-tariff');
+
+    const calcPayoutType = document.getElementById('calc-payout-type');
+    const calcPartnerIncome = document.getElementById('calc-partner-income');
+    const calcPartnerReward = document.getElementById('calc-partner-reward');
+
+    function formatRub(value) {
+        return Math.round(value).toLocaleString('ru-RU') + ' ₽';
+    }
+
+    function updatePartnerLeadCalc() {
+        const offerOption = leadOffer?.selectedOptions[0];
+        const tariffOption = leadTariff?.selectedOptions[0];
+
+        if (!offerOption || !offerOption.value || !tariffOption || !tariffOption.value) {
+            calcPayoutType.textContent = '—';
+            calcPartnerIncome.textContent = '—';
+            calcPartnerReward.textContent = '0 ₽';
+            return;
+        }
+
+        const payoutType = offerOption.dataset.payoutType;
+        const fixedReward = parseFloat(offerOption.dataset.offerReward || '0');
+        const statusPercent = parseFloat(offerOption.dataset.statusPercent || '0');
+        const tariffPrice = parseFloat(tariffOption.dataset.price || '0');
+
+        if (payoutType === 'fixed') {
+            calcPayoutType.textContent = 'Фиксированная';
+            calcPartnerIncome.textContent = formatRub(fixedReward);
+            calcPartnerReward.textContent = formatRub(fixedReward);
+            return;
+        }
+
+        const rewardAmount = tariffPrice * statusPercent / 100;
+
+        calcPayoutType.textContent = 'По статусу партнера';
+        calcPartnerIncome.textContent = statusPercent + '%';
+        calcPartnerReward.textContent = formatRub(rewardAmount);
+    }
+
+    leadOffer?.addEventListener('change', updatePartnerLeadCalc);
+    leadTariff?.addEventListener('change', updatePartnerLeadCalc);
+
+    updatePartnerLeadCalc();
+</script>
+<script>
+  //        Доступ к кнопке  
+    const leadTitleInput = document.querySelector('#lead-form input[name="title"]');
+    const leadStatusInput = document.getElementById('lead-status');
+    const leadNextBtn = document.getElementById('go-step-2');
+
+    function validateLeadStep() {
+        const titleFilled = leadTitleInput && leadTitleInput.value.trim() !== '';
+        const offerFilled = leadOffer && leadOffer.value !== '';
+        const statusFilled = leadStatusInput && leadStatusInput.value !== '';
+        const tariffFilled = leadTariff && leadTariff.value !== '';
+
+        const isValid = titleFilled && offerFilled && statusFilled && tariffFilled;
+
+        leadNextBtn.disabled = !isValid;
+    }
+
+    leadTitleInput?.addEventListener('input', validateLeadStep);
+    leadOffer?.addEventListener('change', validateLeadStep);
+    leadStatusInput?.addEventListener('change', validateLeadStep);
+    leadTariff?.addEventListener('change', validateLeadStep);
+
+    validateLeadStep();
+</script>
+<script>
+    //  Переход на второй шаг
+    const leadStep1 = document.querySelector('.lead-step-1');
+    const leadStep2 = document.querySelector('.lead-step-2');
+    const backToStep1Btn = document.getElementById('go-step-1');
+
+    leadNextBtn?.addEventListener('click', function () {
+        leadStep1?.classList.remove('active');
+        leadStep2?.classList.add('active');
+    });
+
+    backToStep1Btn?.addEventListener('click', function () {
+        leadStep2?.classList.remove('active');
+        leadStep1?.classList.add('active');
+    });
+</script>
+<script>
+    // Активация кнопки на втором шаге
+    const clientNameInput = document.querySelector('#lead-form input[name="client_name"]');
+    const clientEmailInput = document.querySelector('#lead-form input[name="client_email"]');
+    const clientPhoneInput = document.querySelector('#lead-form input[name="client_phone"]');
+    const submitLeadBtn = document.getElementById('submit-lead-btn');
+
+    function validateLeadStep2() {
+        const nameFilled = clientNameInput?.value.trim() !== '';
+        const emailFilled = clientEmailInput?.value.trim() !== '';
+        const phoneDigits = (clientPhoneInput?.value || '').replace(/\D/g, '');
+
+        const phoneValid = phoneDigits.length === 11;
+
+        submitLeadBtn.disabled = !(nameFilled && emailFilled && phoneValid);
+    }
+
+    clientPhoneInput?.addEventListener('input', function () {
+        let digits = this.value.replace(/\D/g, '');
+
+        if (digits.startsWith('8')) {
+            digits = '7' + digits.slice(1);
+        }
+
+        if (!digits.startsWith('7')) {
+            digits = '7' + digits;
+        }
+
+        digits = digits.slice(0, 11);
+
+        let formatted = '+7';
+
+        if (digits.length > 1) {
+            formatted += ' (' + digits.slice(1, 4);
+        }
+
+        if (digits.length >= 4) {
+            formatted += ') ' + digits.slice(4, 7);
+        }
+
+        if (digits.length >= 7) {
+            formatted += '-' + digits.slice(7, 9);
+        }
+
+        if (digits.length >= 9) {
+            formatted += '-' + digits.slice(9, 11);
+        }
+
+        this.value = formatted;
+
+        validateLeadStep2();
+    });
+
+    clientNameInput?.addEventListener('input', validateLeadStep2);
+    clientEmailInput?.addEventListener('input', validateLeadStep2);
+
+    validateLeadStep2();
+</script>
+<script>
+    // Активация/дизактивация кнопки редактирования (радиокнопка)
+    const leadRadios = document.querySelectorAll('.lead-select-radio');
+    const editLeadBtn = document.getElementById('edit-lead-btn');
+
+    let selectedLeadRadio = null;
+
+const paidLeadWarning = document.getElementById('paid-lead-warning');
+
+leadRadios.forEach(radio => {
+
+    radio.addEventListener('click', function () {
+
+        if (selectedLeadRadio === this) {
+
+            this.checked = false;
+
+            selectedLeadRadio = null;
+
+            editLeadBtn.disabled = true;
+
+            paidLeadWarning.style.display = 'none';
+
+            return;
+        }
+
+        selectedLeadRadio = this;
+
+        const isPaidOut = this.dataset.paidOut === '1';
+
+        if (isPaidOut) {
+
+            editLeadBtn.disabled = true;
+
+            paidLeadWarning.style.display = 'block';
+
+            return;
+        }
+
+        paidLeadWarning.style.display = 'none';
+
+        editLeadBtn.disabled = false;
+    });
+});
+</script>
+
+<script>
+    const editLeadOffer = document.getElementById('edit-lead-offer');
+    const editLeadTariff = document.getElementById('edit-lead-tariff');
+
+    const editCalcPayoutType = document.getElementById('edit-calc-payout-type');
+    const editCalcPartnerIncome = document.getElementById('edit-calc-partner-income');
+    const editCalcPartnerReward = document.getElementById('edit-calc-partner-reward');
+    function updateEditLeadCalc() {
+        const offerOption = editLeadOffer?.selectedOptions[0];
+        const tariffOption = editLeadTariff?.selectedOptions[0];
+
+        const dealAmountInput = document.getElementById('edit-lead-deal-amount');
+        const rewardInput = document.getElementById('edit-lead-reward');
+
+        if (!offerOption || !offerOption.value || !tariffOption || !tariffOption.value) {
+            editCalcPayoutType.textContent = '—';
+            editCalcPartnerIncome.textContent = '—';
+            editCalcPartnerReward.textContent = '0 ₽';
+
+            dealAmountInput.value = '0';
+            rewardInput.value = '0';
+            return;
+        }
+
+        const payoutType = offerOption.dataset.payoutType;
+        const fixedReward = parseFloat(offerOption.dataset.offerReward || '0');
+        const statusPercent = parseFloat(offerOption.dataset.statusPercent || '0');
+        const tariffPrice = parseFloat(tariffOption.dataset.price || '0');
+
+        let rewardAmount = 0;
+
+        if (payoutType === 'fixed') {
+            rewardAmount = fixedReward;
+
+            editCalcPayoutType.textContent = 'Фиксированная';
+            editCalcPartnerIncome.textContent = formatRub(fixedReward);
+            editCalcPartnerReward.textContent = formatRub(rewardAmount);
+        } else {
+            rewardAmount = tariffPrice * statusPercent / 100;
+
+            editCalcPayoutType.textContent = 'По статусу партнера';
+            editCalcPartnerIncome.textContent = statusPercent + '%';
+            editCalcPartnerReward.textContent = formatRub(rewardAmount);
+        }
+
+        dealAmountInput.value = Math.round(tariffPrice);
+        rewardInput.value = Math.round(rewardAmount);
+    }
+
+    editLeadOffer?.addEventListener('change', updateEditLeadCalc);
+    editLeadTariff?.addEventListener('change', updateEditLeadCalc);
+</script>
+<script>
+    //  Открытие попапа редактирования
+    const editLeadModal = document.getElementById('edit-lead-modal');
+    const closeEditLeadModal = document.getElementById('close-edit-lead-modal');
+    let originalEditLeadData = {};
+    editLeadBtn?.addEventListener('click', () => {
+        const selectedRadio = document.querySelector('.lead-select-radio:checked');
+
+        if (!selectedRadio) {
+            return;
+        }
+        document.getElementById('edit-lead-form').action =
+            `/partner/leads/${selectedRadio.value}/update/`;
+        document.getElementById('edit-lead-title').value = selectedRadio.dataset.title || '';
+        document.getElementById('edit-lead-created').value = selectedRadio.dataset.created || '';
+        document.getElementById('edit-lead-offer').value = selectedRadio.dataset.offerId || '';
+        document.getElementById('edit-lead-status').value = selectedRadio.dataset.status || '';
+        document.getElementById('edit-lead-tariff').value = selectedRadio.dataset.tariff || '';
+
+        document.getElementById('edit-lead-deal-amount').value = selectedRadio.dataset.dealAmount || '0';
+        document.getElementById('edit-lead-reward').value = selectedRadio.dataset.reward || '0';
+
+        document.getElementById('edit-client-name').value = selectedRadio.dataset.clientName || '';
+        document.getElementById('edit-client-email').value = selectedRadio.dataset.clientEmail || '';
+        document.getElementById('edit-client-phone').value = selectedRadio.dataset.clientPhone || '';
+        document.getElementById('edit-client-company').value = selectedRadio.dataset.clientCompany || '';
+        originalEditLeadData = {
+            title: document.getElementById('edit-lead-title').value,
+            created: document.getElementById('edit-lead-created').value,
+            offer: document.getElementById('edit-lead-offer').value,
+            status: document.getElementById('edit-lead-status').value,
+            tariff: document.getElementById('edit-lead-tariff').value,
+            clientName: document.getElementById('edit-client-name').value,
+            clientEmail: document.getElementById('edit-client-email').value,
+            clientPhone: document.getElementById('edit-client-phone').value,
+            clientCompany: document.getElementById('edit-client-company').value,
+        };
+        updateEditLeadCalc();
+        updateEditLeadCalc();
+        validateEditStep1();
+        validateEditStep2();
+        editLeadModal?.classList.add('active');
+    });
+
+    closeEditLeadModal?.addEventListener('click', () => {
+        editLeadModal?.classList.remove('active');
+    });
+
+    editLeadModal?.addEventListener('click', (event) => {
+
+        if (event.target === editLeadModal) {
+            editLeadModal.classList.remove('active');
+        }
+    });
+</script>
+<script>
+    const editTitle = document.getElementById('edit-lead-title');
+    const editCreated = document.getElementById('edit-lead-created');
+    const editOffer = document.getElementById('edit-lead-offer');
+    const editStatus = document.getElementById('edit-lead-status');
+    const editTariff = document.getElementById('edit-lead-tariff');
+
+    const editClientName = document.getElementById('edit-client-name');
+    const editClientEmail = document.getElementById('edit-client-email');
+    const editClientPhone = document.getElementById('edit-client-phone');
+    const editClientCompany = document.getElementById('edit-client-company');
+
+    const editNextBtn = document.getElementById('edit-step-next');
+    const editSaveBtn = document.getElementById('save-edit-lead');
+
+    function validateEditStep1() {
+        const valid =
+            editTitle.value.trim() &&
+            editCreated.value &&
+            editOffer.value &&
+            editStatus.value
+
+        editNextBtn.disabled = !valid;
+    }
+
+    function editDataChanged() {
+        return (
+            editTitle.value !== originalEditLeadData.title ||
+            editCreated.value !== originalEditLeadData.created ||
+            editOffer.value !== originalEditLeadData.offer ||
+            editStatus.value !== originalEditLeadData.status ||
+            editTariff.value !== originalEditLeadData.tariff ||
+            editClientName.value !== originalEditLeadData.clientName ||
+            editClientEmail.value !== originalEditLeadData.clientEmail ||
+            editClientPhone.value !== originalEditLeadData.clientPhone ||
+            editClientCompany.value !== originalEditLeadData.clientCompany
+        );
+    }
+
+    function validateEditStep2() {
+        const valid =
+            editClientName.value.trim() &&
+            editClientEmail.value.trim() &&
+            editClientPhone.value.trim();
+
+        editSaveBtn.disabled = !(valid && editDataChanged());
+    }
+
+    [
+        editTitle,
+        editCreated,
+        editOffer,
+        editStatus,
+        editTariff
+    ].forEach(field => {
+        field?.addEventListener('input', function () {
+            validateEditStep1();
+            validateEditStep2();
+        });
+
+        field?.addEventListener('change', function () {
+            validateEditStep1();
+            validateEditStep2();
+        });
+});
+
+    [
+        editClientName,
+        editClientEmail,
+        editClientPhone,
+        editClientCompany
+    ].forEach(field => {
+        field?.addEventListener('input', validateEditStep2);
+        field?.addEventListener('change', validateEditStep2);
+    });
+</script>
+<script id="dflyxq">
+    function updatePlaceholder() {
+        const input = document.getElementById('search');
+
+        if (window.innerWidth <= 768) {
+            input.placeholder = 'Название лида, партнер, ...';
+        }    
+        if (window.innerWidth <= 390) {
+            input.placeholder = 'Лид, партнер, оффер ...';
+        }    
+
+    }
+
+    updatePlaceholder();
+
+    window.addEventListener('resize', updatePlaceholder);
+</script>
+{% endblock %}

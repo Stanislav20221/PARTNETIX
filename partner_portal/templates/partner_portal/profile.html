@@ -1,0 +1,1290 @@
+{% extends 'partner_portal/base.html' %}
+{% load static %}
+{% block title %}Профиль партнера{% endblock %}
+{% block page_title %}ПРОФИЛЬ ПАРТНЕРА{% endblock %}
+
+{% block content %}
+<style>
+    .profile-wrapper {
+        max-width: 100%;
+        margin: 0 auto;
+        padding: 0 0px 40px;
+        height: 100%;
+    }
+
+    .profile-grid {
+        display: grid;
+        grid-template-columns: 320px 1fr;
+        gap: 28px;
+        align-items: stretch;
+        width: 100%;
+    }
+
+
+        .profile-card,
+        .form-card {
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+            height: 100%;
+            border: 1px solid #eef2f7;
+            width: 100%;
+    }
+    .profile-card {
+        background: white;
+        border-radius: 20px;
+        padding: 32px 24px;
+        box-shadow: 0 10px 30px rgba(15, 23, 42, 0.06);
+
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+    }
+    .avatar-box {
+        text-align: center;
+
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+
+        height: 100%;
+        width: 100%;
+    }
+
+    .avatar-wrap {
+        display: flex;
+        justify-content: center;
+        margin-bottom: 16px;
+    }
+
+    .avatar-image,
+    .avatar-placeholder {
+        width: 160px;
+        height: 160px;
+        border-radius: 50%;
+        object-fit: cover;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #e5e7eb;
+        color: #6b7280;
+    }
+
+    .avatar-placeholder svg {
+        width: 72px;
+        height: 72px;
+        opacity: 0.8;
+    }
+
+    .user-name {
+        font-size: 22px;
+        font-weight: 800;
+        color: #111827;
+        margin-bottom: 8px;
+    }
+
+    .user-meta {
+        color: #6b7280;
+        margin-bottom: 6px;
+        font-size: 14px;
+    }
+
+    .form-title {
+        font-size: 20px;
+        font-weight: 800;
+        color: #111827;
+        margin-bottom: 20px;
+    }
+
+    .profile-info-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+    }
+
+    .profile-info-item {
+        background: #f9fafb;
+        border: 1px solid #eef2f7;
+        border-radius: 14px;
+        padding: 14px 16px;
+    }
+
+    .profile-info-label {
+        font-size: 12px;
+        font-weight: 800;
+        color: #6b7280;
+        text-transform: uppercase;
+        margin-bottom: 6px;
+    }
+
+    .profile-info-value {
+        font-size: 15px;
+        font-weight: 700;
+        color: #111827;
+        word-break: break-word;
+    }
+
+    .profile-info-item.full {
+        grid-column: 1 / -1;
+    }
+
+    .profile-section {
+        margin-top: 24px;
+    }
+
+    .profile-section-title {
+        font-size: 18px;
+        font-weight: 800;
+        margin-bottom: 14px;
+        color: #111827;
+    }
+    .change-photo-btn {
+        margin-top: 18px;
+        width: 100%;
+        border: none;
+        border-radius: 12px;
+        background: #1F5BFF;
+        color: white;
+        padding: 13px 16px;
+        font-size: 14px;
+        font-weight: 700;
+        cursor: pointer;
+        transition: 0.2s;
+    }
+
+    .change-photo-btn:hover {
+        background: #1F5BFF;
+    }
+    .delete-photo-btn {
+        margin-top: 10px;
+        width: 100%;
+        border: none;
+        border-radius: 12px;
+        background: #1F5BFF;
+        color: white;
+        padding: 13px 16px;
+        font-size: 14px;
+        font-weight: 700;
+        cursor: pointer;
+        transition: 0.2s;
+    }
+
+    .delete-photo-btn:hover {
+        background: #1F5BFF;
+    }
+
+    .disabled-btn {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+    .info-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+    }
+    .full-width {
+        grid-column: 1 / -1;
+    }
+    .hidden {
+        display: none !important;
+    }
+    .save-info-btn {
+        margin-top: 14px;
+        border: none;
+        border-radius: 12px;
+        background: #1F5BFF;
+        color: white;
+        padding: 14px 16px;
+        font-size: 14px;
+        font-weight: 700;
+        cursor: pointer;
+        transition: 0.2s;
+    }
+
+    .save-info-btn:hover {
+        background: #1F5BFF;
+    }
+    .profile-toast {
+        background: #dcfce7;
+        color: #166534;
+        border: 1px solid #bbf7d0;
+        padding: 14px 16px;
+        border-radius: 14px;
+        margin-bottom: 20px;
+        font-size: 14px;
+        font-weight: 700;
+    }
+    .profile-edit-input {
+        width: 100%;
+        border: none;
+        background: transparent;
+        padding: 0;
+        font-size: 15px;
+        font-weight: 700;
+        color: #111827;
+        outline: none;
+    }
+    .save-profile-btn, .save-card-btn {
+        margin-top: 14px;
+        border: none;
+        border-radius: 12px;
+        background: #2563eb;
+        color: white;
+        padding: 14px 16px;
+        font-size: 14px;
+        font-weight: 700;
+        cursor: pointer;
+        transition: 0.2s;
+    }
+     .save-profile-btn {
+        width: 100%;
+     }
+    .save-profile-btn.disabled-btn {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+    .profile-logo-value {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .profile-bank-logo,
+    .profile-payment-logo {
+        width: 22px;
+        height: 22px;
+        object-fit: contain;
+    }
+    .profile-logo-value {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    }
+
+    .profile-bank-logo,
+    .profile-payment-logo {
+        width: 22px;
+        height: 22px;
+        object-fit: contain;
+    }
+    .user-company {
+        margin-top: 4px;
+        margin-bottom: 10px;
+        font-size: 14px;
+        font-weight: 700;
+        color: #6b7280;
+        text-align: center;
+    }
+    .company-bank-grid {
+        display: grid;
+        grid-template-columns: 180px 180px 1fr;
+        gap: 16px;
+        width: 100%;
+        grid-column: 1 / -1;
+    }
+    .partner-type-label {
+        font-weight: 500;
+        padding-bottom: 5px;
+    }
+    .btn-spinner {
+        width: 14px;
+        height: 14px;
+        border: 2px solid rgba(255,255,255,.5);
+        border-top-color: white;
+        border-radius: 50%;
+        display: inline-block;
+        animation: spin 0.8s linear infinite;
+        margin-right: 8px;
+        vertical-align: -2px;
+    }
+
+   @keyframes spin {
+        to {
+            transform: rotate(360deg);
+        }
+    }
+    @media (max-width: 900px) {
+        .profile-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    @media (max-width: 640px) {
+        .profile-wrapper {
+            margin: 0 12px 20px;
+        }
+
+        .profile-info-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .profile-info-item.full {
+            grid-column: auto;
+        }
+        .company-bank-grid {
+            grid-template-columns: 1fr;
+        }    
+    }
+</style>
+
+<form id="profile-form"
+      method="post"
+      enctype="multipart/form-data">
+    {% csrf_token %}
+    <div id="profile-ajax-message"></div>
+<div class="profile-wrapper">
+
+    {% if messages %}
+        {% for message in messages %}
+            <div class="profile-toast">
+                {{ message }}
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <div class="profile-grid">
+
+        <!-- Левая карточка -->
+        <div class="profile-card">
+
+            <div class="avatar-box">
+
+                <div class="avatar-wrap">
+                    <img src="{% if request.user.avatar %}{{ request.user.avatar.url }}{% endif %}"
+                         alt="Аватар"
+                         class="avatar-image {% if not request.user.avatar %}hidden{% endif %}"
+                         id="partner-avatar-preview">
+
+                    <div class="avatar-placeholder {% if request.user.avatar %}hidden{% endif %}"
+                         id="partner-avatar-placeholder">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                            <path d="M20 21a8 8 0 0 0-16 0"></path>
+                            <circle cx="12" cy="7" r="4"></circle>
+                        </svg>
+                    </div>
+                </div>
+
+                <div class="user-name">
+                    {% if partner_registration.partner_type != 'company' and partner_registration.partner_type != 'self_employed' %}
+                        {% if request.user.first_name or request.user.last_name %}
+                            {{ request.user.first_name }} {{ request.user.last_name }}
+                        {% else %}
+                            {{ request.user.email }}
+                        {% endif %}
+                     {% endif %}    
+                </div>
+                {% if partner_registration.partner_type == 'company' %}
+                    <div class="user-name">
+                        {{ partner_registration.company_short_name|default:partner_registration.company_full_name }}
+                    </div>
+
+                    <div class="user-company">
+                        {{ partner_registration.contact_person_name }}
+                    </div>
+
+                {% endif %}
+                   
+                <div class="partner-type-label">
+                        {{ partner_registration.get_partner_type_display }}
+                </div>
+                <div class="user-meta">
+                    Статус:
+                    {% if partner_registration.status %}
+                        <span style="color:#2563eb;font-weight:700;">
+                            {{ partner_registration.status.name }}
+                        </span>
+                    {% else %}
+                        <span style="color:#6b7280;font-weight:700;">
+                            Не назначен
+                        </span>
+                    {% endif %}
+                </div>
+
+                <div class="user-meta">
+                    Форма выплаты:
+                    <span style="font-weight:700;">
+                        {% if partner_registration.offer.payout_type == 'partner_status' %}
+                            По статусу партнера
+                        {% else %}
+                            Фиксированная
+                        {% endif %}
+                    </span>
+                </div>
+
+                <div class="user-meta">
+                    Вознаграждение:
+                    <span style="font-weight:700;color:#2563eb;">
+                        {% if partner_registration.offer.payout_type == 'partner_status' %}
+                            {{ partner_registration.status.reward_percent|floatformat:0 }}%
+                        {% else %}
+                            {{ partner_registration.offer.reward|floatformat:0 }} ₽
+                        {% endif %}
+                    </span>
+                </div>
+
+                <input type="file"
+                       id="partner-avatar-input"
+                       name="avatar"
+                       accept="image/*"
+                       hidden>
+
+                <input type="hidden"
+                       name="delete_avatar"
+                       id="delete-avatar-input"
+                       value="">
+
+                <button type="button"
+                        class="change-photo-btn"
+                        id="change-photo-btn">
+
+                    {% if request.user.avatar %}
+                        Изменить фото
+                    {% else %}
+                        Добавить фото
+                    {% endif %}
+                </button>
+
+                <button type="button"
+                        class="delete-photo-btn {% if not request.user.avatar %}disabled-btn{% endif %}"
+                        id="delete-photo-btn"
+                        {% if not request.user.avatar %}disabled{% endif %}>
+                    Удалить фото
+                </button>
+
+                <button type="submit"
+                        class="save-profile-btn disabled-btn"
+                        id="save-photo-btn"
+                        disabled>
+
+                    {% if request.user.avatar %}
+                        Сохранить фото
+                    {% else %}
+                        Сохранить
+                    {% endif %}
+                </button>
+
+            </div>
+        </div>
+
+        <!-- Правая карточка -->
+        <div class="form-card">
+
+            <div class="form-title">
+                Основная информация
+            </div>
+        
+            <div class="profile-info-grid">               
+                {% if partner_registration.partner_type == 'individual' %}
+                <div class="profile-info-item">
+                    <div class="profile-info-label">ФИО</div>
+
+                    <input type="text"
+                        name="full_name"
+                        value="{{ partner_registration.full_name|default:'' }}"
+                        class="profile-edit-input">
+                </div>
+
+                <div class="profile-info-item">
+                    <div class="profile-info-label">Email</div>
+
+                    <input type="email"
+                        name="email"
+                        value="{{ request.user.email }}"
+                        class="profile-edit-input">
+                </div>
+
+                <div class="profile-info-item">
+                    <div class="profile-info-label">Телефон</div>
+
+                    <input type="text"
+                        name="phone"
+                        id="profile-phone"
+                        value="{{ request.user.phone|default:'' }}"
+                        class="profile-edit-input">
+                </div>
+
+                <div class="profile-info-item">
+                    <div class="profile-info-label">Вид деятельности</div>
+
+                    <input type="text"
+                        name="activity_type"
+                        value="{{ partner_registration.activity_type|default:'' }}"
+                        class="profile-edit-input">
+                </div>
+              {% elif partner_registration.partner_type == 'self_employed' %}
+                <div class="profile-info-item">
+                    <div class="profile-info-label">ФИО</div>
+                    <input type="text"
+                        name="full_name"
+                        value="{{ partner_registration.full_name|default:'' }}"
+                        class="profile-edit-input">
+                </div>
+
+                <div class="profile-info-item">
+                    <div class="profile-info-label">Email</div>
+                    <input type="email"
+                        name="email"
+                        value="{{ request.user.email }}"
+                        class="profile-edit-input">
+                </div>
+
+                <div class="profile-info-item">
+                    <div class="profile-info-label">Телефон</div>
+                    <input type="text"
+                        name="phone"
+                        id="profile-phone"
+                        value="{{ request.user.phone|default:'' }}"
+                        class="profile-edit-input">
+                </div>
+
+                <div class="profile-info-item">
+                    <div class="profile-info-label">Вид деятельности</div>
+                    <input type="text"
+                        name="activity_type"
+                        value="{{ partner_registration.activity_type|default:'' }}"
+                        class="profile-edit-input">
+                </div>
+
+                <div class="profile-info-item">
+                    <div class="profile-info-label">Название компании</div>
+                    <input type="text"
+                        name="company_name"
+                        value="{{ partner_registration.company_name|default:'' }}"
+                        class="profile-edit-input">
+                </div>
+
+                <div class="profile-info-item">
+                    <div class="profile-info-label">ИНН</div>
+                    <input type="text"
+                        name="inn"
+                        value="{{ partner_registration.inn|default:'' }}"
+                        class="profile-edit-input">
+                </div>  
+              {% elif partner_registration.partner_type == 'company' %}
+
+                <div class="profile-info-item">
+                    <div class="profile-info-label">Email</div>
+
+                    <input type="email"
+                        name="email"
+                        value="{{ request.user.email }}"
+                        class="profile-edit-input">
+                </div>
+
+                <div class="profile-info-item">
+                    <div class="profile-info-label">Телефон</div>
+
+                    <input type="text"
+                        name="phone"
+                        id="profile-phone"
+                        value="{{ request.user.phone|default:'' }}"
+                        class="profile-edit-input">
+                </div>
+
+                <div class="profile-info-item">
+                    <div class="profile-info-label">
+                        Полное название организации
+                    </div>
+
+                    <input type="text"
+                        name="company_full_name"
+                        value="{{ partner_registration.company_full_name|default:'' }}"
+                        class="profile-edit-input">
+                </div>
+
+                <div class="profile-info-item">
+                    <div class="profile-info-label">
+                        Сокращенное название
+                    </div>
+
+                    <input type="text"
+                        name="company_short_name"
+                        value="{{ partner_registration.company_short_name|default:'' }}"
+                        class="profile-edit-input">
+                </div>
+
+                <div class="profile-info-item">
+                    <div class="profile-info-label">
+                        Юридический адрес
+                    </div>
+
+                    <input type="text"
+                        name="legal_address"
+                        value="{{ partner_registration.legal_address|default:'' }}"
+                        class="profile-edit-input">
+                </div>
+
+                <div class="profile-info-item">
+                    <div class="profile-info-label">
+                        Почтовый адрес
+                    </div>
+
+                    <input type="text"
+                        name="postal_address"
+                        value="{{ partner_registration.postal_address|default:'' }}"
+                        class="profile-edit-input">
+                </div>
+
+                <div class="profile-info-item">
+                    <div class="profile-info-label">ИНН</div>
+
+                    <input type="text"
+                        name="inn"
+                        value="{{ partner_registration.inn|default:'' }}"
+                        class="profile-edit-input">
+                </div>
+
+                <div class="profile-info-item">
+                    <div class="profile-info-label">КПП</div>
+
+                    <input type="text"
+                        name="kpp"
+                        value="{{ partner_registration.kpp|default:'' }}"
+                        class="profile-edit-input">
+                </div>
+
+                <div class="profile-info-item full">
+                    <div class="profile-info-label">
+                        ФИО контактного лица
+                    </div>
+
+                    <input type="text"
+                        name="contact_person_name"
+                        value="{{ partner_registration.contact_person_name|default:'' }}"
+                        class="profile-edit-input">
+                </div>                  
+             {% endif %}
+           </div>      
+            <div class="profile-section">
+
+                <div class="profile-section-title">
+                    Платёжные реквизиты
+                </div>
+
+                {% if partner_registration.partner_type == 'company' or partner_registration.partner_type == 'self_employed' %}
+
+                    <div class="profile-info-grid">
+
+                        <div class="profile-info-item">
+                            <div class="profile-info-label">Банк</div>
+
+                            <div class="profile-info-value profile-logo-value">
+
+                                <img id="profile-bank-logo"
+                                    src="{{ bank_logo }}"
+                                    class="profile-bank-logo"
+                                    alt=""
+                                    {% if not bank_logo %}style="display:none;"{% endif %}>
+
+                                <input type="text"
+                                    id="profile-bank-name"
+                                    name="legal_bank_name"
+                                    value="{{ payment_details.legal_bank_name|default:'' }}"
+                                    class="profile-edit-input">
+                            </div>
+                        </div>
+
+                        <div class="profile-info-item">
+                            <div class="profile-info-label">БИК</div>
+
+                            <input type="text"
+                                name="bik"
+                                value="{{ payment_details.bik|default:'' }}"
+                                class="profile-edit-input">
+                        </div>
+
+                        <div class="profile-info-item">
+                            <div class="profile-info-label">
+                                Расчётный счёт
+                            </div>
+
+                            <input type="text"
+                                name="settlement_account"
+                                value="{{ payment_details.settlement_account|default:'' }}"
+                                class="profile-edit-input">
+                        </div>
+
+                        <div class="profile-info-item">
+                            <div class="profile-info-label">
+                                Корреспондентский счёт
+                            </div>
+
+                            <input type="text"
+                                name="correspondent_account"
+                                value="{{ payment_details.correspondent_account|default:'' }}"
+                                class="profile-edit-input">
+                        </div>
+
+                        <div class="company-bank-grid">
+
+                            <div class="profile-info-item">
+                                <div class="profile-info-label">ИНН банка</div>
+
+                                <input type="text"
+                                    name="bank_inn"
+                                    value="{{ payment_details.bank_inn|default:'' }}"
+                                    class="profile-edit-input">
+                            </div>
+
+                            <div class="profile-info-item">
+                                <div class="profile-info-label">КПП банка</div>
+
+                                <input type="text"
+                                    name="bank_kpp"
+                                    value="{{ payment_details.bank_kpp|default:'' }}"
+                                    class="profile-edit-input">
+                            </div>
+
+                            <div class="profile-info-item">
+                                <div class="profile-info-label">Получатель</div>
+
+                            <input type="text"
+                                name="recipient_name"
+                                value="{{ payment_details.recipient_name|default:'' }}"
+                                class="profile-edit-input">
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                {% else %}
+                    <div class="profile-info-grid">
+                        <div class="profile-info-item">
+                            <div class="profile-info-label">Банк</div>
+                            <div class="profile-info-value profile-logo-value">
+                                <img id="profile-bank-logo"
+                                    src="{{ bank_logo }}"
+                                    class="profile-bank-logo"
+                                    alt=""
+                                    {% if not bank_logo %}style="display:none;"{% endif %}>
+
+                                <input type="text"
+                                    id="profile-bank-name"
+                                    name="bank_name"
+                                    value="{{ payment_details.bank_name|default:'' }}"
+                                    class="profile-edit-input"
+                                    readonly>
+                            </div>
+                       </div>
+   
+                        <div class="profile-info-item">
+                            <div class="profile-info-label">Платёжная система</div>
+                                <div class="profile-info-value profile-logo-value">
+                                    <img id="profile-payment-logo"
+                                        src="{{ payment_logo }}"
+                                        class="profile-payment-logo"
+                                        alt=""
+                                        {% if not payment_logo %}style="display:none;"{% endif %}>
+
+                                    <input type="text"
+                                        id="profile-payment-system"
+                                        name="payment_system"
+                                        value="{{ payment_details.payment_system|default:'' }}"
+                                        class="profile-edit-input"
+                                        readonly>
+                                </div>
+                        </div>
+
+                        <div class="profile-info-item">
+                            <div class="profile-info-label">Получатель</div>
+                            <input type="text"
+                                name="recipient_name"
+                                value="{{ payment_details.recipient_name|default:'' }}"
+                                class="profile-edit-input">
+                        </div>
+
+                       <div class="profile-info-item">
+                            <div class="profile-info-label">Карта</div>
+                            <input type="text"
+                                name="card_number"
+                                id="profile-card-number"
+                                value="{{ saved_card_number|default:'' }}"
+                                class="profile-edit-input"
+                                placeholder="0000 0000 0000 0000">
+                        </div>
+
+                {% endif %}
+             </div>
+                <button type="submit"
+                    class="save-card-btn disabled-btn"
+                    id="save-card-btn"
+                    disabled>
+                Сохранить изменения
+            </button>
+            </div>
+
+        </div>
+    </div>
+</div>
+<script>
+    const changePhotoBtn = document.getElementById('change-photo-btn');
+    const avatarInput = document.getElementById('partner-avatar-input');
+    const avatarPreview = document.getElementById('partner-avatar-preview');
+    const avatarPlaceholder = document.getElementById('partner-avatar-placeholder');
+    const deletePhotoBtn = document.getElementById('delete-photo-btn');
+    const savePhotoBtn = document.getElementById('save-photo-btn');
+
+    changePhotoBtn?.addEventListener('click', () => {
+        avatarInput.click();
+    });
+
+    avatarInput?.addEventListener('change', function () {
+        const file = this.files[0];
+
+        if (!file) return;
+
+        const reader = new FileReader();
+
+        reader.onload = function (e) {
+            avatarPreview.src = e.target.result;
+            avatarPreview.classList.remove('hidden');
+            avatarPlaceholder.classList.add('hidden');
+
+            deletePhotoBtn.disabled = false;
+            deletePhotoBtn.classList.remove('disabled-btn');
+            savePhotoBtn.disabled = false;
+            savePhotoBtn.classList.remove('disabled-btn');
+            savePhotoBtn.textContent = 'Сохранить фото';
+        };
+
+        reader.readAsDataURL(file);
+        changePhotoBtn.textContent = 'Изменить фото';
+    });
+// Удаление фото
+    deletePhotoBtn?.addEventListener('click', () => {
+        avatarPreview.src = '';
+
+        avatarPreview.classList.add('hidden');
+        avatarPlaceholder.classList.remove('hidden');
+
+        avatarInput.value = '';
+
+        document.getElementById('delete-avatar-input').value = '1';
+
+        deletePhotoBtn.disabled = true;
+        deletePhotoBtn.classList.add('disabled-btn');
+        changePhotoBtn.textContent = 'Добавить фото';
+        savePhotoBtn.disabled = false;
+        savePhotoBtn.classList.remove('disabled-btn');
+        savePhotoBtn.textContent = 'Сохранить';
+    });
+</script>
+<script>
+    // Удаление уведомления через 5 менут
+    const profileToast = document.querySelector('.profile-toast');
+
+    if (profileToast) {
+        setTimeout(() => {
+            profileToast.style.transition = '0.4s';
+            profileToast.style.opacity = '0';
+
+            setTimeout(() => {
+                profileToast.remove();
+            }, 400);
+
+        }, 5000);
+    }
+</script>
+<script src="https://unpkg.com/imask"></script>
+<script>
+    const profileCardNumber = document.getElementById('profile-card-number');
+    const partnerType = "{{ partner_registration.partner_type }}";
+    const saveChangesBtn = document.querySelector('.save-profile-btn');
+    const saveCardBtn = document.getElementById('save-card-btn');
+    const profileInputs = document.querySelectorAll('.profile-edit-input');
+    if (profileCardNumber) {
+        IMask(profileCardNumber, {
+            mask: '0000 0000 0000 0000'
+        });
+    }
+    const profilePhone = document.getElementById('profile-phone');
+
+    if (profilePhone) {
+        IMask(profilePhone, {
+            mask: '+{7} (000) 000-00-00'
+        });
+    }
+</script>
+<script>
+    const profileBankName = document.getElementById('profile-bank-name');
+    const profilePaymentSystem = document.getElementById('profile-payment-system');
+    const profileBankLogo = document.getElementById('profile-bank-logo');
+    const profilePaymentLogo = document.getElementById('profile-payment-logo');    
+    const initialValues = {};
+
+    profileInputs.forEach(input => {
+        initialValues[input.name] = input.value;
+    });
+    function validateProfileChanges() {
+        if (partnerType === 'company' || partnerType === 'self_employed') {
+            validateCompanyPaymentForm();
+            return;
+        }
+        let changed = false;
+        let allRequiredFilled = true;
+
+        profileInputs.forEach(input => {
+            if (input.value.trim() === '') {
+                allRequiredFilled = false;
+            }
+
+            if (input.value !== initialValues[input.name]) {
+                changed = true;
+            }
+        });
+
+        const cardInput = document.getElementById('profile-card-number');
+
+        if (cardInput && cardInput.value.trim() !== '') {
+            const digits = cardInput.value.replace(/\D/g, '');
+
+            if (digits.length !== 16) {
+                allRequiredFilled = false;
+            }
+        }
+        if (changed && allRequiredFilled) {
+            saveCardBtn.disabled = false;
+            saveCardBtn.classList.remove('disabled-btn');
+        } else {
+            saveCardBtn.disabled = true;
+            saveCardBtn.classList.add('disabled-btn');
+        }
+    }
+    profileInputs.forEach(input => {
+        input.addEventListener('input', validateProfileChanges);
+    });
+    function getPaymentLogo(system) {
+        switch (system.toLowerCase()) {
+            case 'мир':
+                return '/static/users/images/payment/mir.svg';
+            case 'visa':
+                return '/static/users/images/payment/visa.svg';
+            case 'mastercard':
+                return '/static/users/images/payment/mastercard.svg';
+            default:
+                return '';
+        }
+    }
+
+    function detectPaymentSystem(digits) {
+        const first1 = digits.slice(0, 1);
+        const first2 = parseInt(digits.slice(0, 2));
+        const first6 = parseInt(digits.slice(0, 6));
+
+        if (first6 >= 220000 && first6 <= 220499) return 'МИР';
+        if (first1 === '4') return 'Visa';
+        if (first2 >= 51 && first2 <= 55) return 'Mastercard';
+
+        return 'Не определена';
+    }
+
+    if (profileCardNumber) {
+        profileCardNumber.addEventListener('input', async function () {
+            const digits = this.value.replace(/\D/g, '');
+            validateProfileChanges();
+            if (digits.length < 6) {
+                profileBankName.value = '';
+                profilePaymentSystem.value = '';
+                profileBankLogo.style.display = 'none';
+                profilePaymentLogo.style.display = 'none';
+                return;
+            }
+
+            const bin = digits.slice(0, 6);
+
+            const response = await fetch(`/partner/accruals/bank-bin-lookup/?bin=${bin}`);
+            const data = await response.json();
+
+            if (data.success) {
+                profileBankName.value = data.bank;
+
+                if (data.logo) {
+                    profileBankLogo.src = data.logo;
+                    profileBankLogo.style.display = 'block';
+                }
+            }
+
+            const paymentSystem = detectPaymentSystem(digits);
+            profilePaymentSystem.value = paymentSystem;
+
+            const paymentLogoPath = getPaymentLogo(paymentSystem);
+
+            if (paymentLogoPath) {
+                profilePaymentLogo.src = paymentLogoPath;
+                profilePaymentLogo.style.display = 'block';
+            }
+        });
+    }
+let requiredFields = [];
+
+if (partnerType === 'company') {
+    requiredFields = [
+        'company_full_name',
+        'company_short_name',
+        'legal_address',
+        'postal_address',
+        'inn',
+        'kpp',
+        'contact_person_name',
+
+        'legal_bank_name',
+        'bik',
+        'settlement_account',
+        'correspondent_account',
+        'recipient_name',
+        'bank_inn',
+        'bank_kpp'
+    ];
+}
+
+else if (partnerType === 'self_employed') {
+    requiredFields = [
+        'full_name',
+        'email',
+        'phone',
+        'activity_type',
+        'company_name',
+        'inn',
+        'legal_bank_name',
+        'bik',
+        'settlement_account',
+        'correspondent_account',
+        'recipient_name',
+        'bank_inn',
+        'bank_kpp'
+    ];
+}
+    const initialCompanyValues = {};
+
+    requiredFields.forEach(name => {
+        const input = document.querySelector(`[name="${name}"]`);
+
+        if (input) {
+            initialCompanyValues[name] = input.value;
+        }
+    });
+    profileInputs.forEach(input => {
+        input.addEventListener('input', validateCompanyPaymentForm);
+    });
+
+    function validateCompanyPaymentForm() {
+
+        if (partnerType !== 'company' && partnerType !== 'self_employed') {
+            return;
+        }
+        const allFilled = requiredFields.every(name => {
+            const input = document.querySelector(`[name="${name}"]`);
+            return input && input.value.trim() !== '';
+        });
+        const bankInn = document.querySelector('[name="bank_inn"]');
+        const bankKpp = document.querySelector('[name="bank_kpp"]');
+        const companyInn = document.querySelector('[name="inn"]');
+        const companyKpp = document.querySelector('[name="kpp"]');
+        const bik = document.querySelector('[name="bik"]');
+        const settlement = document.querySelector('[name="settlement_account"]');
+        const correspondent = document.querySelector('[name="correspondent_account"]');
+        let changed = false;
+        requiredFields.forEach(name => {
+            const input = document.querySelector(`[name="${name}"]`);
+
+            if (input && input.value !== initialCompanyValues[name]) {
+                changed = true;
+            }
+        });
+        const bankInnDigits = (bankInn?.value || '').replace(/\D/g, '');
+        const innValid = bankInnDigits.length === 10;
+        const kppDigits = (bankKpp?.value || '').replace(/\D/g, '');
+
+        const kppValid = kppDigits.length === 9;
+                
+        const companyInnDigits = (companyInn?.value || '').replace(/\D/g, '');
+        const companyKppDigits = (companyKpp?.value || '').replace(/\D/g, '');
+        const innDigits = (bankInn?.value || '').replace(/\D/g, '');
+        const bikDigits = (bik?.value || '').replace(/\D/g, '');
+        const settlementDigits = (settlement?.value || '').replace(/\D/g, '');
+        const correspondentDigits = (correspondent?.value || '').replace(/\D/g, '');
+        const bikValid = bikDigits.length === 9;
+        const companyInnValid =
+            partnerType === 'self_employed'
+                ? companyInnDigits.length === 12
+                : companyInnDigits.length === 10;
+
+        const companyKppValid =
+            partnerType === 'self_employed'
+                ? true
+                : companyKppDigits.length === 9;
+
+        const settlementValid =
+            settlementDigits.length === 20;
+
+        const correspondentValid =
+            correspondentDigits.length === 20;
+        const isValid =
+            changed &&
+            allFilled &&
+            innValid &&
+            kppValid &&
+            companyInnValid &&
+            companyKppValid &&
+            bikValid &&
+            settlementValid &&
+            correspondentValid;
+
+        saveCardBtn.disabled = !isValid;
+        if (isValid) {
+            saveCardBtn.disabled = false;
+            saveCardBtn.classList.remove('disabled-btn');
+        }
+
+        saveCardBtn.classList.toggle('disabled-btn', !isValid);
+
+    }
+
+    [
+        'legal_bank_name',
+        'bik',
+        'settlement_account',
+        'correspondent_account',
+        'recipient_name',
+        'bank_inn',
+        'bank_kpp'
+    ].forEach(name => {
+
+        const input = document.querySelector(`[name="${name}"]`);
+
+        input?.addEventListener('input', validateCompanyPaymentForm);
+    });
+  
+    validateCompanyPaymentForm();
+ //   Ограничение ввода для числовых полей
+    document.querySelector('[name="inn"]')?.addEventListener('input', function () {
+
+        const maxLength =
+            partnerType === 'self_employed' ? 12 : 10;
+
+        this.value = this.value
+            .replace(/\D/g, '')
+            .slice(0, maxLength);
+
+        setTimeout(() => {
+            validateCompanyPaymentForm();
+        }, 0);
+    });
+    document.querySelector('[name="bank_inn"]')?.addEventListener('input', function () {
+
+        this.value = this.value
+            .replace(/\D/g, '')
+            .slice(0, 10);
+
+        setTimeout(() => {
+            validateCompanyPaymentForm();
+        }, 0);
+    });
+
+    document.querySelector('[name="bank_kpp"]')?.addEventListener('input', function () {
+
+        this.value = this.value.replace(/\D/g, '').slice(0, 9);
+
+        setTimeout(() => {
+            validateCompanyPaymentForm();
+        }, 0);
+    });
+
+    document.querySelector('[name="kpp"]')?.addEventListener('input', function () {
+        this.value = this.value.replace(/\D/g, '').slice(0, 9);
+
+        setTimeout(() => {
+            validateCompanyPaymentForm();
+        }, 0);
+    });
+    document.querySelector('[name="bik"]')?.addEventListener('input', function () {
+        this.value = this.value.replace(/\D/g, '').slice(0, 9);
+
+        setTimeout(() => {
+            validateCompanyPaymentForm();
+        }, 0);
+    });
+
+    document.querySelector('[name="settlement_account"]')?.addEventListener('input', function () {
+        this.value = this.value.replace(/\D/g, '').slice(0, 20);
+
+        setTimeout(() => {
+            validateCompanyPaymentForm();
+        }, 0);
+    });
+
+    document.querySelector('[name="correspondent_account"]')?.addEventListener('input', function () {
+        this.value = this.value.replace(/\D/g, '').slice(0, 20);
+
+        setTimeout(() => {
+            validateCompanyPaymentForm();
+        }, 0);
+    });
+</script>
+
+<script>
+const profileForm = document.getElementById('profile-form');
+const ajaxMessage = document.getElementById('profile-ajax-message');
+
+profileForm?.addEventListener('submit', async function (e) {
+
+    e.preventDefault();
+
+    saveCardBtn.disabled = true;
+    saveCardBtn.classList.add('disabled-btn');
+
+    saveCardBtn.innerHTML =
+        '<span class="btn-spinner"></span> Сохранение...';
+
+    const formData = new FormData(profileForm);
+
+    try {
+
+        const response = await fetch(profileForm.action || window.location.href, {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        });
+
+        if (response.ok) {
+
+            ajaxMessage.innerHTML = `
+                <div class="profile-toast">
+                    Изменения успешно сохранены
+                </div>
+            `;
+
+            saveCardBtn.innerHTML = 'Сохранено';
+
+            saveCardBtn.disabled = true;
+            saveCardBtn.classList.add('disabled-btn');
+
+            profileInputs.forEach(input => {
+                initialValues[input.name] = input.value;
+            });
+
+        } else {
+            throw new Error();
+        }
+
+    } catch {
+
+        ajaxMessage.innerHTML = `
+            <div class="profile-toast" style="background:#fee2e2;color:#991b1b;border-color:#fecaca;">
+                Ошибка сохранения
+            </div>
+        `;
+
+        saveCardBtn.innerHTML = 'Сохранить изменения';
+    }
+
+});
+</script>
+</form>
+{% endblock %}

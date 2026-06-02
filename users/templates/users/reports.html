@@ -1,0 +1,674 @@
+{% extends 'users/base.html' %}
+{% load number_format %}
+
+{% block title %}Отчёты{% endblock %}
+{% block page_title %}ОТЧЁТЫ{% endblock %}
+
+{% block content %}
+
+<style>
+    .reports-card {
+        background: white;
+        border-radius: 18px;
+        padding: 24px;
+        margin: 0 24px 24px;
+        box-shadow: 0 8px 25px rgba(15,23,42,0.06);
+        border: 1px solid #eef2f7;
+    }
+
+    .reports-card h2 {
+        margin: 0 0 20px;
+    }
+
+    .reports-form {
+        width: 100%;
+    }
+
+    .reports-form-group label {
+        display: block;
+        margin-bottom: 8px;
+        font-weight: 700;
+        color: #374151;
+    }
+
+    .reports-form-group select,
+    .reports-form-group input {
+        width: 100%;
+        height: 48px;
+        border-radius: 12px;
+        border: 1px solid #d1d5db;
+        padding: 0 14px;
+    }
+
+    .report-tabs {
+        display: grid;
+        grid-template-columns: repeat(6, 1fr);
+        border: 1px solid #1F5BFF;
+        border-radius: 12px;
+        overflow: hidden;
+        margin: 0 24px 22px;
+    }
+
+    .report-tabs button {
+        border: none;
+        background: white;
+        padding: 14px;
+        font-weight: 700;
+        cursor: pointer;
+        border-right: 1px solid #1F5BFF;
+    }
+
+    .report-tabs button:last-child {
+        border-right: none;
+    }
+
+    .report-tabs button.active {
+        background: #1F5BFF;
+        color: white;
+    }
+
+    .report-form-row {
+        display: grid;
+        grid-template-columns: 1fr 380px;
+        gap: 16px;
+        align-items: end;
+        margin-bottom: 20px;
+    }
+
+    .period-fields-wrapper {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+    }
+
+    .reports-actions {
+        display: flex;
+        gap: 12px;
+        align-items: center;
+    }
+
+    .report-btn,
+    .report-reset-btn {
+        height: 48px;
+        min-width: 180px;
+        border-radius: 12px;
+        font-weight: 800;
+    }
+
+    .report-btn {
+        border: none;
+        background: #2563eb;
+        color: white;
+        padding: 0 20px;
+        cursor: pointer;
+    }
+
+    .report-reset-btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #1F5BFF;
+        color: #fff;
+        text-decoration: none;
+        border: none;
+        cursor: pointer;
+    }
+
+    .reports-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    .reports-table th,
+    .reports-table td {
+        padding: 14px;
+        border-bottom: 1px solid #e5e7eb;
+        text-align: left;
+    }
+
+    .reports-table th {
+        color: #6b7280;
+        font-size: 12px;
+        text-transform: uppercase;
+    }
+
+    .reports-summary {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 16px;
+        margin-top: 20px;
+    }
+
+    .summary-card {
+        background: #f8fafc;
+        border-radius: 14px;
+        padding: 16px;
+    }
+
+    .summary-card span {
+        display: block;
+        font-size: 12px;
+        color: #6b7280;
+    }
+
+    .summary-card strong {
+        font-size: 20px;
+        font-weight: 800;
+    }
+ 
+    .report-form-row {
+        display: grid;
+        gap: 16px;
+        align-items: end;
+        margin-bottom: 20px;
+    }
+
+    .report-form-row.without-period {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .report-form-row.with-period {
+        grid-template-columns: 1fr 260px 380px;
+    }
+    .reports-pagination {
+    display: flex;
+    gap: 8px;
+    margin-top: 20px;
+    align-items: center;
+    justify-content: center;
+    }
+
+    .reports-pagination a,
+    .reports-pagination span {
+        min-width: 38px;
+        height: 38px;
+        padding: 0 12px;
+        border-radius: 10px;
+        border: 1px solid #d1d5db;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-decoration: none;
+        color: #1f2937;
+        font-weight: 700;
+    }
+
+    .reports-pagination span.active {
+        color: #000;
+
+    }
+    .report-signatures {
+        display: grid;
+        grid-template-columns: 1fr 1fr auto;
+        gap: 40px;
+        align-items: end;
+        margin-top: 40px;
+        margin-bottom: 20px;
+    }
+
+    .signature-block {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .signature-block.center {
+        justify-content: center;
+    }
+
+    .signature-block.right {
+        justify-content: flex-end;
+    }
+
+    .signature-title {
+        font-weight: 700;
+        color: #374151;
+        white-space: nowrap;
+        margin-top: 10px;
+    }
+
+    .signature-line {
+        flex: 1;
+        border-bottom: 1px solid #111827;
+        min-width: 140px;
+        margin-top: 31px;
+    }
+    .reports-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    margin-top: 20px;
+    flex-wrap: wrap;
+    }
+
+    .reports-export-actions,
+    .reports-main-actions {
+        display: flex;
+        gap: 12px;
+        align-items: center;
+    }
+
+    .report-secondary-btn {
+        height: 48px;
+        padding: 0 18px;
+        border-radius: 10px;
+        border: none;
+
+        background: #1F5BFF;
+        color: white;
+
+        font-weight: 700;
+        text-decoration: none;
+
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+
+        transition: .2s;
+        cursor: pointer;
+        width: 152px;
+    }
+
+    .report-secondary-btn:hover {
+        background: #1749d1;
+        transform: translateY(-1px);
+    }
+
+    .report-secondary-btn i {
+        font-size: 14px;
+    }
+    .report-period-text {
+        display: inline-block;
+        margin-top: 8px;
+        font-size: 14px;
+        font-weight: 600;
+        color: #6b7280;
+    }
+    .report-secondary-btn:disabled {
+        opacity: 0.5 !important;
+        cursor: not-allowed !important;
+        pointer-events: none !important;
+        transform: none !important;
+    }
+    .report-btn:disabled {
+        cursor: not-allowed;
+        opacity: 0.5;
+    }
+    .report-reset-btn:disabled {
+   
+        cursor: not-allowed;
+        opacity: 0.5;
+   }
+    @media print {
+    body * {
+        visibility: hidden !important;
+    }
+
+    #print-area,
+    #print-area * {
+        visibility: visible !important;
+    }
+
+    #print-area {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+    }
+
+    .reports-card {
+        box-shadow: none !important;
+        border: none !important;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+
+    .reports-pagination {
+        display: none !important;
+    }
+
+    .reports-summary {
+        grid-template-columns: repeat(4, 1fr) !important;
+        page-break-inside: avoid;
+    }
+
+    .report-signatures {
+        page-break-inside: avoid;
+        margin-top: 30px;
+    }
+
+    .reports-table {
+        width: 100% !important;
+        font-size: 10px;
+    }
+
+    .reports-table th,
+    .reports-table td {
+        padding: 6px;
+    }
+    
+
+    @page {
+        size: A4 landscape;
+        margin: 10mm;
+    }
+}    
+
+    @media (max-width: 800px) {
+        .report-tabs {
+            grid-template-columns: 1fr 1fr;
+        }
+
+        .report-form-row,
+        .period-fields-wrapper,
+        .reports-summary {
+            grid-template-columns: 1fr;
+        }
+
+        .reports-actions {
+            flex-direction: column;
+            align-items: stretch;
+        }
+
+        .report-btn,
+        .report-reset-btn {
+            width: 100%;
+        }
+    }
+</style>
+
+<form method="get" class="reports-form">
+        <input type="hidden" name="partner" value="{{ selected_partner }}">
+        <input type="hidden" name="report_type" value="{{ report_type }}">
+        <input type="hidden" name="start_date" value="{{ start_date }}">
+        <input type="hidden" name="end_date" value="{{ end_date }}">
+        <div class="report-tabs">
+        <button type="submit" name="date_filter" value="all"
+                class="{% if date_filter == 'all' %}active{% endif %}">
+            Все время
+        </button>
+
+        <button type="submit" name="date_filter" value="today"
+                class="{% if date_filter == 'today' %}active{% endif %}">
+            Сегодня
+        </button>
+
+        <button type="submit" name="date_filter" value="yesterday"
+                class="{% if date_filter == 'yesterday' %}active{% endif %}">
+            Вчера
+        </button>
+
+        <button type="submit" name="date_filter" value="week"
+                class="{% if date_filter == 'week' %}active{% endif %}">
+            Неделя
+        </button>
+
+        <button type="submit" name="date_filter" value="month"
+                class="{% if date_filter == 'month' %}active{% endif %}">
+            Месяц
+        </button>
+
+        <button type="submit" name="date_filter" value="period"
+                class="{% if date_filter == 'period' %}active{% endif %}">
+            Период
+        </button>
+    </div>
+</form>
+
+<div class="reports-card">
+    <h2>Сформировать отчёт</h2>
+
+    <form method="get" class="reports-form">
+        <input type="hidden" name="date_filter" value="{{ date_filter }}">
+
+        <div class="report-form-row {% if date_filter == 'period' %}with-period{% else %}without-period{% endif %}">
+            <div class="reports-form-group">
+                <label>Партнёр</label>
+
+                <select name="partner" required>
+                    <option value="">Выберите партнёра</option>
+
+                    {% for reg in partners_for_report %}
+                        <option value="{{ reg.user.id }}"
+                                {% if selected_partner == reg.user.id|stringformat:"s" %}selected{% endif %}>
+                            {% if reg.partner_type == 'company' %}
+                                {{ reg.company_short_name|default:reg.company_full_name }} — {{ reg.user.email }}
+                            {% else %}
+                                {{ reg.user.first_name }} — {{ reg.user.email }}
+                            {% endif %}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+                <div class="reports-form-group">
+                    <label>Данные для отчёта</label>
+
+                    <select name="report_type">
+                        <option value="all"
+                            {% if report_type == 'all' %}selected{% endif %}>
+                            Все лиды
+                        </option>
+
+                        <option value="deals"
+                            {% if report_type == 'deals' %}selected{% endif %}>
+                            Только сделки
+                        </option>
+
+                        <option value="no_deals"
+                            {% if report_type == 'no_deals' %}selected{% endif %}>
+                            Лиды без сделок
+                        </option>
+                    </select>
+                </div>
+            <div class="period-fields-wrapper"
+                 {% if date_filter != 'period' %}style="display:none;"{% endif %}>
+                <div class="reports-form-group">
+                    <label>Дата начала</label>
+                    <input type="date" name="start_date" value="{{ start_date }}">
+                </div>
+
+                <div class="reports-form-group">
+                    <label>Дата конца</label>
+                    <input type="date" name="end_date" value="{{ end_date }}">
+                </div>
+            </div>
+        </div>
+
+        <div class="reports-actions">
+
+            <div class="reports-export-actions">
+
+                <button type="button"
+                        class="report-secondary-btn blue"
+                        onclick="window.print()"
+                        {% if not report_generated %}disabled{% endif %}>
+                    <i class="fas fa-print"></i>
+                    <span>Печать</span>
+                </button>
+
+                {% if report_generated %}
+                    <a href="{% url 'export_reports_word' %}?partner={{ selected_partner }}&report_type={{ report_type }}&date_filter={{ date_filter }}&start_date={{ start_date }}&end_date={{ end_date }}"
+                    class="report-secondary-btn blue">
+                        <i class="fas fa-file-word"></i>
+                        <span>Word</span>
+                    </a>
+
+                    <a href="{% url 'export_reports_pdf' %}?partner={{ selected_partner }}&report_type={{ report_type }}&date_filter={{ date_filter }}&start_date={{ start_date }}&end_date={{ end_date }}"
+                    class="report-secondary-btn blue">
+                        <i class="fas fa-file-pdf"></i>
+                        <span>PDF</span>
+                    </a>
+
+                    <a href="{% url 'export_reports_csv' %}?partner={{ selected_partner }}&report_type={{ report_type }}&date_filter={{ date_filter }}&start_date={{ start_date }}&end_date={{ end_date }}"
+                    class="report-secondary-btn blue">
+                        <i class="fas fa-file-csv"></i>
+                        <span>CSV</span>
+                    </a>
+                {% else %}
+                    <button type="button" class="report-secondary-btn blue" disabled>
+                        <i class="fas fa-file-word"></i>
+                        <span>Word</span>
+                    </button>
+
+                    <button type="button" class="report-secondary-btn blue" disabled>
+                        <i class="fas fa-file-pdf"></i>
+                        <span>PDF</span>
+                    </button>
+
+                    <button type="button" class="report-secondary-btn blue" disabled>
+                        <i class="fas fa-file-csv"></i>
+                        <span>CSV</span>
+                    </button>
+                {% endif %}
+
+            </div>
+          
+            <div class="reports-main-actions">
+                <button type="submit"
+                        name="generate_report"
+                        value="1"
+                        class="report-btn"
+                        {% if report_generated %}disabled{% endif %}>
+                    Сформировать отчёт
+                </button>
+                <button type="button"
+                        class="report-reset-btn"
+                        {% if not report_generated %}disabled{% endif %}
+                        onclick="window.location.href=`{% url 'reports' %}`">
+                    Сброс
+                </button>
+            </div>
+
+        </div>
+    </form>
+</div>
+
+{% if leads_report is not None %}
+   <div id="print-area">
+    <div class="reports-card">
+        <h2>
+            Отчёт по партнёру:
+            {% if selected_partner_reg %}
+                {% if selected_partner_reg.partner_type == 'company' %}
+                    {{ selected_partner_reg.company_short_name|default:selected_partner_reg.company_full_name }}
+                {% else %}
+                    {{ selected_partner_obj.first_name|default:selected_partner_obj.email }}
+                {% endif %}
+            {% endif %}
+
+            {% if period_text %}
+                <br>
+                <span class="report-period-text">
+                    {{ period_text }}
+                </span>
+            {% endif %}
+        </h2>
+
+        <table class="reports-table">
+            <thead>
+                <tr>
+                    <th>Дата</th>
+                    <th>Лид</th>
+                    <th>Клиент</th>
+                    <th>Оффер</th>
+                    <th>Статус</th>
+                    <th>Сумма сделки</th>
+                    <th>Вознаграждение</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                {% for lead in leads_report %}
+                    <tr>
+                        <td>{{ lead.created_at|date:"d.m.Y H:i" }}</td>
+                        <td>{{ lead.title }}</td>
+                        <td>
+                            {% if lead.client %}
+                                {{ lead.client.first_name }}<br>
+                                {{ lead.client.email }}
+                            {% else %}
+                                —
+                            {% endif %}
+                        </td>
+                        <td>{{ lead.offer.title|default:"—" }}</td>
+                        <td>{{ lead.get_status_display }}</td>
+                        <td>{{ lead.deal_amount|space_thousands }} ₽</td>
+                        <td>{{ lead.partner_reward|space_thousands }} ₽</td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="7">По этому партнёру лидов пока нет</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        <div class="report-signatures">
+
+            <div class="signature-block">
+                <span class="signature-title">Заказчик</span>
+                <div class="signature-line"></div>
+            </div>
+
+            <div class="signature-block center">
+                <span class="signature-title">Исполнитель</span>
+                <div class="signature-line"></div>
+            </div>
+
+            <div class="signature-block right">
+                <span class="signature-title">
+                    Дата: {% now "d.m.Y" %}
+                </span>
+            </div>
+
+        </div>
+        <div class="reports-pagination">
+            {% if leads_report.has_previous %}
+                <a href="?partner={{ selected_partner }}&report_type={{ report_type }}&date_filter={{ date_filter }}&start_date={{ start_date }}&end_date={{ end_date }}&page={{ leads_report.previous_page_number }}">
+                    Назад
+                </a>
+            {% endif %}
+
+            {% for num in leads_report.paginator.page_range %}
+                {% if leads_report.number == num %}
+                    <span class="active">{{ num }}</span>
+                {% else %}
+                    <a href="?partner={{ selected_partner }}&report_type={{ report_type }}&date_filter={{ date_filter }}&start_date={{ start_date }}&end_date={{ end_date }}&page={{ num }}">
+                        {{ num }}
+                    </a>
+                {% endif %}
+            {% endfor %}
+
+            {% if leads_report.has_next %}
+                <a href="?partner={{ selected_partner }}&report_type={{ report_type }}&date_filter={{ date_filter }}&start_date={{ start_date }}&end_date={{ end_date }}&page={{ leads_report.next_page_number }}">
+                    Вперёд
+                </a>
+            {% endif %}
+        </div>
+        <div class="reports-summary">
+            <div class="summary-card">
+                <span>Лидов</span>
+                <strong>{{ total_leads }}</strong>
+            </div>
+
+            <div class="summary-card">
+                <span>Сделок</span>
+                <strong>{{ deal_leads }}</strong>
+            </div>
+
+            <div class="summary-card">
+                <span>Сумма сделок</span>
+                <strong>{{ total_amount|space_thousands }} ₽</strong>
+            </div>
+
+            <div class="summary-card">
+                <span>Вознаграждение</span>
+                <strong>{{ total_reward|space_thousands }} ₽</strong>
+            </div>
+        </div>
+    </div>
+ </div>   
+{% endif %}
+
+{% endblock %}

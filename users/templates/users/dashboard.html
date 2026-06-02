@@ -1,0 +1,661 @@
+{% extends 'users/base.html' %}
+{% load number_format %}
+{{ total_partners }}
+{{ active_partners }}
+{{ inactive_partners }}
+{{ new_partners_month }}
+{{ total_accrued }}
+{% block title %}Статистика{% endblock %}
+{% block page_title %}СТАТИСТИКА{% endblock %}
+
+{% block content %}
+<div class="stats-section">
+    <h2 class="stats-title">ОБЩАЯ СТАТИСТИКА</h2>
+    <div class="stats-grid stats-grid-top">
+
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fa-solid fa-users"></i>
+                </div>
+
+                <div class="stat-content">
+                    <div class="stat-label">ВСЕГО ПАРТНЕРОВ</div>
+                    <div class="stat-value">{{ total_partners }}</div>
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fa-solid fa-coins"></i>
+                </div>
+
+                <div class="stat-content">
+                    <div class="stat-label">ВСЕГО ЗАРАБОТАНО (₽)</div>
+                    <div class="stat-value">{{ admin_profit|space_thousands }}</div>
+                </div>        
+            </div>
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fa-solid fa-hand-holding-dollar"></i>
+                    </div>
+
+                    <div class="stat-content">
+                        <div class="stat-label">НАЧИСЛЕНО ПАРТНЕРАМ (₽)</div>
+                        <div class="stat-value">{{ total_partner_reward|space_thousands }}</div>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fa-solid fa-money-bill-transfer"></i>
+                </div>
+
+                <div class="stat-content">
+                    <div class="stat-label">ВЫПЛАЧЕНО (₽)</div>
+                    <div class="stat-value">{{ paid_total|space_thousands }}</div>
+                </div>
+            </div>
+
+        </div>
+
+           <div class="stats-grid stats-grid-overview-bottom">
+            
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fa-solid fa-file-invoice-dollar"></i>
+                </div>
+
+                <div class="stat-content">
+                    <div class="stat-label">ОСТАЛОСЬ ВЫПЛАТИТЬ (₽)</div>
+                    <div class="stat-value">{{ pending_total|space_thousands }}</div>
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fa-solid fa-address-book"></i>
+                </div>
+
+                <div class="stat-content">
+                    <div class="stat-label">ВСЕГО ЛИДОВ</div>
+                    <div class="stat-value">{{ total_leads }}</div>
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fa-solid fa-briefcase"></i>
+                </div>
+
+                <div class="stat-content">
+                    <div class="stat-label">ВСЕГО СДЕЛОК ПО ЛИДАМ</div>
+                    <div class="stat-value">{{ deal_leads }}</div>
+                </div>
+            </div>
+    </div>
+</div>
+<div class="stats-divider"></div>
+
+<div class="stats-section">
+    <h2 class="stats-title">ПАРТНЕРЫ</h2>
+
+    <div class="stats-grid stats-grid-bottom">
+        <div class="stat-card">
+            <div class="stat-icon">
+                <i class="fa-solid fa-users"></i>
+            </div>
+
+            <div class="stat-content">
+                <div class="stat-label">ВСЕГО ПАРТНЕРОВ</div>
+                <div class="stat-value">{{ total_partners }}</div>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon">
+                <i class="fa-solid fa-user-check"></i>
+            </div>
+
+            <div class="stat-content">
+                <div class="stat-label">АКТИВНЫХ ПАРТНЕРОВ</div>
+                <div class="stat-value">{{ active_partners }}</div>
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-icon">
+                <i class="fa-solid fa-user-xmark"></i>
+            </div>
+
+            <div class="stat-content">
+                <div class="stat-label">НЕАКТИВНЫХ ПАРТНЕРОВ</div>
+                <div class="stat-value">{{ inactive_partners }}</div>
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-icon">
+                <i class="fa-solid fa-user-plus"></i>
+            </div>
+
+            <div class="stat-content">
+                <div class="stat-label">НОВЫХ ПАРТНЕРОВ ЗА МЕСЯЦ</div>
+                <div class="stat-value">{{ new_partners_month }}</div>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="charts-grid">
+
+    <div class="chart-card">
+        <div class="chart-header">
+            <h3>ТОП 5 партнёров</h3>
+            <span>по количеству сделок</span>
+        </div>
+
+        <canvas id="topPartnersChart"></canvas>
+    </div>
+
+    <div class="chart-card">
+        <div class="chart-header">
+            <h3>Динамика продаж</h3>
+            <span>сделки по месяцам</span>
+        </div>
+        <canvas id="salesDynamicsChart"></canvas>
+    </div>
+
+</div>
+<div class="chart-card funnel-card">
+    <div class="chart-header">
+        <h3>Воронка продаж</h3>
+        <span>путь лида до сделки</span>
+    </div>
+
+        <div class="funnel-wrapper">
+
+        <div class="funnel-step funnel-step-1">
+            <span>Все лиды</span>
+            <strong>{{ total_leads }}</strong>
+        </div>
+
+        <div class="funnel-step funnel-step-2">
+            <span>В работе</span>
+            <strong>{{ in_progress_leads }}</strong>
+        </div>
+
+        <div class="funnel-step funnel-step-3">
+            <span>Сделки</span>
+            <strong>{{ deal_leads }}</strong>
+        </div>
+
+    </div>
+</div>
+<div class="stats-divider"></div>
+
+<div class="stats-section">
+    <h2 class="stats-title">ЛИДЫ</h2>
+
+    <div class="stats-grid leads-grid">
+        <div class="stat-card">
+            <div class="stat-icon">
+                <i class="fa-solid fa-address-book"></i>
+            </div>
+
+            <div class="stat-content">
+                <div class="stat-label">ВСЕГО ЛИДОВ</div>
+                <div class="stat-value">{{ total_leads }}</div>
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-icon">
+                <i class="fa-solid fa-file-circle-plus"></i>
+            </div>
+
+            <div class="stat-content">
+                <div class="stat-label">НОВЫХ ЛИДОВ</div>
+                <div class="stat-value">{{ new_leads }}</div>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon">
+                <i class="fa-solid fa-spinner"></i>
+            </div>
+
+            <div class="stat-content">
+                <div class="stat-label">ЛИДОВ В РАБОТЕ</div>
+                <div class="stat-value">{{ in_progress_leads }}</div>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon">
+                <i class="fa-solid fa-ban"></i>
+            </div>
+
+            <div class="stat-content">
+                <div class="stat-label">ОТМЕНЕННЫХ ЛИДОВ</div>
+                <div class="stat-value">{{ cancelled_leads }}</div>
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-icon">
+                <i class="fa-solid fa-briefcase"></i>
+            </div>
+
+            <div class="stat-content">
+                <div class="stat-label">СДЕЛОК ПО ЛИДАМ</div>
+                <div class="stat-value">{{ deal_leads }}</div>
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-icon">
+                <i class="fa-solid fa-chart-line"></i>
+            </div>
+
+            <div class="stat-content">
+                <div class="stat-label">ОБЩАЯ КОНВЕРСИЯ (%)</div>
+                <div class="stat-value">{{ lead_conversion }}</div>
+            </div>
+        </div>   
+     </div>
+</div>
+<div class="stats-divider"></div>
+
+<div class="stats-section">
+    <h2 class="stats-title">ВЫПЛАТЫ</h2>
+
+    <div class="stats-grid payouts-grid">
+        <div class="stat-card">
+            <div class="stat-icon">
+                <i class="fa-solid fa-file-invoice-dollar"></i>
+            </div>
+
+            <div class="stat-content">
+                <div class="stat-label">ВСЕГО ЗАЯВОК НА ВЫПЛАТУ</div>
+                <div class="stat-value">{{ withdrawal_requests_count }}</div>
+            </div>
+        </div>
+
+        <div class="stat-card">
+           <div class="stat-icon">
+                <i class="fa-solid fa-clock-rotate-left"></i>
+            </div>
+
+            <div class="stat-content">
+                <div class="stat-label">ИСТОРИЯ ВЫПЛАТ</div>
+                <div class="stat-value">{{ paid_withdrawal_requests_count }}</div>
+            </div>
+        </div>
+    </div>
+</div>
+<style>
+.stat-card {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+
+    background: white;
+    border-radius: 18px;
+    padding: 24px;
+    min-height: 120px;
+
+    box-shadow: 0 8px 25px rgba(15,23,42,0.06);
+    border: 1px solid #eef2f7;
+}
+
+.stat-icon {
+    width: 75px;
+    height: 75px;
+    min-width: 75px;
+    opacity: 0.8;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 16px;
+    background: rgba(37, 99, 235, 0.08);
+    color: #2563eb;
+
+    font-size: 26px;
+}
+
+.stat-content {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 8px;
+}
+
+.payouts-grid {
+    grid-template-columns: repeat(2, 1fr);
+}    
+ .leads-grid {
+    grid-template-columns: repeat(3, 1fr);
+}
+.stats-grid-overview-bottom {
+    grid-template-columns: repeat(3, 1fr);
+}  
+.stats-divider {
+    height: 4px;
+     margin: 64px 24px 52px 24px;
+    opacity: 0.5;
+    border-radius: 999px;
+
+    background: linear-gradient(
+        to bottom,
+        #dbe4ef,
+        #cbd5e1
+    );
+
+    box-shadow:
+        inset 0 2px 4px rgba(255,255,255,0.8),
+        inset 0 -2px 4px rgba(148,163,184,0.35);
+}
+ .stats-grid {
+    display: grid;
+    gap: 18px;
+    margin-bottom: 18px;
+}
+
+.stats-grid-top {
+    grid-template-columns: repeat(4, 1fr);
+}
+
+.stats-grid-bottom {
+    grid-template-columns: repeat(4, 1fr);
+}
+
+.stat-card {
+    min-height: 120px;
+    background: white;
+    border-radius: 18px;
+    padding: 24px;
+    box-shadow: 0 8px 25px rgba(15, 23, 42, 0.06);
+    border: 1px solid #eef2f7;
+}   
+.stats-section {
+    margin-top: 20px;
+    padding-left: 24px;
+}
+
+.stats-title {
+    font-size: 20px;
+    font-weight: 500;
+    color: #111827;
+    padding-left: 7px;
+}
+
+
+.stat-card {
+    background: white;
+    border-radius: 18px;
+    padding: 24px;
+    box-shadow: 0 8px 25px rgba(15, 23, 42, 0.06);
+    border: 1px solid #eef2f7;
+    transition: 0.2s;
+}
+
+.stat-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 14px 30px rgba(37, 99, 235, 0.08);
+}
+
+.stat-card.wide {
+    grid-column: span 1;
+}
+
+.stat-label {
+    font-size: 15px;
+    font-weight: 600;
+    color: #6b7280;
+    margin-bottom: 14px;
+}
+
+.stat-value {
+    font-size: 34px;
+    font-weight: 800;
+    color: #2563eb;
+    line-height: 1;
+}
+.page-title {
+    font-size: 26px;
+    font-weight: 700;
+    color: #111827;
+    padding-left: 31px;
+}
+.charts-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    margin: 28px 0 0 0;
+}
+
+.chart-card {
+    background: white;
+    border-radius: 22px;
+    padding: 24px;
+    border: 1px solid #eef2f7;
+    box-shadow: 0 12px 32px rgba(15, 23, 42, 0.07);
+}
+
+.chart-header {
+    margin-bottom: 20px;
+}
+
+.chart-header h3 {
+    margin: 0;
+    font-size: 20px;
+    font-weight: 800;
+    color: #111827;
+}
+
+.chart-header span {
+    display: block;
+    margin-top: 6px;
+    color: #6b7280;
+    font-size: 14px;
+}
+
+.chart-card canvas {
+    width: 100% !important;
+    height: 320px !important;
+}
+.funnel-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 18px;
+
+    padding: 30px 20px;
+}
+
+.funnel-step {
+    height: 70px;
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    padding: 0 28px;
+
+    color: white;
+    font-weight: 700;
+
+    border-radius: 18px;
+
+    background: linear-gradient(
+        135deg,
+        #3b82f6,
+        #2563eb
+    );
+
+    box-shadow:
+        0 10px 25px rgba(37,99,235,0.18);
+
+    transition: 0.2s;
+}
+
+.funnel-step:hover {
+    transform: translateY(-2px);
+}
+
+.funnel-step span {
+    font-size: 16px;
+}
+
+.funnel-step strong {
+    font-size: 24px;
+}
+
+.funnel-step-1 {
+    width: 100%;
+}
+
+.funnel-step-2 {
+    width: 72%;
+}
+
+.funnel-step-3 {
+    width: 46%;
+}
+@media (max-width: 900px) {
+    .charts-grid {
+        grid-template-columns: 1fr;
+    }
+}
+@media (max-width: 1000px) {
+    .stats-grid-top {
+        grid-template-columns: repeat(3, 1fr);
+    }
+
+    .stats-grid-bottom {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    .stat-label {
+        font-size: 14px;
+    }
+}
+
+
+@media (max-width: 700px) {
+     .stats-grid-top {
+        grid-template-columns: repeat(3, 1fr);
+    }
+    .content {
+        margin-left: 0;
+        margin-left: 0;
+        width: 739px;
+        padding: 20px 37px 10px 1px;    
+    }
+    .stat-label {
+        font-size: 12px;
+    }
+    .stats-grid-overview-bottom {
+        grid-template-columns: repeat(1, 1fr);
+    }
+}   
+@media (max-width: 480px) {
+    .stats-grid-top,
+    .stats-grid-bottom {
+        grid-template-columns: 1fr;
+    }
+} 
+</style>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    const topPartnersCtx = document.getElementById('topPartnersChart');
+    const salesDynamicsCtx = document.getElementById('salesDynamicsChart');
+
+    new Chart(topPartnersCtx, {
+        type: 'bar',
+        data: {
+            labels: {{ top_partners_labels|default:"[]"|safe }},
+            datasets: [{
+                label: 'Сделок',
+                data: {{ top_partners_values|default:"[]"|safe }},
+                borderRadius: 12
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+
+    new Chart(salesDynamicsCtx, {
+        type: 'line',
+        data: {
+            labels: {{ sales_month_labels|default:"[]"|safe }},
+            datasets: [{
+                label: 'Продажи',
+                data:  {{ sales_month_values|default:"[]"|safe }},
+                tension: 0.35,
+                fill: true
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                }
+            },
+        scales: {
+            y: {
+                beginAtZero: true,
+                ticks: {
+                    callback: function(value) {
+                        return value.toLocaleString('ru-RU') + ' ₽';
+                    }
+                }
+            }
+        }
+        }
+    });
+
+const salesFunnelCtx = document.getElementById('salesFunnelChart');
+
+new Chart(salesFunnelCtx, {
+    type: 'bar',
+    data: {
+        labels: ['Все лиды', 'В работе', 'Сделки'],
+        datasets: [{
+            label: 'Количество',
+            data: [
+                {{ total_leads }},
+                {{ in_progress_leads }},
+                {{ deal_leads }}
+            ],
+            borderRadius: 14
+        }]
+    },
+    options: {
+        indexAxis: 'y',
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                display: false
+            }
+        },
+        scales: {
+            x: {
+                beginAtZero: true
+            }
+        }
+    }
+});
+</script>
+{% endblock %}

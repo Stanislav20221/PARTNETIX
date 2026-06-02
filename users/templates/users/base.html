@@ -1,0 +1,455 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <link rel="stylesheet"href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}PARTNETIX{% endblock %}</title>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #f3f4f6;
+        }
+
+        .sidebar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 325px;
+            height: 100vh;
+            background: #1F5BFF;
+            color: white;
+            padding: 30px 20px;
+            z-index: 5000;
+        }
+
+        .logo {
+            font-size: 22px;
+            font-weight: bold;
+            margin-bottom: 40px;
+            text-align: center;
+        }
+
+        .menu {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .menu-item {
+            text-decoration: none;
+            color: white;
+            padding: 12px;
+            border-radius: 10px;
+            transition: 0.2s;
+        }
+        .menu-item.active {
+            background: #1c1c1c;
+        }
+        .menu-item:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .content {
+            margin-left: 325px;
+            min-height: 100vh;
+            background: white;
+            padding: 30px;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        .page-title {
+            font-size: 26px;
+            font-weight: 700;
+            color: #111827;
+        }
+
+        .logout {
+            text-decoration: none;
+            color: white;
+            background:#1F5BFF;
+            padding: 10px 16px;
+            border-radius: 10px;
+            font-size: 14px;
+        }
+
+        .logout:hover {
+            background: #1F5BFF;
+        }
+        .menu-btn {
+            display: none;
+            background: #2563eb;
+            color: white;
+            border: none;
+            padding: 10px 14px;
+            border-radius: 10px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        .placeholder-page {
+            padding: 40px;
+            background: white;
+            border-radius: 18px;
+            box-shadow: 0 8px 25px rgba(15,23,42,0.06);
+        }
+        .menu-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            
+            text-decoration: none;
+            color: white;
+            padding: 12px;
+            border-radius: 10px;
+            transition: 0.2s;
+        }
+
+        .menu-item i {
+            opacity: 0.8;
+            width: 18px;
+            text-align: center;
+            font-size: 15px;
+        }
+        .sidebar-user-card {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px;
+    margin-bottom: 28px;
+    border-radius: 16px;
+    background: rgba(255, 255, 255, 0.12);
+}
+
+.sidebar-user-avatar {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    overflow: hidden;
+    background: rgba(255, 255, 255, 0.25);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.sidebar-user-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.sidebar-user-name {
+    font-size: 15px;
+    font-weight: 800;
+    line-height: 1.2;
+}
+
+.sidebar-user-role {
+    margin-top: 4px;
+    font-size: 12px;
+    opacity: 0.8;
+}
+
+.sidebar-user-tooltip {
+    position: absolute;
+    left: calc(100% + 14px);
+    top: 0;
+    width: 280px;
+    background: rgba(17, 24, 39, 0.94);
+    color: white;
+    padding: 14px 16px;
+    border-radius: 14px;
+    font-size: 13px;
+    line-height: 1.6;
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    z-index: 6000;
+    box-shadow: 0 12px 30px rgba(0,0,0,0.25);
+    transition: opacity 0.18s ease, visibility 0.18s ease;
+}
+.sidebar-user-tooltip::before {
+    content: "";
+    position: absolute;
+    left: -9px;
+    top: 38px;
+
+    border-right: 9px solid #111827;
+}
+
+.sidebar-user-card:hover .sidebar-user-tooltip {
+    opacity: 1;
+    visibility: visible;   
+}
+
+.tooltip-title {
+    font-size: 15px;
+    font-weight: 800;
+    margin-bottom: 10px;
+}
+
+.tooltip-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 7px 0;
+    border-top: 1px solid rgba(255,255,255,0.1);
+}
+
+.tooltip-row span:first-child {
+    color: #d1d5db;
+}
+
+.tooltip-row span:last-child {
+    font-weight: 600;
+}
+
+.tooltip-active {
+    color: #4ade80;
+}
+.logout-btn {
+    border: none;
+    background: #1d4ed8;
+    color: white;
+
+    padding: 10px 18px;
+    border-radius: 10px;
+
+    font-size: 14px;
+    font-weight: 600;
+
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.logout-btn:hover {
+    background: #1d4ed8;
+}
+
+   @media (min-width: 900px) {
+        .close-menu {   
+            display: none;
+        }  
+    }  
+    /* Мобильная версия */
+    @media (max-width: 768px) {
+        .menu-btn {
+            display: inline-block;
+            margin-bottom: 10px;
+        }
+
+        .sidebar {
+            position: fixed;
+            top: 0;
+            left: -100%; /* скрыт */
+            width: 100%;
+            height: 100%;
+            z-index: 2000;
+            transition: 0.3s;
+            padding: 20px;
+        }
+
+        .sidebar.active {
+            left: 0; /* показать */
+        }
+    }
+    .close-menu {
+        background: transparent;
+        border: none;
+        font-size: 24px;
+        cursor: pointer;
+        margin-bottom: 20px;
+    }
+
+    </style>
+    <button class="menu-btn" id="open-menu">
+    ☰ Меню
+</button>
+</head>
+<body>
+
+    <div class="sidebar">
+        <button class="close-menu" id="close-menu">✕</button>
+        <div class="logo">PARTNETIX</div>
+<div class="sidebar-user-card">
+    <div class="sidebar-user-avatar">
+        {% if request.user.avatar %}
+            <img src="{{ request.user.avatar.url }}" alt="">
+        {% else %}
+            <i class="fa-regular fa-user"></i>
+        {% endif %}
+    </div>
+
+    <div class="sidebar-user-info">
+        <div class="sidebar-user-name">
+            {% if request.user.first_name or request.user.last_name %}
+                {{ request.user.first_name }} {{ request.user.last_name }}
+            {% else %}
+                {{ request.user.email }}
+            {% endif %}
+        </div>
+
+        <div class="sidebar-user-role">
+            {% if request.user.role == 'admin' %}
+                Администратор
+            {% else %}
+                Клиент
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="sidebar-user-tooltip">
+
+        <div class="tooltip-title">
+            {% if request.user.first_name or request.user.last_name %}
+                {{ request.user.first_name }} {{ request.user.last_name }}
+            {% else %}
+                {{ request.user.email }}
+            {% endif %}
+        </div>
+
+        <div class="tooltip-role">
+
+            {% if request.user.role == 'admin' %}
+                <i class="fa-solid fa-shield"></i>
+                Администратор
+            {% else %}
+                <i class="fa-solid fa-user"></i>
+                Клиент
+            {% endif %}
+
+        </div>
+
+        <div class="tooltip-row">
+            <span>Количество партнеров</span>
+            <span>{{ total_partners|default:"0" }}</span>
+        </div>
+
+        <div class="tooltip-row">
+            <span>Количество лидов</span>
+            <span>{{ total_leads|default:"0" }}</span>
+        </div>
+
+        <div class="tooltip-row">
+            <span>Количество сделок</span>
+            <span>{{ deal_leads |default:"0" }}</span>
+        </div>
+
+        <div class="tooltip-row">
+            <span>Общая конверсия</span>
+            <span>{{ lead_conversion|default:"0" }}%</span>
+        </div>
+
+        <div class="tooltip-row">
+            <span>Активен до</span>
+            <span class="tooltip-active">31.12.2025</span>
+        </div>
+    </div> 
+</div>
+            <div class="menu">
+                <a href="{% url 'dashboard' %}"
+                class="menu-item {% if active_page == 'dashboard' %}active{% endif %}">
+                    <i class="fa-solid fa-chart-pie"></i>
+                    <span>СТАТИСТИКА</span>
+                </a>
+
+                <a href="{% url 'partners' %}"
+                class="menu-item {% if active_page == 'partners' %}active{% endif %}">
+                    <i class="fa-solid fa-users"></i>
+                    <span>ПАРТНЕРЫ</span>
+                </a>
+
+                <a href="{% url 'referral_program' %}"
+                class="menu-item {% if active_page == 'referral_program' %}active{% endif %}">
+                    <i class="fa-solid fa-link"></i>
+                    <span>РЕФЕРАЛЬНАЯ ПРОГРАММА</span>
+                </a>
+
+                <a href="{% url 'leads' %}"
+                class="menu-item {% if active_page == 'leads' %}active{% endif %}">
+                    <i class="fa-solid fa-user-plus"></i>
+                    <span>ЛИДЫ</span>
+                </a>
+
+                <a href="{% url 'reports' %}"
+                class="menu-item {% if active_page == 'reports' %}active{% endif %}">
+                    <i class="fa-solid fa-file-lines"></i>
+                    <span>ОТЧЕТЫ</span>
+                </a>
+                <a href="{% url 'payouts' %}"
+                class="menu-item {% if active_page == 'payouts' %}active{% endif %}">
+                    <i class="fa-solid fa-money-bill-transfer"></i>
+                    <span>ВЫПЛАТЫ</span>
+                </a>
+                <a href="{% url 'client_tariffs' %}"
+                class="menu-item {% if active_page == 'tariffs' %}active{% endif %}">
+                    <i class="fa-solid fa-tags"></i>
+                    <span>ТАРИФЫ</span>
+                </a>
+                <a href="{% url 'education' %}"
+                class="menu-item {% if active_page == 'education' %}active{% endif %}">
+                    <i class="fa-solid fa-graduation-cap"></i>
+                    <span>ОБУЧЕНИЕ</span>
+                </a>
+
+                <a href="{% url 'materials' %}"
+                class="menu-item {% if active_page == 'materials' %}active{% endif %}">
+                    <i class="fa-solid fa-folder-open"></i>
+                    <span>МАТЕРИАЛЫ</span>
+                </a>
+
+                <a href="{% url 'profile' %}"
+                class="menu-item {% if active_page == 'profile' %}active{% endif %}">
+                    <i class="fa-solid fa-user-gear"></i>
+                    <span>ПРОФИЛЬ</span>
+                </a>
+                <a href="{% url 'admin_chat' %}"
+                class="menu-item {% if active_page == 'admin_chat' %}active{% endif %}">
+                    <i class="fa-solid fa-comments"></i>
+                    <span>ЧАТ С ПАРТНЕРАМИ</span>
+                </a>
+            </div>
+    </div>
+
+    <div class="content">
+        <div class="header">
+            <div class="page-title">{% block page_title %}{% endblock %}</div>
+            <form method="post" action="{% url 'logout' %}">
+                {% csrf_token %}
+                
+                <button type="submit" class="logout-btn">
+                    Выйти
+                </button>
+            </form>
+        </div>
+
+    {% block content %}{% endblock %}
+    </div>
+    <script>
+        const openMenu = document.getElementById('open-menu');
+        const closeMenu = document.getElementById('close-menu');
+        const sidebar = document.querySelector('.sidebar');
+
+        openMenu.addEventListener('click', function () {
+            sidebar.classList.add('active');
+        });
+
+        closeMenu.addEventListener('click', function () {
+            sidebar.classList.remove('active');
+        });
+    </script>
+</body>
+</html>

@@ -24,8 +24,8 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-l&w=b9o&b!%k*_wde6lr)5b5d1ru+mo#*tnby9ehskoblizx@$'
-CARD_ENCRYPTION_KEY = 'WzaJ8sKBqZEVB-hPNNU4EGFX5ToKdl8PyEzKlceuFEo='
+SECRET_KEY = os.getenv('SECRET_KEY')
+CARD_ENCRYPTION_KEY = os.getenv('CARD_ENCRYPTION_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -131,8 +131,8 @@ USE_TZ = True
 USE_THOUSAND_SEPARATOR = True
 THOUSAND_SEPARATOR = ' '
 NUMBER_GROUPING = 3
-TELEGRAM_BOT_TOKEN = '8347387630:AAGoanZBLOigrMWs7jcpdg3KHTUUyxInOeY'
-TELEGRAM_CHANNEL_ID = '@partnetix'
+TELEGRAM_BOT_TOKEN = os.getenv('TELEGRAM_BOT_TOKEN')
+TELEGRAM_CHANNEL_ID = os.getenv('TELEGRAM_CHANNEL_ID')
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/6.0/howto/static-files/

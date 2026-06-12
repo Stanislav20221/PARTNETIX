@@ -1651,34 +1651,51 @@
 // Логика для активации кнопки редактирования при выборе лида в таблице    
     const editLeadBtn = document.getElementById('edit-lead-btn');
     const leadRadios = document.querySelectorAll('.lead-select-radio');
-
-    leadRadios.forEach(function(radio) {
-        radio.addEventListener('change', function() {
-            editLeadBtn.disabled = false;
-            editLeadBtn.dataset.leadId = this.value;
-        });
-    });
-</script>
-<script>
-// Улучшенная логика для возможности снять выбор с радио кнопки и отключить кнопку редактирования
     let selectedRadio = null;
 
     leadRadios.forEach(radio => {
         radio.addEventListener('click', function () {
+
             if (selectedRadio === this) {
                 this.checked = false;
                 selectedRadio = null;
+
                 editLeadBtn.disabled = true;
+                editLeadBtn.classList.add('disabled');
                 editLeadBtn.removeAttribute('data-lead-id');
+
+                if (paidLeadWarning) {
+                    paidLeadWarning.style.display = 'none';
+                }
+
                 return;
             }
 
             selectedRadio = this;
-            editLeadBtn.disabled = false;
-            editLeadBtn.dataset.leadId = this.value;
+
+            const isPaidOut = this.dataset.paidOut === '1';
+
+            if (isPaidOut) {
+                editLeadBtn.disabled = true;
+                editLeadBtn.classList.add('disabled');
+                editLeadBtn.removeAttribute('data-lead-id');
+
+                if (paidLeadWarning) {
+                    paidLeadWarning.style.display = 'block';
+                }
+            } else {
+                editLeadBtn.disabled = false;
+                editLeadBtn.classList.remove('disabled');
+                editLeadBtn.dataset.leadId = this.value;
+
+                if (paidLeadWarning) {
+                    paidLeadWarning.style.display = 'none';
+                }
+            }
         });
     });
 </script>
+
 <script>
     // Логика для открытия модального окна редактирования и подстановки данных выбранного лида
     const editLeadModal = document.getElementById('edit-lead-modal');
@@ -2004,7 +2021,9 @@ document.querySelectorAll('.filter-tab').forEach(tab => {
     document.querySelectorAll('input[name="selected_lead"]').forEach(radio => {
         radio.addEventListener('change', function () {
             const isPaidOut = this.dataset.paidOut === '1';
-
+console.log('LEAD:', this.value);
+console.log('paidOut raw:', this.dataset.paidOut);
+console.log('isPaidOut:', isPaidOut);
             if (isPaidOut) {
                 editLeadBtn.disabled = true;
                 editLeadBtn.classList.add('disabled');

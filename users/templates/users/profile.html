@@ -458,36 +458,6 @@
         <div class="profile-grid">
             <div class="profile-card">
                 <div class="avatar-box">
-                    <div class="avatar-wrap">
-                        {% if request.user.avatar %}
-                            <img
-                                id="avatar-preview"
-                                src="{{ request.user.avatar.url }}?v={{ request.user.avatar.name }}"
-                                alt="Аватар"
-                                class="avatar-image"
-                            >
-                            <div id="avatar-placeholder" class="avatar-placeholder hidden">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-                                    <path d="M20 21a8 8 0 0 0-16 0"></path>
-                                    <circle cx="12" cy="7" r="4"></circle>
-                                </svg>
-                            </div>
-                        {% else %}
-                            <img
-                                id="avatar-preview"
-                                src=""
-                                alt="Аватар"
-                                class="avatar-image hidden"
-                            >
-                            <div id="avatar-placeholder" class="avatar-placeholder">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-                                    <path d="M20 21a8 8 0 0 0-16 0"></path>
-                                    <circle cx="12" cy="7" r="4"></circle>
-                                </svg>
-                            </div>
-                        {% endif %}
-                    </div>
-
                     <div class="user-name">
                         {{ request.user.first_name }} {{ request.user.last_name }}
                     </div>

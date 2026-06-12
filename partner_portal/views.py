@@ -49,6 +49,9 @@ from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, 
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 import csv
+from asgiref.sync import async_to_sync
+from channels.layers import get_channel_layer
+
 def partner_required(view_func):
     @wraps(view_func)
     def wrapper(request, *args, **kwargs):
@@ -1968,9 +1971,12 @@ def partner_chat(request):
     admin_user = User.objects.filter(
         is_staff=True
     ).first()
-    topics = (
+
+    current_filter = request.GET.get('filter', 'all')
+
+    base_topics = (
         ChatTopic.objects.filter(partner=request.user)
-        .select_related('admin')
+        .select_related('admin', 'partner', 'created_by')
         .prefetch_related('messages')
         .annotate(
             unread_count=Count(
@@ -1978,37 +1984,50 @@ def partner_chat(request):
                 filter=Q(messages__is_read=False) & ~Q(messages__sender=request.user)
             )
         )
-        .order_by('-updated_at')
     )
+
+    all_count = base_topics.count()
+    open_count = base_topics.filter(status='open').count()
+    closed_count = base_topics.filter(status='closed').count()
+    unread_count = base_topics.filter(unread_count__gt=0).count()
+
+    topics = base_topics
+
+    if current_filter == 'open':
+        topics = topics.filter(status='open')
+    elif current_filter == 'closed':
+        topics = topics.filter(status='closed')
+    elif current_filter == 'unread':
+        topics = topics.filter(unread_count__gt=0)
+
+    topics = topics.order_by('-updated_at')
 
     return render(request, 'partner_portal/partner_chat.html', {
         'active_page': 'partner_chat',
         'topics': topics,
         'admin_user': admin_user,
+        'current_filter': current_filter,
+        'all_count': all_count,
+        'open_count': open_count,
+        'closed_count': closed_count,
+        'unread_count': unread_count,
     })
+
 @login_required
 @partner_required
 def partner_chat_topic(request, topic_id):
     admin_user = User.objects.filter(
-    is_staff=True
+        is_staff=True
     ).first()
-    topics = (
-        ChatTopic.objects.filter(partner=request.user)
-        .select_related('admin')
-        .prefetch_related('messages')
-        .annotate(
-            unread_count=Count(
-                'messages',
-                filter=Q(messages__is_read=False) & ~Q(messages__sender=request.user)
-            )
-        )
-        .order_by('-updated_at')
-    )
+
+    current_filter = request.GET.get('filter', 'all')
+
     current_topic = get_object_or_404(
         ChatTopic,
         id=topic_id,
         partner=request.user
     )
+
     current_topic.messages.filter(
         is_read=False
     ).exclude(
@@ -2016,6 +2035,35 @@ def partner_chat_topic(request, topic_id):
     ).update(
         is_read=True
     )
+
+    base_topics = (
+        ChatTopic.objects.filter(partner=request.user)
+        .select_related('admin', 'partner', 'created_by')
+        .prefetch_related('messages')
+        .annotate(
+            unread_count=Count(
+                'messages',
+                filter=Q(messages__is_read=False) & ~Q(messages__sender=request.user)
+            )
+        )
+    )
+
+    all_count = base_topics.count()
+    open_count = base_topics.filter(status='open').count()
+    closed_count = base_topics.filter(status='closed').count()
+    unread_count = base_topics.filter(unread_count__gt=0).count()
+
+    topics = base_topics
+
+    if current_filter == 'open':
+        topics = topics.filter(status='open')
+    elif current_filter == 'closed':
+        topics = topics.filter(status='closed')
+    elif current_filter == 'unread':
+        topics = topics.filter(unread_count__gt=0)
+
+    topics = topics.order_by('-updated_at')
+
     messages = (
         current_topic.messages
         .select_related('sender')
@@ -2028,6 +2076,11 @@ def partner_chat_topic(request, topic_id):
         'current_topic': current_topic,
         'messages': messages,
         'admin_user': admin_user,
+        'current_filter': current_filter,
+        'all_count': all_count,
+        'open_count': open_count,
+        'closed_count': closed_count,
+        'unread_count': unread_count,
     })
 
 @login_required
@@ -2048,8 +2101,20 @@ def partner_chat_create_topic(request):
                 priority='normal',
                 category='other'
             )
+        channel_layer = get_channel_layer()
 
-            return redirect('partner_chat_topic', topic_id=topic.id)
+        async_to_sync(channel_layer.group_send)(
+            f'user_notifications_{topic.admin.id}',
+            {
+                'type': 'topic_created',
+                'topic_id': topic.id,
+                'title': topic.title,
+                'url': reverse('admin_chat_topic', args=[topic.id]),
+                'status_display': topic.get_status_display(),
+                'created_by': 'Партнёр',
+            }
+        )
+        return redirect('partner_chat_topic', topic_id=topic.id)
 
     return redirect('partner_chat')
 
@@ -2079,6 +2144,28 @@ def partner_chat_send_message(request, topic_id):
                 topic=topic,
                 sender=request.user,
                 text=text
+            )
+            channel_layer = get_channel_layer()
+            if request.user.partner_registration.partner_type == 'company':
+                sender_name = (
+                    request.user.partner_registration.company_short_name
+                )
+            else:
+                sender_name = (
+                    f'{request.user.first_name} '
+                    f'{request.user.last_name}'
+                ).strip()
+            async_to_sync(channel_layer.group_send)(
+                f'user_notifications_{topic.admin.id}',
+                {
+                    'type': 'topic_message_created',
+                    'topic_id': topic.id,
+                    'text': message.text,
+                    'time': message.created_at.strftime('%H:%M'),
+                    'sender_name': sender_name,
+                    'sender_email': request.user.email,
+                    'sender_role': 'Партнёр',
+                }
             )
             request.user.typing_updated_at = None
             request.user.save(update_fields=['typing_updated_at'])
@@ -2137,10 +2224,31 @@ def partner_chat_messages(request, topic_id):
             'avatar_url': message.sender.avatar.url if message.sender.avatar else '/static/img/default-avatar.png',
         })
     typing = topic.admin.is_typing if topic.admin else False
+    partner_registration = getattr(
+        request.user,
+        'partner_registration',
+        None
+    )
 
+    if (
+        partner_registration
+        and partner_registration.partner_type == 'company'
+    ):
+        sender_name = (
+            partner_registration.company_short_name
+            or partner_registration.company_full_name
+            or request.user.email
+        )
+    else:
+        sender_name = (
+            f'{request.user.first_name} {request.user.last_name}'
+        ).strip() or request.user.email
     return JsonResponse({
         'messages': data,
         'typing': typing,
+        'sender_name': sender_name,
+        'sender_email': request.user.email,
+        'sender_role': 'Партнёр',
     })
 
 @login_required
@@ -2342,3 +2450,54 @@ def partner_chat_toggle_topic_status(request, topic_id):
         topic.save(update_fields=['status', 'updated_at'])
 
     return redirect('partner_chat_topic', topic_id=topic.id)
+from django.http import JsonResponse
+from django.shortcuts import get_object_or_404
+from django.contrib.auth.decorators import login_required
+
+@login_required
+@partner_required
+def partner_chat_topic_data(request, topic_id):
+    topic = get_object_or_404(
+        ChatTopic,
+        id=topic_id,
+        partner=request.user
+    )
+
+    topic_messages = topic.messages.select_related(
+        'sender'
+    ).order_by('created_at')
+
+    def serialize_message(message):
+        return {
+            'id': message.id,
+            'text': message.text or '',
+            'time': message.created_at.strftime('%H:%M'),
+            'is_own': message.sender_id == request.user.id,
+            'message_type': message.message_type,
+            'is_read': message.is_read,
+
+            'audio_url': message.audio_file.url if message.audio_file else '',
+            'image_url': message.image_file.url if message.image_file else '',
+            'file_url': message.file.url if message.file else '',
+            'file_name': message.file_name if message.file else '',
+            'video_note_url': message.video_note.url if message.video_note else '',
+
+            'avatar_url': (
+                message.sender.avatar.url
+                if message.sender.avatar
+                else ''
+            ),
+        }
+
+    return JsonResponse({
+        'topic': {
+            'id': topic.id,
+            'title': topic.title,
+            'status': topic.status,
+            'status_display': topic.get_status_display(),
+        },
+        'messages': [
+            serialize_message(message)
+            for message in topic_messages
+        ]
+    })

@@ -14,17 +14,16 @@ from pathlib import Path
 from dotenv import load_dotenv
 import os
 
-load_dotenv()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
-
+load_dotenv(BASE_DIR / '.env')
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.getenv('SECRET_KEY')
+SECRET_KEY = SECRET_KEY = os.getenv('SECRET_KEY')
 CARD_ENCRYPTION_KEY = os.getenv('CARD_ENCRYPTION_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
@@ -132,11 +131,12 @@ USE_THOUSAND_SEPARATOR = True
 THOUSAND_SEPARATOR = ' '
 NUMBER_GROUPING = 3
 TELEGRAM_BOT_TOKEN = os.getenv('TELEGRAM_BOT_TOKEN')
-TELEGRAM_CHANNEL_ID = os.getenv('TELEGRAM_CHANNEL_ID')
+TELEGRAM_CHANNEL_ID = '@partnetix'
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/6.0/howto/static-files/
-API_NINJAS_KEY = 'cD19dbfsk1h2BoF8fyvvbcXlbJrch06SjvPutMVO'
+API_NINJAS_KEY = os.getenv('API_NINJAS_KEY')
+OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
 
 STATIC_URL = 'static/'
 SITE_URL = 'http://127.0.0.1:8000'

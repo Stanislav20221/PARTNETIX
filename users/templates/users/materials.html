@@ -998,8 +998,8 @@
                             </form>
 
                             <form method="post"
-                                action="{% url 'delete_education_video' video.id %}"
-                                onsubmit="return confirm('Удалить видео?');">
+                                    action="{% url 'delete_material' video.id %}"
+                                    onsubmit="return confirm('Удалить видео?');">
                                 {% csrf_token %}
                                 <button type="submit" class="action-btn delete">
                                     <i class="fa-solid fa-trash"></i>

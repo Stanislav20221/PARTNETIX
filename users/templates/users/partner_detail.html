@@ -1,0 +1,2920 @@
+{% extends 'users/base.html' %}
+{% load static %}
+{% block title %}Карточка партнёра{% endblock %}
+{% block page_title %}КАРТОЧКА ПАРТНЁРА{% endblock %}
+
+{% block content %}
+<style>
+    .profile-wrapper {
+        max-width: 100%;
+        margin: 0 auto;
+        padding: 0 0px 40px;
+        height: 100%;
+    }
+
+    .profile-grid {
+        display: block;
+        width: 100%;
+    }
+
+
+        .profile-card,
+        .form-card {
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+            height: 100%;
+            border: 1px solid #eef2f7;
+            width: 100%;
+    }
+    .profile-card {
+        background: white;
+        border-radius: 20px;
+        padding: 32px 24px;
+        box-shadow: 0 10px 30px rgba(15, 23, 42, 0.06);
+
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+    }
+    .avatar-box {
+        text-align: center;
+
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+
+        height: 100%;
+        width: 100%;
+    }
+
+    .avatar-wrap {
+        display: flex;
+        justify-content: center;
+        margin-bottom: 16px;
+    }
+
+    .avatar-image,
+    .avatar-placeholder {
+        width: 160px;
+        height: 160px;
+        border-radius: 50%;
+        object-fit: cover;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #e5e7eb;
+        color: #6b7280;
+    }
+
+    .avatar-placeholder svg {
+        width: 72px;
+        height: 72px;
+        opacity: 0.8;
+    }
+
+    .user-name {
+        font-size: 22px;
+        font-weight: 800;
+        color: #111827;
+        margin-bottom: 8px;
+    }
+
+    .user-meta {
+        color: #6b7280;
+        margin-bottom: 6px;
+        font-size: 14px;
+    }
+
+    .form-title {
+        font-size: 20px;
+        font-weight: 800;
+        color: #111827;
+        margin-bottom: 20px;
+    }
+
+    .profile-info-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+    }
+
+    .profile-info-item {
+        background: #f9fafb;
+        border: 1px solid #eef2f7;
+        border-radius: 14px;
+        padding: 14px 16px;
+    }
+
+    .profile-info-label {
+        font-size: 12px;
+        font-weight: 800;
+        color: #6b7280;
+        text-transform: uppercase;
+        margin-bottom: 6px;
+    }
+
+    .profile-info-value {
+        font-size: 15px;
+        font-weight: 700;
+        color: #111827;
+        word-break: break-word;
+    }
+
+    .profile-info-item.full {
+        grid-column: 1 / -1;
+    }
+
+    .profile-section {
+        margin-top: 24px;
+    }
+
+    .profile-section-title {
+        font-size: 18px;
+        font-weight: 800;
+        margin-bottom: 14px;
+        color: #111827;
+    }
+    .info-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+    }
+    .full-width {
+        grid-column: 1 / -1;
+    }
+    .hidden {
+        display: none !important;
+    }
+    .save-info-btn {
+        margin-top: 14px;
+        border: none;
+        border-radius: 12px;
+        background: #1F5BFF;
+        color: white;
+        padding: 14px 16px;
+        font-size: 14px;
+        font-weight: 700;
+        cursor: pointer;
+        transition: 0.2s;
+    }
+
+    .save-info-btn:hover {
+        background: #1F5BFF;
+    }
+    .profile-toast {
+        background: #dcfce7;
+        color: #166534;
+        border: 1px solid #bbf7d0;
+        padding: 14px 16px;
+        border-radius: 14px;
+        margin-bottom: 20px;
+        font-size: 14px;
+        font-weight: 700;
+    }
+    .profile-edit-input {
+        width: 100%;
+        border: none;
+        background: transparent;
+        padding: 0;
+        font-size: 15px;
+        font-weight: 700;
+        color: #111827;
+        outline: none;
+    }
+    .save-profile-btn, .save-card-btn {
+        margin-top: 14px;
+        border: none;
+        border-radius: 12px;
+        background: #2563eb;
+        color: white;
+        padding: 14px 16px;
+        font-size: 14px;
+        font-weight: 700;
+        cursor: pointer;
+        transition: 0.2s;
+    }
+     .save-profile-btn {
+        width: 100%;
+     }
+    .save-profile-btn.disabled-btn {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+    .profile-logo-value {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .profile-bank-logo,
+    .profile-payment-logo {
+        width: 22px;
+        height: 22px;
+        object-fit: contain;
+    }
+    .profile-logo-value {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    }
+
+    .profile-bank-logo,
+    .profile-payment-logo {
+        width: 22px;
+        height: 22px;
+        object-fit: contain;
+    }
+    .user-company {
+        margin-top: 4px;
+        margin-bottom: 10px;
+        font-size: 14px;
+        font-weight: 700;
+        color: #6b7280;
+        text-align: center;
+    }
+    .company-bank-grid {
+        display: grid;
+        grid-template-columns: 180px 180px 1fr;
+        gap: 16px;
+        width: 100%;
+        grid-column: 1 / -1;
+    }
+    .partner-type-label {
+        font-weight: 500;
+        padding-bottom: 5px;
+    }
+    .btn-spinner {
+        width: 14px;
+        height: 14px;
+        border: 2px solid rgba(255,255,255,.5);
+        border-top-color: white;
+        border-radius: 50%;
+        display: inline-block;
+        animation: spin 0.8s linear infinite;
+        margin-right: 8px;
+        vertical-align: -2px;
+    }
+    .partner-photo-row {
+        display: flex;
+        justify-content: center;
+        margin-bottom: 24px;
+    }
+
+    .partner-detail-avatar,
+    .partner-detail-avatar-placeholder {
+        width: 140px;
+        height: 140px;
+        border-radius: 50%;
+    }
+
+    .partner-detail-avatar {
+        object-fit: cover;
+        border: 4px solid #eef2f7;
+    }
+
+    .partner-detail-avatar-placeholder {
+        background: #f3f4f6;
+
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        color: #9ca3af;
+        font-size: 48px;
+    }
+    .partner-main-grid {
+        display: grid;
+        grid-template-columns: 180px 1fr;
+        gap: 24px;
+        align-items: start;
+    }
+
+    .partner-photo-column {
+        display: flex;
+        justify-content: center;
+    }
+
+    .partner-detail-avatar,
+    .partner-detail-avatar-placeholder {
+        width: 160px;
+        height: 160px;
+        border-radius: 50%;
+    }
+
+    .partner-detail-avatar {
+        object-fit: cover;
+        border: 4px solid #eef2f7;
+    }
+
+    .partner-detail-avatar-placeholder {
+        background: #f3f4f6;
+
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        font-size: 56px;
+        color: #9ca3af;
+    }
+
+    .partner-fields-column {
+        width: 100%;
+    }
+    .partner-status-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr;
+        gap: 16px;
+        margin-top: 16px;
+    }
+
+    .partner-status-row .profile-info-item {
+        margin: 0;
+    }
+    .profile-info-item select.profile-edit-input {
+        width: 100%;
+
+        border: none;
+        outline: none;
+
+        background-color: transparent;
+
+        cursor: pointer;
+
+        appearance: none;
+        -webkit-appearance: none;
+        -moz-appearance: none;
+
+        padding-right: 28px;
+
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+
+        background-repeat: no-repeat;
+        background-position: right center;
+    }
+    .profile-info-item select.profile-edit-input {
+        padding-right: 36px;
+        padding-top: 3px;
+        padding-right: 36px;
+        background-repeat: no-repeat;
+        background-position: right 12px calc(50% - 2px);
+        background-size: 18px 18px;
+    }
+    .offers-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 16px;
+    }
+
+
+    .offer-card {
+        position: relative;
+        padding-bottom: 62px;
+    }
+
+    .offer-title {
+        font-size: 15px;
+        font-weight: 700;
+        color: #111827;
+        margin-bottom: 8px;
+    }
+
+    .offer-meta {
+        font-size: 13px;
+        color: #6b7280;
+    }
+
+    .empty-offers {
+        color: #6b7280;
+    }
+    .offer-card-header {
+        display: flex;
+        justify-content: space-between;
+        gap: 16px;
+        align-items: flex-start;
+        margin-bottom: 16px;
+    }
+
+    .offer-status-badge {
+        padding: 6px 10px;
+        border-radius: 999px;
+        background: rgba(34, 197, 94, 0.08);
+        color: #16a34a;
+        font-size: 12px;
+        font-weight: 800;
+        white-space: nowrap;
+    }
+
+    .offer-info-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+    }
+
+    .offer-info-item {
+        background: white;
+        border: 1px solid #eef2f7;
+        border-radius: 12px;
+        padding: 12px;
+    }
+
+    .offer-info-item span {
+        display: block;
+        margin-bottom: 5px;
+        color: #6b7280;
+        font-size: 11px;
+        font-weight: 800;
+        text-transform: uppercase;
+    }
+
+    .offer-info-item strong {
+        color: #111827;
+        font-size: 14px;
+    }
+    .offer-stats-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 12px;
+
+        margin-top: 16px;
+    }
+
+    .offer-stat-card {
+        background: white;
+        border: 1px solid #eef2f7;
+        border-radius: 12px;
+        padding: 12px;
+    }
+
+    .offer-stat-card span {
+        display: block;
+        margin-bottom: 6px;
+
+        font-size: 11px;
+        font-weight: 800;
+        text-transform: uppercase;
+
+        color: #6b7280;
+    }
+
+    .offer-stat-card strong {
+        font-size: 18px;
+        font-weight: 800;
+        color: #111827;
+    }
+    .offer-stat-item {
+        text-align: center;
+        font-size: 14px;
+        color: #6b7280;
+    }
+
+    .offer-stat-item strong {
+        color: #111827;
+        font-size: 16px;
+        font-weight: 700;
+        margin-left: 4px;
+    }
+
+    .offer-stat-item strong {
+        font-size: 18px;
+        font-weight: 800;
+
+        color: #111827;
+    }
+    .profile-section-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 16px;
+        margin-bottom: 14px;
+    }
+
+    .profile-section-header .profile-section-title {
+        margin-bottom: 0;
+    }
+
+    .add-offer-btn {
+        border: none;
+        border-radius: 12px;
+        background: #1F5BFF;
+        color: white;
+        padding: 12px 16px;
+        font-size: 14px;
+        font-weight: 800;
+        cursor: pointer;
+    }
+
+    .add-offer-btn:hover {
+        background: #1d4ed8;
+    }
+    .custom-modal {
+    display: none;
+
+    position: fixed;
+    inset: 0;
+
+    background: rgba(0,0,0,.45);
+
+    z-index: 9999;
+
+    justify-content: center;
+    align-items: center;
+    }
+
+    .custom-modal.show {
+        display: flex;
+    }
+
+    .custom-modal-content {
+        width: 500px;
+        max-width: 95vw;
+
+        background: white;
+
+        border-radius: 18px;
+
+        padding: 24px;
+    }
+
+    .custom-modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+
+        margin-bottom: 20px;
+    }
+
+    .modal-close-btn {
+        border: none;
+        background: none;
+
+        font-size: 28px;
+
+        cursor: pointer;
+    }
+
+    .custom-modal-footer {
+        display: flex;
+        justify-content: flex-end;
+        gap: 12px;
+
+        margin-top: 20px;
+    }
+
+    .secondary-btn {
+        border: none;
+
+        padding: 12px 16px;
+
+        border-radius: 12px;
+
+        background: #e5e7eb;
+
+        cursor: pointer;
+    }
+    .offer-mode-switch {
+        display: flex;
+        gap: 24px;
+        margin-bottom: 20px;
+    }
+
+    .offer-radio {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        cursor: pointer;
+        font-weight: 600;
+    }
+    .new-offer-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+    }
+
+    .new-offer-grid .full {
+        grid-column: 1 / -1;
+    }
+
+    .profile-edit-input[type="date"],
+    .profile-edit-input[type="url"],
+    .profile-edit-input[type="number"],
+    textarea.profile-edit-input {
+        width: 100%;
+    }
+
+    textarea.profile-edit-input {
+        resize: vertical;
+        min-height: 90px;
+    }    
+    #addOfferModal .custom-modal-content {
+        width: 720px;
+        max-width: 95vw;
+        padding: 28px;
+    }
+
+
+    .offer-mode-switch {
+        display: flex;
+        gap: 24px;
+        margin: 18px 0 20px;
+    }
+
+    .offer-radio {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        font-weight: 700;
+        cursor: pointer;
+    }
+  
+
+ .modal {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.45);
+    z-index: 10000;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+
+.modal.active {
+    display: flex;
+}
+
+.modal-card {
+    width: 100%;
+    max-width: 700px;
+    background: white;
+    border-radius: 18px;
+    padding: 24px;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.2);
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.modal-title {
+    font-size: 22px;
+    font-weight: 800;
+    color: #111827;
+}
+
+.close-btn {
+    border: none;
+    background: transparent;
+    font-size: 26px;
+    cursor: pointer;
+    color: #6b7280;
+}
+
+.form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+}
+
+.form-group.full {
+    grid-column: 1 / -1;
+}
+
+.form-label {
+    display: block;
+    margin-bottom: 6px;
+    font-size: 13px;
+    font-weight: 800;
+    color: #374151;
+}
+
+.modal input,
+.modal textarea,
+.modal select {
+    width: 100%;
+    padding: 13px 14px;
+    border: 1px solid #d1d5db;
+    border-radius: 12px;
+    outline: none;
+    font-size: 14px;
+    background: #f9fafb;
+}
+
+.modal textarea {
+    min-height: 90px;
+    resize: vertical;
+}
+
+.modal input:focus,
+.modal textarea:focus,
+.modal select:focus {
+    border-color: #2563eb;
+    background: #fff;
+    box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.12);
+}
+
+.submit-btn {
+    width: 100%;
+    margin-top: 16px;
+    border: none;
+    background: #2563eb;
+    color: white;
+    padding: 13px 18px;
+    border-radius: 12px;
+    font-size: 14px;
+    font-weight: 800;
+    cursor: pointer;
+}
+
+.upload-btn {
+    display: inline-flex;
+    width: auto;
+    padding: 10px 16px;
+    background: #2563eb;
+    color: white;
+    border-radius: 10px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 700;
+}
+#offer-modal input:not([type="file"]),
+#offer-modal textarea,
+#offer-modal select {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    width: 100%;
+    min-height: 44px;
+    padding: 13px 14px;
+    border: 1px solid #d1d5db;
+    border-radius: 12px;
+    background: #f9fafb;
+    color: #111827;
+}
+#offer-modal .form-group input,
+#offer-modal .form-group textarea,
+#offer-modal .form-group select {
+    min-height: 44px !important;
+    display: block !important;
+}
+
+.offer-card-actions {
+    position: absolute;
+    right: 16px;
+    bottom: 18px;
+
+    display: flex;
+    gap: 8px;
+}
+
+.edit-offer-btn {
+    border: none;
+    border-radius: 10px;
+    background: #eff6ff;
+    color: #2563eb;
+    padding: 10px 14px;
+    font-size: 13px;
+    font-weight: 800;
+    cursor: pointer;
+    text-decoration: none;
+}
+
+.edit-offer-btn:hover {
+    background: #dbeafe;
+}
+
+.edit-offer-btn:hover {
+    background: #dbeafe;
+}
+.edit-offer-btn,
+.offer-delete-btn {
+    border: none;
+    border-radius: 10px;
+    padding: 9px 12px;
+    font-size: 12px;
+    font-weight: 800;
+    cursor: pointer;
+    text-decoration: none;
+}
+.promo-upload-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.upload-file-name {
+    color: #6b7280;
+    font-size: 14px;
+}
+div#existing-promo-files {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 12px;
+}
+
+.promo-file-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+
+    max-width: 190px;
+    padding: 5px 8px;
+
+    background: #f3f6ff;
+    border-radius: 8px;
+
+    color: #2563eb;
+    font-size: 12px;
+    font-weight: 800;
+}
+
+.promo-file-name {
+    display: block;
+    max-width: 150px;
+
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+button.promo-file-remove {
+    width: 16px;
+    height: 16px;
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    border: none;
+    border-radius: 50%;
+
+    background: #fee2e2;
+    color: #ef4444;
+
+    font-size: 12px;
+    line-height: 1;
+    font-weight: 900;
+
+    cursor: pointer;
+    padding: 0;
+    flex-shrink: 0;
+}
+span#edit-promo-files-text
+ {
+    display: none;
+}
+button.promo-file-remove:hover {
+    background: #fecaca;
+}
+.promo-file-name {
+    display: block;
+    max-width: 150px;
+
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+
+    color: #2563eb;
+    text-decoration: none;
+}
+
+.promo-file-name:hover {
+    text-decoration: underline;
+}
+.offer-mode-switch {
+    display: flex;
+    gap: 24px;
+    margin-bottom: 18px;
+}
+
+.offer-radio {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+
+    font-size: 14px;
+    font-weight: 800;
+    color: #111827;
+
+    cursor: pointer;
+}
+
+.offer-radio input {
+    width: auto !important;
+    min-height: auto !important;
+}
+.offer-status-badge.active {
+    background: rgba(34, 197, 94, 0.08);
+    color: #16a34a;
+}
+
+.offer-status-badge.inactive {
+    background: #fee2e2;
+    color: #991b1b;
+}
+.edit-offer-btn:hover {
+    background: #dbeafe;
+}
+
+.offer-delete-btn {
+    background: #fee2e2;
+    color: #dc2626;
+}
+
+.offer-delete-btn:hover {
+    background: #dc2626;
+    color: white;
+}
+.offer-card {
+    position: relative;
+    padding-bottom: 82px;
+    background: white;
+    border-radius: 18px;
+    padding: 20px;
+    padding-bottom: 73px;
+    border: 1px solid #eef2f7;
+
+    box-shadow:
+        0 8px 25px rgba(15, 23, 42, 0.06);
+
+    transition: .2s;
+}
+
+.offer-card:hover {
+    transform: translateY(-2px);
+
+    box-shadow:
+        0 14px 30px rgba(37, 99, 235, 0.08);
+}
+.offer-description {
+    margin-top: 4px;
+
+    font-size: 13px;
+    line-height: 1.4;
+
+    color: #6b7280;
+
+    min-height: 36px;
+}
+.company-details-row {
+    display: grid;
+    grid-template-columns: 220px 220px 1fr;
+    gap: 16px;
+
+    margin: 16px 0 24px 0;
+}
+
+.company-details-row .profile-info-item {
+    margin: 0;
+}
+.company-status-row {
+    display: grid;
+     margin: 0 0 16px 0;
+    grid-column: 1 / -1;
+    width: 100%;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+
+    margin-bottom: 16px;
+}
+.company-details-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    margin-bottom: 16px;
+}
+.company-status-row .profile-info-item,
+.company-details-row .profile-info-item {
+    width: 100%;
+    margin: 0;
+}
+
+.company-status-row select,
+.company-status-row input,
+.company-details-row input {
+    width: 100%;
+    box-sizing: border-box;
+}
+.company-status-row .profile-info-item,
+.company-status-row .profile-edit-input,
+.company-status-row select {
+    width: 100%;
+}
+.back-to-partners {
+    margin-bottom: 16px;
+}
+
+.back-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+
+    border: 1px solid #dbe3ef;
+    background: #fff;
+
+    color: #374151;
+
+    padding: 10px 14px;
+
+    border-radius: 10px;
+
+    font-size: 14px;
+    font-weight: 600;
+
+    cursor: pointer;
+
+    transition: all 0.2s ease;
+}
+
+.back-btn:hover {
+    background: #f8fafc;
+    border-color: #cbd5e1;
+    transform: translateX(-2px);
+}
+    @media (max-width: 900px) {
+         .company-status-row {
+            grid-template-columns: 1fr;
+        }
+        .company-details-row {
+            grid-template-columns: 1fr;
+        }
+        .partner-main-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .partner-photo-column {
+            margin-bottom: 20px;
+        }
+        .partner-status-row {
+            grid-template-columns: 1fr;
+        }
+        .profile-grid {
+            grid-template-columns: 1fr;
+        }
+        .offers-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }    
+   @keyframes spin {
+        to {
+            transform: rotate(360deg);
+        }
+    }
+
+    @media (max-width: 640px) {
+        .profile-wrapper {
+            margin: 0 12px 20px;
+        }
+
+        .profile-info-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .profile-info-item.full {
+            grid-column: auto;
+        }
+        .company-bank-grid {
+            grid-template-columns: 1fr;
+        }
+      .offers-grid {
+            grid-template-columns: 1fr;
+        }          
+    }
+</style>
+
+<form id="profile-form"
+      method="post"
+      enctype="multipart/form-data">
+    {% csrf_token %}
+    <div id="profile-ajax-message"></div>
+<div class="profile-wrapper">
+
+    {% if messages %}
+        {% for message in messages %}
+            <div class="profile-toast">
+                {{ message }}
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <div class="profile-grid">
+
+        <!-- Правая карточка -->
+        <div class="form-card">
+            <div class="back-to-partners">
+                <button
+                    type="button"
+                    class="back-btn"
+                    onclick="history.back()">
+                    ← Назад к партнёрам
+                </button>
+            </div>
+            <div class="form-title">
+                Основная информация
+            </div>
+            <div class="partner-main-grid">
+
+                    <div class="partner-photo-column">
+
+                        {% if partner.avatar %}
+                            <img
+                                src="{{ partner.avatar.url }}"
+                                alt="Фото"
+                                class="partner-detail-avatar">
+                        {% else %}
+                            <div class="partner-detail-avatar-placeholder">
+                                <i class="fa-solid fa-user"></i>
+                            </div>
+                        {% endif %}
+
+                    </div>
+             
+    <div class="partner-fields-column">
+            <div class="profile-info-grid">         
+                
+
+
+                {% if partner_registration.partner_type == 'individual' %}
+                <div class="profile-info-item">
+                    <div class="profile-info-label">ФИО</div>
+
+                    <input type="text"
+                        name="full_name"
+                        value="{{ partner_registration.full_name|default:'' }}"
+                        class="profile-edit-input">
+                </div>
+
+                <div class="profile-info-item">
+                    <div class="profile-info-label">Email</div>
+
+                    <input type="email"
+                        name="email"
+                        value="{{ partner.email }}"
+                        class="profile-edit-input">
+                </div>
+
+                <div class="profile-info-item">
+                    <div class="profile-info-label">Телефон</div>
+
+                    <input type="text"
+                        name="phone"
+                        id="profile-phone"
+                        value="{{ partner.phone|default:'' }}"
+                        class="profile-edit-input">
+                </div>
+                <div class="profile-info-item">
+                    <div class="profile-info-label">Вид деятельности</div>
+
+                    <input type="text"
+                        name="activity_type"
+                        value="{{ partner_registration.activity_type|default:'' }}"
+                        class="profile-edit-input">
+                    </div>    
+                </div>
+                <div class="partner-status-row">
+                    <div class="profile-info-item">
+                        <div class="profile-info-label">Статус</div>
+
+                        <select name="status" class="profile-edit-input">
+                            <option value="">Не назначен</option>
+
+                            {% for status in partner_statuses %}
+                                <option value="{{ status.id }}"
+                                    {% if partner_registration.status and partner_registration.status.id == status.id %}selected{% endif %}>
+                                    {{ status.name }} — {{ status.reward_percent|floatformat:0 }}%
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                <div class="profile-info-item">
+                    <div class="profile-info-label">Форма выплаты</div>
+
+                    <input type="text"
+                        value="{% if partner_registration.offer.payout_type == 'partner_status' %}По статусу партнёра{% else %}Фиксированная{% endif %}"
+                        class="profile-edit-input"
+                        readonly>
+                </div>
+
+                <div class="profile-info-item">
+                    <div class="profile-info-label">Вознаграждение</div>
+
+                    <input type="text"
+                        value="{% if partner_registration.offer.payout_type == 'partner_status' %}{{ partner_registration.status.reward_percent|floatformat:0 }}%{% else %}{{ partner_registration.offer.reward|floatformat:0 }} ₽{% endif %}"
+                        class="profile-edit-input"
+                        readonly>
+                </div>
+                </div>
+                {% elif partner_registration.partner_type == 'self_employed' %}
+                <div class="profile-info-item">
+                    <div class="profile-info-label">ФИО</div>
+                    <input type="text"
+                        name="full_name"
+                        value="{{ partner_registration.full_name|default:'' }}"
+                        class="profile-edit-input">
+                </div>
+
+                <div class="profile-info-item">
+                    <div class="profile-info-label">Email</div>
+                    <input type="email"
+                        name="email"
+                        value="{{ partner.email }}"
+                        class="profile-edit-input">
+                </div>
+
+                <div class="profile-info-item">
+                    <div class="profile-info-label">Телефон</div>
+                    <input type="text"
+                        name="phone"
+                        id="profile-phone"
+                        value="{{ partner.phone|default:'' }}"
+                        class="profile-edit-input">
+                </div>
+
+                <div class="profile-info-item">
+                    <div class="profile-info-label">Вид деятельности</div>
+                    <input type="text"
+                        name="activity_type"
+                        value="{{ partner_registration.activity_type|default:'' }}"
+                        class="profile-edit-input">
+                </div>
+
+                <div class="profile-info-item">
+                    <div class="profile-info-label">Название компании</div>
+                    <input type="text"
+                        name="company_name"
+                        value="{{ partner_registration.company_name|default:'' }}"
+                        class="profile-edit-input">
+                </div>
+
+                <div class="profile-info-item">
+                    <div class="profile-info-label">ИНН</div>
+                    <input type="text"
+                        name="inn"
+                        value="{{ partner_registration.inn|default:'' }}"
+                        class="profile-edit-input">
+                </div>  
+              {% elif partner_registration.partner_type == 'company' %}
+
+                <div class="profile-info-item">
+                    <div class="profile-info-label">Email</div>
+
+                    <input type="email"
+                        name="email"
+                        value="{{ partner.email }}"
+                        class="profile-edit-input">
+                </div>
+
+                <div class="profile-info-item">
+                    <div class="profile-info-label">Телефон</div>
+
+                    <input type="text"
+                        name="phone"
+                        id="profile-phone"
+                        value="{{ partner.phone|default:'' }}"
+                        class="profile-edit-input">
+                </div>
+
+                <div class="profile-info-item">
+                    <div class="profile-info-label">
+                        Полное название организации
+                    </div>
+
+                    <input type="text"
+                        name="company_full_name"
+                        value="{{ partner_registration.company_full_name|default:'' }}"
+                        class="profile-edit-input">
+                </div>
+
+                <div class="profile-info-item">
+                    <div class="profile-info-label">
+                        Сокращенное название
+                    </div>
+
+                    <input type="text"
+                        name="company_short_name"
+                        value="{{ partner_registration.company_short_name|default:'' }}"
+                        class="profile-edit-input">
+                </div>
+
+                <div class="profile-info-item">
+                    <div class="profile-info-label">
+                        Юридический адрес
+                    </div>
+
+                    <input type="text"
+                        name="legal_address"
+                        value="{{ partner_registration.legal_address|default:'' }}"
+                        class="profile-edit-input">
+                </div>
+
+                <div class="profile-info-item">
+                    <div class="profile-info-label">
+                        Почтовый адрес
+                    </div>
+
+                    <input type="text"
+                        name="postal_address"
+                        value="{{ partner_registration.postal_address|default:'' }}"
+                        class="profile-edit-input">
+                </div>
+
+
+             </div>                  
+             {% endif %}
+           </div>    
+        </div>  {# partner-fields-column #}
+    </div>  {# partner-main-grid #}  
+            <div class="profile-section">
+                {% if partner_registration.partner_type == 'company' %}
+
+    <div class="company-status-row">
+
+        <div class="profile-info-item">
+            <div class="profile-info-label">
+                Статус
+            </div>
+
+            <select name="status" class="profile-edit-input">
+                <option value="">Не назначен</option>
+
+                {% for status in partner_statuses %}
+                    <option
+                        value="{{ status.id }}"
+                        {% if partner_registration.status and partner_registration.status.id == status.id %}selected{% endif %}>
+                        {{ status.name }} — {{ status.reward_percent|floatformat:0 }}%
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="profile-info-item">
+            <div class="profile-info-label">
+                Форма выплаты
+            </div>
+
+            <input
+                type="text"
+                value="{% if partner_registration.offer.payout_type == 'partner_status' %}По статусу партнёра{% else %}Фиксированная{% endif %}"
+                class="profile-edit-input"
+                readonly>
+        </div>
+
+        <div class="profile-info-item">
+            <div class="profile-info-label">
+                Вознаграждение
+            </div>
+
+            <input
+                type="text"
+                value="{% if partner_registration.offer.payout_type == 'partner_status' %}{{ partner_registration.status.reward_percent|floatformat:0 }}%{% else %}{{ partner_registration.offer.reward|floatformat:0 }} ₽{% endif %}"
+                class="profile-edit-input"
+                readonly>
+        </div>
+
+    </div>
+
+                    <div class="company-details-row">
+                        <div class="profile-info-item">
+                            <div class="profile-info-label">ИНН</div>
+                            <input type="text" name="inn"
+                                value="{{ partner_registration.inn|default:'' }}"
+                                class="profile-edit-input">
+                        </div>
+
+                        <div class="profile-info-item">
+                            <div class="profile-info-label">КПП</div>
+                            <input type="text" name="kpp"
+                                value="{{ partner_registration.kpp|default:'' }}"
+                                class="profile-edit-input">
+                        </div>
+
+                        <div class="profile-info-item">
+                            <div class="profile-info-label">ФИО контактного лица</div>
+                            <input type="text" name="contact_person_name"
+                                value="{{ partner_registration.contact_person_name|default:'' }}"
+                                class="profile-edit-input">
+                        </div>
+                    </div>
+                {% endif %}
+                <div class="profile-section-title">
+                    Платёжные реквизиты
+                </div>
+
+                {% if partner_registration.partner_type == 'company' or partner_registration.partner_type == 'self_employed' %}
+
+                    <div class="profile-info-grid">
+
+                        <div class="profile-info-item">
+                            <div class="profile-info-label">Банк</div>
+
+                            <div class="profile-info-value profile-logo-value">
+
+                                <img id="profile-bank-logo"
+                                    src="{{ bank_logo }}"
+                                    class="profile-bank-logo"
+                                    alt=""
+                                    {% if not bank_logo %}style="display:none;"{% endif %}>
+
+                                <input type="text"
+                                    id="profile-bank-name"
+                                    name="legal_bank_name"
+                                    value="{{ payment_details.legal_bank_name|default:'' }}"
+                                    class="profile-edit-input">
+                            </div>
+                        </div>
+
+                        <div class="profile-info-item">
+                            <div class="profile-info-label">БИК</div>
+
+                            <input type="text"
+                                name="bik"
+                                value="{{ payment_details.bik|default:'' }}"
+                                class="profile-edit-input">
+                        </div>
+
+                        <div class="profile-info-item">
+                            <div class="profile-info-label">
+                                Расчётный счёт
+                            </div>
+
+                            <input type="text"
+                                name="settlement_account"
+                                value="{{ payment_details.settlement_account|default:'' }}"
+                                class="profile-edit-input">
+                        </div>
+
+                        <div class="profile-info-item">
+                            <div class="profile-info-label">
+                                Корреспондентский счёт
+                            </div>
+
+                            <input type="text"
+                                name="correspondent_account"
+                                value="{{ payment_details.correspondent_account|default:'' }}"
+                                class="profile-edit-input">
+                        </div>
+
+                        <div class="company-bank-grid">
+
+                            <div class="profile-info-item">
+                                <div class="profile-info-label">ИНН банка</div>
+
+                                <input type="text"
+                                    name="bank_inn"
+                                    value="{{ payment_details.bank_inn|default:'' }}"
+                                    class="profile-edit-input">
+                            </div>
+
+                            <div class="profile-info-item">
+                                <div class="profile-info-label">КПП банка</div>
+
+                                <input type="text"
+                                    name="bank_kpp"
+                                    value="{{ payment_details.bank_kpp|default:'' }}"
+                                    class="profile-edit-input">
+                            </div>
+
+                            <div class="profile-info-item">
+                                <div class="profile-info-label">Получатель</div>
+
+                            <input type="text"
+                                name="recipient_name"
+                                value="{{ payment_details.recipient_name|default:'' }}"
+                                class="profile-edit-input">
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                {% else %}
+                    <div class="profile-info-grid">
+                        <div class="profile-info-item">
+                            <div class="profile-info-label">Банк</div>
+                            <div class="profile-info-value profile-logo-value">
+                                <img id="profile-bank-logo"
+                                    src="{{ bank_logo }}"
+                                    class="profile-bank-logo"
+                                    alt=""
+                                    {% if not bank_logo %}style="display:none;"{% endif %}>
+
+                                <input type="text"
+                                    id="profile-bank-name"
+                                    name="bank_name"
+                                    value="{{ payment_details.bank_name|default:'' }}"
+                                    class="profile-edit-input"
+                                    readonly>
+                            </div>
+                       </div>
+   
+                        <div class="profile-info-item">
+                            <div class="profile-info-label">Платёжная система</div>
+                                <div class="profile-info-value profile-logo-value">
+                                    <img id="profile-payment-logo"
+                                        src="{{ payment_logo }}"
+                                        class="profile-payment-logo"
+                                        alt=""
+                                        {% if not payment_logo %}style="display:none;"{% endif %}>
+
+                                    <input type="text"
+                                        id="profile-payment-system"
+                                        name="payment_system"
+                                        value="{{ payment_details.payment_system|default:'' }}"
+                                        class="profile-edit-input"
+                                        readonly>
+                                </div>
+                        </div>
+
+                        <div class="profile-info-item">
+                            <div class="profile-info-label">Получатель</div>
+                            <input type="text"
+                                name="recipient_name"
+                                value="{{ payment_details.recipient_name|default:'' }}"
+                                class="profile-edit-input">
+                        </div>
+
+                       <div class="profile-info-item">
+                            <div class="profile-info-label">Карта</div>
+                            <input type="text"
+                                name="card_number"
+                                id="profile-card-number"
+                                value="{{ saved_card_number|default:'' }}"
+                                class="profile-edit-input"
+                                placeholder="0000 0000 0000 0000">
+                        </div>
+
+                {% endif %}
+             </div>
+                <button
+                    type="submit"
+                    class="save-card-btn"
+                    id="save-card-btn">
+                    Сохранить изменения
+                </button>
+            </div>
+                <div class="profile-section">
+
+                    <div class="profile-section-header">
+                        <div class="profile-section-title">
+                            Офферы
+                        </div>
+
+                        <button
+                            type="button"
+                            class="add-offer-btn"
+                            onclick="openCreateOfferModal()">
+                            + Добавить оффер
+                        </button>
+                    </div>
+
+                    <div class="offers-grid">
+
+                        {% for offer in offers %}
+
+                    <div class="offer-card">
+
+                        <div class="offer-card-header">
+                            <div>
+                                <div class="offer-title">
+                                    {{ offer.title }}
+                                </div>
+
+                                <div class="offer-description">
+                                    {{ offer.description|default:"Описание отсутствует"|truncatechars:80 }}
+                                </div>
+                            </div>
+
+                            <span class="offer-status-badge {% if offer.status == 'Активный' %}active{% else %}inactive{% endif %}">
+                                {% if offer.status == 'Активный' %}
+                                    Активен
+                                {% else %}
+                                    Неактивен
+                                {% endif %}
+                            </span>
+                        </div>
+
+                        <div class="offer-info-grid">
+
+                            <div class="offer-info-item">
+                                <span>Тип выплаты</span>
+                                <strong>
+                                    {% if offer.payout_type == 'partner_status' %}
+                                        По статусу партнёра
+                                    {% else %}
+                                        Фиксированная
+                                    {% endif %}
+                                </strong>
+                            </div>
+
+                            <div class="offer-info-item">
+                                <span>Вознаграждение</span>
+                                <strong>
+
+                                    {% if offer.payout_type == 'partner_status' %}
+
+                                        {% if partner_registration.status %}
+                                            {{ partner_registration.status.reward_percent|floatformat:0 }}%
+                                        {% else %}
+                                            —
+                                        {% endif %}
+
+                                    {% else %}
+
+                                        {{ offer.reward|floatformat:0 }} ₽
+
+                                    {% endif %}
+
+                                </strong>
+                            </div>
+
+                            <div class="offer-info-item">
+                                <span>Старт</span>
+                                <strong>
+                                    {{ offer.activity_start|date:"d.m.Y"|default:"—" }}
+                                </strong>
+                            </div>
+
+                            <div class="offer-info-item">
+                                <span>Завершение</span>
+                                <strong>
+                                    {{ offer.activity_end|date:"d.m.Y"|default:"—" }}
+                                </strong>
+                            </div>
+
+                        </div>
+                            <div class="offer-stats-grid">
+
+                                <div class="offer-stat-card">
+                                    <span>Лидов</span>
+                                    <strong>{{ offer.leads_count }}</strong>
+                                </div>
+
+                                <div class="offer-stat-card">
+                                    <span>Сделок</span>
+                                    <strong>{{ offer.deals_count }}</strong>
+                                </div>
+
+                                <div class="offer-stat-card">
+                                    <span>Выплачено</span>
+                                    <strong>{{ offer.deals_amount|floatformat:0 }} ₽</strong>
+                                </div>
+
+                            </div>
+                            <div class="offer-card-actions">
+                                <button
+                                    type="button"
+                                    class="edit-offer-btn"
+                                    onclick="openEditOfferModal(this)"
+                                    data-offer-id="{{ offer.id }}"
+                                    data-title="{{ offer.title|escapejs }}"
+                                    data-description="{{ offer.description|default:''|escapejs }}"
+                                    data-promo-files='[
+                                            {% for promo_file in offer.promo_files.all %}
+                                                {
+                                                    "id": "{{ promo_file.id }}",
+                                                    "name": "{{ promo_file.filename|escapejs }}",
+                                                    "url": "{{ promo_file.file.url }}"
+                                                }{% if not forloop.last %},{% endif %}
+                                            {% endfor %}
+                                        ]'
+                                    data-payout-type="{{ offer.payout_type }}"
+                                    data-fixed-reward="{{ offer.reward|floatformat:0 }}"
+                                    data-status-reward="{% if partner_registration.status %}{{ partner_registration.status.reward_percent|floatformat:0 }}{% else %}0{% endif %}"
+                                    data-activity-start="{{ offer.activity_start|date:'Y-m-d' }}"
+                                    data-activity-end="{{ offer.activity_end|date:'Y-m-d' }}"
+                                    data-landing-page="{{ offer.landing_page }}">
+                                    Редактировать
+                                </button>
+                                <button
+                                    type="button"
+                                    class="offer-delete-btn"
+                                    onclick="openRemoveOfferModal('{% url 'remove_partner_offer' partner.id offer.id %}')">
+                                    Удалить
+                                </button>
+                            </div>
+                    </div>
+
+                        {% empty %}
+
+                            <div class="empty-offers">
+                                У партнёра пока нет подключённых офферов
+                            </div>
+
+                        {% endfor %}
+
+                    </div>
+
+                </div>
+        </div>
+    </div>
+</div>
+</div>
+</form>
+
+    <div class="modal" id="offer-modal">
+        <div class="modal-card">
+            <div class="modal-header">
+                <div class="modal-title">Добавить оффер</div>
+                <button type="button" class="close-btn" id="close-offer-modal">&times;</button>
+            </div>
+
+            <form method="post" action="{% url 'create_partner_offer' partner.id %}" enctype="multipart/form-data" class="offer-form">
+                {% csrf_token %}
+            <div class="offer-mode-switch">
+
+                <label class="offer-radio">
+                    <input
+                        type="radio"
+                        name="offer_mode"
+                        value="new"
+                        checked
+                        onchange="togglePartnerOfferMode()">
+
+                    <span>Новый оффер</span>
+                </label>
+
+                <label class="offer-radio">
+                    <input
+                        type="radio"
+                        name="offer_mode"
+                        value="existing"
+                        onchange="togglePartnerOfferMode()">
+
+                    <span>Существующий оффер</span>
+                </label>
+            </div>
+            <div id="existingPartnerOfferBlock" style="display:none;">
+
+                <div class="form-group full">
+
+                    <label class="form-label">
+                        Выберите оффер
+                    </label>
+
+                    <select
+                        name="existing_offer_id"
+                        class="form-select">
+
+                        <option value="">
+                            Выберите оффер
+                        </option>
+
+                        {% for offer in all_offers %}
+                        <option
+                            value="{{ offer.id }}"
+                            data-title="{{ offer.title|escapejs }}"
+                            data-description="{{ offer.description|default:''|escapejs }}"
+                            data-payout-type="{{ offer.payout_type }}"
+                            data-fixed-reward="{{ offer.reward|floatformat:0 }}"
+                            data-fixed-reward="{{ offer.reward|floatformat:0 }}"
+                            data-status-reward="{% if partner_registration.status %}{{ partner_registration.status.reward_percent|floatformat:0 }}{% else %}0{% endif %}"
+                            data-start="{{ offer.activity_start|date:'Y-m-d' }}"
+                            data-end="{{ offer.activity_end|date:'Y-m-d' }}"
+                            data-landing="{{ offer.landing_page }}">
+                            {{ offer.title }}
+                        </option>
+                        {% endfor %}
+
+                    </select>
+
+                </div>
+
+            </div>
+            <div id="newPartnerOfferBlock">
+                <div class="form-grid">
+
+                    <div class="form-group full">
+                        <label class="form-label">Название оффера</label>
+                        <input type="text" name="title" id="offer-title" placeholder="Название оффера">
+                    </div>
+
+                    <div class="form-group full">
+                        <label class="form-label">Описание оффера</label>
+                        <textarea name="description" id="offer-description" rows="4" placeholder="Описание оффера"></textarea>
+                    </div>
+                    <div class="form-group full">
+                        <label class="form-label">
+                            Посадочная страница
+                        </label>
+
+                        <input
+                            type="url"
+                            id="offer-landing-page"
+                            name="landing_page"
+                            value="https://partnetix.ru"
+                            readonly
+                            class="readonly-input">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Форма выплаты</label>
+                        <select name="payout_type" id="offer-payout-type"> 
+                            <option value="fixed">Фиксированная (₽)</option>
+                            <option value="partner_status">По статусу партнёра</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+
+                        <label
+                            class="form-label reward-label"
+                            id="offer-reward-label">
+                            Вознаграждение (₽)
+                        </label>
+
+                        <input
+                            type="number"
+                            name="reward"
+                            id="offer-reward"
+                            placeholder="Вознаграждение">
+
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Начало активности</label>
+                        <input type="date" name="activity_start" id="offer-activity-start">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Конец активности</label>
+                        <input type="date" name="activity_end" id="offer-activity-end">
+                    </div>
+
+                        <div class="promo-upload-row">
+                            <label class="upload-btn" for="promo-create">
+                                Добавить файлы
+                            </label>
+
+                            <span id="promo-create-text" class="upload-file-name">
+                                Файлы не выбраны
+                            </span>
+
+                            <input
+                                type="file"
+                                name="promo_materials"
+                                id="promo-create"
+                                hidden
+                                multiple
+                            >
+                        </div>
+
+                </div>
+            </div>
+               <button type="submit" class="submit-btn">Сохранить оффер</button>
+            </form>
+        </div>
+    </div>
+<div class="modal" id="edit-offer-modal">
+
+    <div class="modal-card">
+
+        <div class="modal-header">
+            <div class="modal-title">
+                Редактировать оффер
+            </div>
+
+            <button
+                type="button"
+                class="close-btn"
+                id="close-edit-offer-modal">
+                &times;
+            </button>
+        </div>
+
+        <form
+            method="post"
+            id="edit-offer-form"
+            enctype="multipart/form-data">
+
+            {% csrf_token %}
+
+            <div class="form-grid">
+
+                <div class="form-group full">
+                    <label class="form-label">
+                        Название оффера
+                    </label>
+
+                    <input
+                        type="text"
+                        name="title"
+                        id="edit-title">
+                </div>
+
+                <div class="form-group full">
+                    <label class="form-label">
+                        Описание оффера
+                    </label>
+
+                    <textarea
+                        name="description"
+                        id="edit-description"></textarea>
+                </div>
+
+                <div class="form-group full">
+                    <label class="form-label">
+                        Посадочная страница
+                    </label>
+
+                    <input
+                        type="url"
+                        name="landing_page"
+                        id="edit-landing-page"
+                        readonly
+                        class="readonly-input">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" id="edit-offer-payout-type">
+                        Форма выплаты
+                    </label>
+
+                    <select
+                        name="payout_type"
+                        id="edit-payout-type">
+
+                        <option value="fixed">
+                            Фиксированная (₽)
+                        </option>
+
+                        <option value="partner_status">
+                            По статусу партнёра (%)
+                        </option>
+
+                    </select>
+                </div>
+
+                <div class="form-group">
+                <label
+                    class="form-label"
+                    id="edit-reward-label">
+                    Вознаграждение (₽)
+                </label>
+
+                    <input
+                        type="number"
+                        name="reward"
+                        id="edit-reward">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">
+                        Начало активности
+                    </label>
+
+                    <input
+                        type="date"
+                        name="activity_start"
+                        id="edit-activity-start">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">
+                        Конец активности
+                    </label>
+
+                    <input
+                        type="date"
+                        name="activity_end"
+                        id="edit-activity-end">
+                </div>
+                    <div class="form-group full">
+                        <label class="form-label">
+                            Промоматериалы
+                        </label>
+
+                        <div id="existing-promo-files" class="existing-promo-files">
+                            <div class="no-files">Файлы не загружены</div>
+                        </div>
+                        <div id="new-edit-promo-files" class="existing-promo-files"></div>
+                        <div class="promo-upload-row">
+                            <label class="upload-btn" for="edit-promo-files">
+                                Добавить файлы
+                            </label>
+
+                            <span id="edit-promo-files-text" class="upload-file-name">
+                                Файлы не выбраны
+                            </span>
+                               
+                            <input
+                                type="file"
+                                name="promo_materials"
+                                id="edit-promo-files"
+                                hidden
+                                multiple>
+                        </div>
+                    </div>
+            </div>
+
+            <button
+                type="submit"
+                class="submit-btn">
+                Сохранить изменения
+            </button>
+
+        </form>
+
+    </div>
+
+</div>
+<div class="modal" id="remove-offer-modal">
+    <div class="modal-card" style="max-width:420px;">
+        <div class="modal-header">
+            <div class="modal-title">
+                Удалить оффер у партнера?
+            </div>
+
+            <button
+                type="button"
+                class="close-btn"
+                onclick="closeRemoveOfferModal()">
+                &times;
+            </button>
+        </div>
+
+        <div style="color:#6b7280;font-weight:700;margin-bottom:20px;">
+            Оффер будет отключён от партнёра. Лиды и выплаты останутся.
+        </div>
+
+        <div style="display:flex;gap:10px;justify-content:flex-end;">
+            <button
+                type="button"
+                class="offer-delete-btn"
+                onclick="confirmRemoveOffer()">
+                Да
+            </button>
+
+            <button
+                type="button"
+                class="edit-offer-btn"
+                onclick="closeRemoveOfferModal()">
+                Нет
+            </button>
+        </div>
+    </div>
+</div>
+<script src="https://unpkg.com/imask"></script>
+<script>
+// Попап для редактирования данных    
+function openEditOfferModal(button) {
+    const modal = document.getElementById('edit-offer-modal');
+    const form = document.getElementById('edit-offer-form');
+    const existingFilesBlock = document.getElementById('existing-promo-files');
+    document.getElementById('edit-title').value = button.dataset.title || '';
+    document.getElementById('edit-description').value = button.dataset.description || '';
+    document.getElementById('edit-payout-type').value =
+        button.dataset.payoutType || 'fixed';
+
+    const rewardInput = document.getElementById('edit-reward');
+
+    rewardInput.dataset.fixedReward =
+        button.dataset.fixedReward || '';
+
+    rewardInput.dataset.statusReward =
+        button.dataset.statusReward || '0';
+    if (button.dataset.payoutType === 'partner_status') {
+        rewardInput.value = rewardInput.dataset.statusReward;
+    } else {
+        rewardInput.value = rewardInput.dataset.fixedReward;
+    }
+    document.getElementById('edit-activity-start').value = button.dataset.activityStart || '';
+    document.getElementById('edit-activity-end').value = button.dataset.activityEnd || '';
+    document.getElementById('edit-landing-page').value = button.dataset.landingPage || '';
+    const offerId = String(button.dataset.offerId).replace(/\D/g, '');
+    form.action = `/users/partners/{{ partner.id }}/offers/${offerId}/update/`;
+    existingFilesBlock.innerHTML = '';
+
+    let promoFiles = [];
+
+    try {
+        promoFiles = JSON.parse(button.dataset.promoFiles || '[]');
+    } catch (e) {
+        promoFiles = [];
+    }
+
+    if (promoFiles.length === 0) {
+        existingFilesBlock.innerHTML =
+            '<div class="no-files">Файлы не загружены</div>';
+    } else {
+        promoFiles.forEach(function(file) {
+            const row = document.createElement('div');
+
+            row.className = 'promo-file-item';
+
+            row.innerHTML = `
+                <a
+                    href="${file.url}"
+                    target="_blank"
+                    class="promo-file-name"
+                    title="${file.name}"
+                >
+                    ${file.name}
+                </a>
+
+                <button
+                    type="button"
+                    class="promo-file-remove"
+                    title="Удалить файл"
+                >
+                    ×
+                </button>
+
+                <input
+                    type="hidden"
+                    name="delete_promo_files"
+                    value=""
+                    class="delete-promo-file-input">
+            `;
+
+            existingFilesBlock.appendChild(row);
+            row.querySelector('.promo-file-remove').addEventListener('click', function () {
+            const input = row.querySelector('.delete-promo-file-input');
+
+            input.value = file.id;
+            row.style.display = 'none';
+        });
+        });
+    }
+
+    modal.classList.add('active');
+    updateEditOfferRewardLabel();
+}
+
+document.getElementById('close-edit-offer-modal')?.addEventListener('click', function () {
+    document.getElementById('edit-offer-modal').classList.remove('active');
+});
+
+document.getElementById('edit-offer-modal')?.addEventListener('click', function (event) {
+    if (event.target === this) {
+        this.classList.remove('active');
+    }
+});
+</script>
+
+
+
+
+<script>
+    // Удаление уведомления через 5 менут
+    const profileToast = document.querySelector('.profile-toast');
+
+    if (profileToast) {
+        setTimeout(() => {
+            profileToast.style.transition = '0.4s';
+            profileToast.style.opacity = '0';
+
+            setTimeout(() => {
+                profileToast.remove();
+            }, 400);
+
+        }, 5000);
+    }
+</script>
+
+<script>
+    const profileCardNumber = document.getElementById('profile-card-number');
+    const partnerType = "{{ partner_registration.partner_type }}";
+    const saveChangesBtn = document.querySelector('.save-profile-btn');
+    const saveCardBtn = document.getElementById('save-card-btn');
+    const profileInputs = document.querySelectorAll('.profile-edit-input');
+    if (profileCardNumber) {
+        IMask(profileCardNumber, {
+            mask: '0000 0000 0000 0000'
+        });
+    }
+    const profilePhone = document.getElementById('profile-phone');
+
+    if (profilePhone) {
+        IMask(profilePhone, {
+            mask: '+{7} (000) 000-00-00'
+        });
+    }
+</script>
+<script>
+    const profileBankName = document.getElementById('profile-bank-name');
+    const profilePaymentSystem = document.getElementById('profile-payment-system');
+    const profileBankLogo = document.getElementById('profile-bank-logo');
+    const profilePaymentLogo = document.getElementById('profile-payment-logo');    
+    const initialValues = {};
+
+    profileInputs.forEach(input => {
+        initialValues[input.name] = input.value;
+    });
+    function validateProfileChanges() {
+        if (partnerType === 'company' || partnerType === 'self_employed') {
+            validateCompanyPaymentForm();
+            return;
+        }
+        let changed = false;
+        let allRequiredFilled = true;
+
+        profileInputs.forEach(input => {
+            if (input.value.trim() === '') {
+                allRequiredFilled = false;
+            }
+
+            if (input.value !== initialValues[input.name]) {
+                changed = true;
+            }
+        });
+
+        const cardInput = document.getElementById('profile-card-number');
+
+        if (cardInput && cardInput.value.trim() !== '') {
+            const digits = cardInput.value.replace(/\D/g, '');
+
+            if (digits.length !== 16) {
+                allRequiredFilled = false;
+            }
+        }
+        if (changed && allRequiredFilled) {
+            saveCardBtn.disabled = false;
+            saveCardBtn.classList.remove('disabled-btn');
+        } else {
+            saveCardBtn.disabled = true;
+            saveCardBtn.classList.add('disabled-btn');
+        }
+    }
+    profileInputs.forEach(input => {
+        input.addEventListener('input', validateProfileChanges);
+    });
+    function getPaymentLogo(system) {
+        switch (system.toLowerCase()) {
+            case 'мир':
+                return '/static/users/images/payment/mir.svg';
+            case 'visa':
+                return '/static/users/images/payment/visa.svg';
+            case 'mastercard':
+                return '/static/users/images/payment/mastercard.svg';
+            default:
+                return '';
+        }
+    }
+
+    function detectPaymentSystem(digits) {
+        const first1 = digits.slice(0, 1);
+        const first2 = parseInt(digits.slice(0, 2));
+        const first6 = parseInt(digits.slice(0, 6));
+
+        if (first6 >= 220000 && first6 <= 220499) return 'МИР';
+        if (first1 === '4') return 'Visa';
+        if (first2 >= 51 && first2 <= 55) return 'Mastercard';
+
+        return 'Не определена';
+    }
+
+    if (profileCardNumber) {
+        profileCardNumber.addEventListener('input', async function () {
+            const digits = this.value.replace(/\D/g, '');
+            validateProfileChanges();
+            if (digits.length < 6) {
+                profileBankName.value = '';
+                profilePaymentSystem.value = '';
+                profileBankLogo.style.display = 'none';
+                profilePaymentLogo.style.display = 'none';
+                return;
+            }
+
+            const bin = digits.slice(0, 6);
+
+            const response = await fetch(`/partner/accruals/bank-bin-lookup/?bin=${bin}`);
+            const data = await response.json();
+
+            if (data.success) {
+                profileBankName.value = data.bank;
+
+                if (data.logo) {
+                    profileBankLogo.src = data.logo;
+                    profileBankLogo.style.display = 'block';
+                }
+            }
+
+            const paymentSystem = detectPaymentSystem(digits);
+            profilePaymentSystem.value = paymentSystem;
+
+            const paymentLogoPath = getPaymentLogo(paymentSystem);
+
+            if (paymentLogoPath) {
+                profilePaymentLogo.src = paymentLogoPath;
+                profilePaymentLogo.style.display = 'block';
+            }
+        });
+    }
+let requiredFields = [];
+
+if (partnerType === 'company') {
+    requiredFields = [
+        'company_full_name',
+        'company_short_name',
+        'legal_address',
+        'postal_address',
+        'inn',
+        'kpp',
+        'contact_person_name',
+
+        'legal_bank_name',
+        'bik',
+        'settlement_account',
+        'correspondent_account',
+        'recipient_name',
+        'bank_inn',
+        'bank_kpp'
+    ];
+}
+
+else if (partnerType === 'self_employed') {
+    requiredFields = [
+        'full_name',
+        'email',
+        'phone',
+        'activity_type',
+        'company_name',
+        'inn',
+        'legal_bank_name',
+        'bik',
+        'settlement_account',
+        'correspondent_account',
+        'recipient_name',
+        'bank_inn',
+        'bank_kpp'
+    ];
+}
+    const initialCompanyValues = {};
+
+    requiredFields.forEach(name => {
+        const input = document.querySelector(`[name="${name}"]`);
+
+        if (input) {
+            initialCompanyValues[name] = input.value;
+        }
+    });
+    profileInputs.forEach(input => {
+        input.addEventListener('input', validateCompanyPaymentForm);
+    });
+
+    function validateCompanyPaymentForm() {
+
+        if (partnerType !== 'company' && partnerType !== 'self_employed') {
+            return;
+        }
+        const allFilled = requiredFields.every(name => {
+            const input = document.querySelector(`[name="${name}"]`);
+            return input && input.value.trim() !== '';
+        });
+        const bankInn = document.querySelector('[name="bank_inn"]');
+        const bankKpp = document.querySelector('[name="bank_kpp"]');
+        const companyInn = document.querySelector('[name="inn"]');
+        const companyKpp = document.querySelector('[name="kpp"]');
+        const bik = document.querySelector('[name="bik"]');
+        const settlement = document.querySelector('[name="settlement_account"]');
+        const correspondent = document.querySelector('[name="correspondent_account"]');
+        let changed = false;
+        requiredFields.forEach(name => {
+            const input = document.querySelector(`[name="${name}"]`);
+
+            if (input && input.value !== initialCompanyValues[name]) {
+                changed = true;
+            }
+        });
+        const bankInnDigits = (bankInn?.value || '').replace(/\D/g, '');
+        const innValid = bankInnDigits.length === 10;
+        const kppDigits = (bankKpp?.value || '').replace(/\D/g, '');
+
+        const kppValid = kppDigits.length === 9;
+                
+        const companyInnDigits = (companyInn?.value || '').replace(/\D/g, '');
+        const companyKppDigits = (companyKpp?.value || '').replace(/\D/g, '');
+        const innDigits = (bankInn?.value || '').replace(/\D/g, '');
+        const bikDigits = (bik?.value || '').replace(/\D/g, '');
+        const settlementDigits = (settlement?.value || '').replace(/\D/g, '');
+        const correspondentDigits = (correspondent?.value || '').replace(/\D/g, '');
+        const bikValid = bikDigits.length === 9;
+        const companyInnValid =
+            partnerType === 'self_employed'
+                ? companyInnDigits.length === 12
+                : companyInnDigits.length === 10;
+
+        const companyKppValid =
+            partnerType === 'self_employed'
+                ? true
+                : companyKppDigits.length === 9;
+
+        const settlementValid =
+            settlementDigits.length === 20;
+
+        const correspondentValid =
+            correspondentDigits.length === 20;
+        const isValid =
+            changed &&
+            allFilled &&
+            innValid &&
+            kppValid &&
+            companyInnValid &&
+            companyKppValid &&
+            bikValid &&
+            settlementValid &&
+            correspondentValid;
+
+        saveCardBtn.disabled = !isValid;
+        if (isValid) {
+            saveCardBtn.disabled = false;
+            saveCardBtn.classList.remove('disabled-btn');
+        }
+
+        saveCardBtn.classList.toggle('disabled-btn', !isValid);
+
+    }
+
+    [
+        'legal_bank_name',
+        'bik',
+        'settlement_account',
+        'correspondent_account',
+        'recipient_name',
+        'bank_inn',
+        'bank_kpp'
+    ].forEach(name => {
+
+        const input = document.querySelector(`[name="${name}"]`);
+
+        input?.addEventListener('input', validateCompanyPaymentForm);
+    });
+  
+    validateCompanyPaymentForm();
+
+    validateCompanyPaymentForm();
+
+document.querySelectorAll('.profile-edit-input').forEach(function(input) {
+    input.addEventListener('input', function () {
+        saveCardBtn.disabled = false;
+        saveCardBtn.classList.remove('disabled-btn');
+        saveCardBtn.innerHTML = 'Сохранить изменения';
+    });
+
+    input.addEventListener('change', function () {
+        saveCardBtn.disabled = false;
+        saveCardBtn.classList.remove('disabled-btn');
+        saveCardBtn.innerHTML = 'Сохранить изменения';
+    });
+});
+
+
+ //   Ограничение ввода для числовых полей
+    document.querySelector('[name="inn"]')?.addEventListener('input', function () {
+
+        const maxLength =
+            partnerType === 'self_employed' ? 12 : 10;
+
+        this.value = this.value
+            .replace(/\D/g, '')
+            .slice(0, maxLength);
+
+        setTimeout(() => {
+            validateCompanyPaymentForm();
+        }, 0);
+    });
+    document.querySelector('[name="bank_inn"]')?.addEventListener('input', function () {
+
+        this.value = this.value
+            .replace(/\D/g, '')
+            .slice(0, 10);
+
+        setTimeout(() => {
+            validateCompanyPaymentForm();
+        }, 0);
+    });
+
+    document.querySelector('[name="bank_kpp"]')?.addEventListener('input', function () {
+
+        this.value = this.value.replace(/\D/g, '').slice(0, 9);
+
+        setTimeout(() => {
+            validateCompanyPaymentForm();
+        }, 0);
+    });
+
+    document.querySelector('[name="kpp"]')?.addEventListener('input', function () {
+        this.value = this.value.replace(/\D/g, '').slice(0, 9);
+
+        setTimeout(() => {
+            validateCompanyPaymentForm();
+        }, 0);
+    });
+    document.querySelector('[name="bik"]')?.addEventListener('input', function () {
+        this.value = this.value.replace(/\D/g, '').slice(0, 9);
+
+        setTimeout(() => {
+            validateCompanyPaymentForm();
+        }, 0);
+    });
+
+    document.querySelector('[name="settlement_account"]')?.addEventListener('input', function () {
+        this.value = this.value.replace(/\D/g, '').slice(0, 20);
+
+        setTimeout(() => {
+            validateCompanyPaymentForm();
+        }, 0);
+    });
+
+    document.querySelector('[name="correspondent_account"]')?.addEventListener('input', function () {
+        this.value = this.value.replace(/\D/g, '').slice(0, 20);
+
+        setTimeout(() => {
+            validateCompanyPaymentForm();
+        }, 0);
+    });
+</script>
+
+<script>
+const profileForm = document.getElementById('profile-form');
+const ajaxMessage = document.getElementById('profile-ajax-message');
+
+profileForm?.addEventListener('submit', async function (e) {
+    console.log('PROFILE FORM SUBMIT');
+    e.preventDefault();
+
+    saveCardBtn.disabled = true;
+    saveCardBtn.classList.add('disabled-btn');
+
+    saveCardBtn.innerHTML =
+        '<span class="btn-spinner"></span> Сохранение...';
+
+    const formData = new FormData(profileForm);
+
+    try {
+
+        const response = await fetch(profileForm.action || window.location.href, {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        });
+
+        if (response.ok) {
+
+            ajaxMessage.innerHTML = `
+                <div class="profile-toast">
+                    Изменения успешно сохранены
+                </div>
+            `;
+
+            saveCardBtn.innerHTML = 'Изменения сохранены';
+
+            saveCardBtn.disabled = true;
+            saveCardBtn.classList.add('disabled-btn');
+
+            profileInputs.forEach(input => {
+                initialValues[input.name] = input.value;
+            });
+
+        } else {
+            throw new Error();
+        }
+
+    } catch {
+
+        ajaxMessage.innerHTML = `
+            <div class="profile-toast" style="background:#fee2e2;color:#991b1b;border-color:#fecaca;">
+                Ошибка сохранения
+            </div>
+        `;
+
+        saveCardBtn.innerHTML = 'Сохранить изменения';
+    }
+
+});
+</script>
+<script>
+    function openAddOfferModal() {
+        document
+            .getElementById('addOfferModal')
+            .classList.add('show');
+    }
+
+    function closeAddOfferModal() {
+        document
+            .getElementById('addOfferModal')
+            .classList.remove('show');
+    }
+    function toggleOfferMode() {
+
+        const mode = document.querySelector(
+            'input[name="offer_mode"]:checked'
+        ).value;
+
+        const existingBlock =
+            document.getElementById('existingOfferBlock');
+
+        const newBlock =
+            document.getElementById('newOfferBlock');
+
+        if (mode === 'existing') {
+            existingBlock.style.display = 'block';
+            newBlock.style.display = 'none';
+        } else {
+            existingBlock.style.display = 'none';
+            newBlock.style.display = 'block';
+        }
+    }
+</script>
+
+
+<script>
+    // Скрипт для показа/скрытия поля вознаграждения при выборе типа выплаты
+    function openCreateOfferModal() {
+        document.getElementById('offer-modal').classList.add('active');
+    }
+</script>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+
+        const offerModal = document.getElementById('offer-modal');
+        const closeBtn = document.getElementById('close-offer-modal');
+
+        if (closeBtn) {
+            closeBtn.addEventListener('click', function () {
+                offerModal.classList.remove('active');
+            });
+        }
+
+    });
+</script>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+
+        const offerModal = document.getElementById('offer-modal');
+
+        offerModal?.addEventListener('click', function (e) {
+
+            if (e.target === offerModal) {
+                offerModal.classList.remove('active');
+            }
+
+        });
+
+    });
+    const promoCreateInput =
+    document.getElementById('promo-create');
+
+    const promoCreateText =
+        document.getElementById('promo-create-text');
+
+    if (promoCreateInput && promoCreateText) {
+        promoCreateInput.addEventListener('change', function() {
+            if (this.files.length === 0) {
+                promoCreateText.textContent = 'Файлы не выбраны';
+            } else if (this.files.length === 1) {
+                promoCreateText.textContent = this.files[0].name;
+            } else {
+                promoCreateText.textContent =
+                    `Выбрано файлов: ${this.files.length}`;
+            }
+        });
+    }
+    const editPromoInput = document.getElementById('edit-promo-files');
+    const editPromoText = document.getElementById('edit-promo-files-text');
+    let selectedEditPromoFiles = [];
+    const newEditPromoFiles = document.getElementById('new-edit-promo-files');
+
+    if (editPromoInput && editPromoText && newEditPromoFiles) {
+        editPromoInput.addEventListener('change', function() {
+            Array.from(this.files).forEach(function(file) {
+                selectedEditPromoFiles.push(file);
+            });
+
+            renderSelectedEditPromoFiles();
+        });
+    }
+function renderSelectedEditPromoFiles() {
+
+    newEditPromoFiles.innerHTML = '';
+
+    if (selectedEditPromoFiles.length === 0) {
+        editPromoText.textContent = 'Файлы не выбраны';
+        return;
+    }
+
+    editPromoText.textContent =
+        `Выбрано файлов: ${selectedEditPromoFiles.length}`;
+
+    selectedEditPromoFiles.forEach(function(file, index) {
+        const row = document.createElement('div');
+        row.className = 'promo-file-item promo-file-new';
+
+        row.innerHTML = `
+            <span class="promo-file-name" title="${file.name}">
+                ${file.name}
+            </span>
+
+            <button
+                type="button"
+                class="promo-file-remove"
+                title="Убрать файл"
+            >
+                ×
+            </button>
+        `;
+
+        row.querySelector('.promo-file-remove').addEventListener('click', function () {
+            selectedEditPromoFiles.splice(index, 1);
+            renderSelectedEditPromoFiles();
+        });
+
+        newEditPromoFiles.appendChild(row);
+    });
+}
+
+</script>
+<script>
+    function togglePartnerOfferMode() {
+
+        const mode = document.querySelector(
+            'input[name="offer_mode"]:checked'
+        ).value;
+
+        const newBlock =
+            document.getElementById('newPartnerOfferBlock');
+
+        const existingBlock =
+            document.getElementById('existingPartnerOfferBlock');
+
+        if (mode === 'existing') {
+
+            newBlock.style.display = 'block';
+            existingBlock.style.display = 'block';
+
+            setOfferFieldsReadonly(true);
+
+        } else {
+
+            newBlock.style.display = 'block';
+            existingBlock.style.display = 'none';
+
+            setOfferFieldsReadonly(false);
+
+            // Очистка полей
+
+            document.getElementById('offer-title').value = '';
+            document.getElementById('offer-description').value = '';
+            document.getElementById('offer-reward').value = '';
+
+            document.getElementById('offer-activity-start').value = '';
+            document.getElementById('offer-activity-end').value = '';
+
+            document.getElementById('offer-payout-type').value = 'fixed';
+            updateOfferRewardLabel();
+            document.getElementById('offer-landing-page').value =
+                'https://partnetix.ru';
+
+            const existingOfferSelect =
+                document.querySelector('[name="existing_offer_id"]');
+
+            if (existingOfferSelect) {
+                existingOfferSelect.value = '';
+            }
+        }
+    }   
+     document.querySelector('[name="existing_offer_id"]')?.addEventListener('change', function () {
+
+        const option = this.options[this.selectedIndex];
+        console.log('reward:', option.dataset.reward);
+        if (!option.value) {
+            return;
+        }
+
+        document.getElementById('offer-title').value =
+            option.dataset.title || '';
+
+        document.getElementById('offer-description').value =
+            option.dataset.description || '';
+
+        document.getElementById('offer-payout-type').value =
+            option.dataset.payoutType || 'fixed';
+            updateOfferRewardLabel();
+        const rewardInput = document.getElementById('offer-reward');
+
+        if (rewardInput) {
+            rewardInput.value = option.dataset.reward || '';
+        }
+        document.getElementById('offer-activity-start').value =
+            option.dataset.start || '';
+
+        document.getElementById('offer-activity-end').value =
+            option.dataset.end || '';
+
+        document.getElementById('offer-landing-page').value =
+            option.dataset.landing || '';
+    });  
+    function updateEditOfferRewardLabel() {
+        const payoutType = document.getElementById('edit-payout-type');
+        const rewardLabel = document.getElementById('edit-reward-label');
+        const rewardInput = document.getElementById('edit-reward');
+
+        if (!payoutType || !rewardLabel || !rewardInput) {
+            return;
+        }
+
+        if (payoutType.value === 'partner_status') {
+            rewardLabel.textContent = 'Вознаграждение (%)';
+            rewardInput.value = rewardInput.dataset.statusReward || '0';
+            rewardInput.readOnly = true;
+        } else {
+            rewardLabel.textContent = 'Вознаграждение (₽)';
+            rewardInput.value = rewardInput.dataset.fixedReward || '';
+            rewardInput.readOnly = false;
+        }
+    }
+
+    function openRemoveOfferModal(url) {
+        removeOfferUrl = url;
+        document.getElementById('remove-offer-modal').classList.add('active');
+    }
+
+    function closeRemoveOfferModal() {
+        removeOfferUrl = '';
+        document.getElementById('remove-offer-modal').classList.remove('active');
+    }
+
+    function confirmRemoveOffer() {
+        if (removeOfferUrl) {
+            window.location.href = removeOfferUrl;
+        }
+    }
+    function setOfferFieldsReadonly(readonly) {
+
+        const fields = [
+            'offer-title',
+            'offer-description',
+            'offer-reward',
+            'offer-activity-start',
+            'offer-activity-end'
+        ];
+
+        fields.forEach(id => {
+
+            const field = document.getElementById(id);
+
+            if (field) {
+                field.readOnly = readonly;
+            }
+        });
+
+        const payoutType =
+            document.getElementById('offer-payout-type');
+
+        if (payoutType) {
+            payoutType.disabled = readonly;
+        }
+    }      
+    function updateOfferRewardLabel() {
+        const payoutType = document.getElementById('offer-payout-type')?.value;
+        const label = document.getElementById('offer-reward-label');
+
+        if (!label) return;
+
+        if (payoutType === 'partner_status') {
+            label.textContent = 'Вознаграждение (%)';
+        } else {
+            label.textContent = 'Вознаграждение (₽)';
+        }
+    }    
+    document.addEventListener('DOMContentLoaded', function() {
+
+    document
+        .getElementById('offer-payout-type')
+        ?.addEventListener('change', updateOfferRewardLabel);
+        updateOfferRewardLabel();
+    });
+    document.addEventListener('DOMContentLoaded', function() {
+
+        document
+            .getElementById('offer-payout-type')
+            ?.addEventListener(
+                'change',
+                updateOfferRewardLabel
+            );
+
+        document
+            .getElementById('edit-payout-type')
+            ?.addEventListener(
+                'change',
+                updateEditOfferRewardLabel
+            );
+
+        updateOfferRewardLabel();
+
+    });
+    let removeOfferUrl = '';
+
+</script>
+{% endblock %}

@@ -45,7 +45,11 @@ class User(AbstractUser):
         unique=True,
         null=True,
         editable=False,
-        verbose_name='ID пользователя'
+        verbose_name='ID пользователя'        
+    )
+    chat_online = models.BooleanField(
+        default=False,
+        verbose_name='Онлайн в чате'
     )
     last_activity = models.DateTimeField(
         null=True,
@@ -609,6 +613,7 @@ class MarketingMaterial(models.Model):
         related_name='marketing_materials',
         verbose_name='Оффер'
     )
+ 
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
@@ -618,6 +623,7 @@ class MarketingMaterial(models.Model):
         if self.file:
             return self.file.name.split('.')[-1].upper()
         return ''    
+    
 class ChatTopic(models.Model):
     STATUS_CHOICES = (
         ('open', 'Открыта'),
@@ -797,10 +803,16 @@ class ChatMessage(models.Model):
     def file_name(self):
         if not self.file:
             return ''
+
+        return os.path.basename(self.file.name)
+    
     @property
     def is_media(self):
-        return self.is_image or self.is_video
-        return os.path.basename(self.file.name)    
+        return (
+            self.message_type in ['image', 'voice', 'video_note']
+            or self.is_image
+            or self.is_video
+        ) 
     class Meta:
         verbose_name = 'Сообщение чата'
         verbose_name_plural = 'Сообщения чата'

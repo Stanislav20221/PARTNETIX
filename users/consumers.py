@@ -260,10 +260,55 @@ class PresenceConsumer(AsyncWebsocketConsumer):
 
     @database_sync_to_async
     def set_user_online(self):
+        self.user.chat_online = True
         self.user.last_activity = timezone.now()
-        self.user.save(update_fields=['last_activity'])
+        self.user.save(update_fields=['chat_online', 'last_activity'])
 
     @database_sync_to_async
     def set_user_offline(self):
+        self.user.chat_online = False
         self.user.last_activity = timezone.now()
-        self.user.save(update_fields=['last_activity'])        
+        self.user.save(update_fields=['chat_online', 'last_activity'])       
+
+class UserNotificationConsumer(AsyncWebsocketConsumer):
+        async def connect(self):
+            self.user = self.scope['user']
+
+            if self.user.is_anonymous:
+                await self.close()
+                return
+
+            self.group_name = f'user_notifications_{self.user.id}'
+
+            await self.channel_layer.group_add(
+                self.group_name,
+                self.channel_name
+            )
+
+            await self.accept()
+
+        async def disconnect(self, close_code):
+            await self.channel_layer.group_discard(
+                self.group_name,
+                self.channel_name
+            )
+
+        async def topic_created(self, event):
+            await self.send(text_data=json.dumps({
+                'type': 'topic_created',
+                'topic_id': event['topic_id'],
+                'title': event['title'],
+                'url': event['url'],
+                'status_display': event['status_display'],
+                'created_by': event['created_by'],
+            }))    
+        async def topic_message_created(self, event):
+            await self.send(text_data=json.dumps({
+                'type': 'topic_message_created',
+                'topic_id': event['topic_id'],
+                'text': event['text'],
+                'time': event['time'],
+                'sender_name': event['sender_name'],
+                'sender_email': event['sender_email'],
+                'sender_role': event['sender_role'],
+            }))    

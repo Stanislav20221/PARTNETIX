@@ -625,37 +625,6 @@
         }
     });
 
-const salesFunnelCtx = document.getElementById('salesFunnelChart');
 
-new Chart(salesFunnelCtx, {
-    type: 'bar',
-    data: {
-        labels: ['Все лиды', 'В работе', 'Сделки'],
-        datasets: [{
-            label: 'Количество',
-            data: [
-                {{ total_leads }},
-                {{ in_progress_leads }},
-                {{ deal_leads }}
-            ],
-            borderRadius: 14
-        }]
-    },
-    options: {
-        indexAxis: 'y',
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-            legend: {
-                display: false
-            }
-        },
-        scales: {
-            x: {
-                beginAtZero: true
-            }
-        }
-    }
-});
 </script>
 {% endblock %}

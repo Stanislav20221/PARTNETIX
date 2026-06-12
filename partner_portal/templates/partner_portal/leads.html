@@ -1641,48 +1641,13 @@
 </script>
 <script>
     // Активация/дизактивация кнопки редактирования (радиокнопка)
-    const leadRadios = document.querySelectorAll('.lead-select-radio');
-    const editLeadBtn = document.getElementById('edit-lead-btn');
-
-    let selectedLeadRadio = null;
-
+const editLeadBtn = document.getElementById('edit-lead-btn');
+const leadRadios = document.querySelectorAll('.lead-select-radio');
 const paidLeadWarning = document.getElementById('paid-lead-warning');
 
-leadRadios.forEach(radio => {
+let selectedRadio = null;
 
-    radio.addEventListener('click', function () {
 
-        if (selectedLeadRadio === this) {
-
-            this.checked = false;
-
-            selectedLeadRadio = null;
-
-            editLeadBtn.disabled = true;
-
-            paidLeadWarning.style.display = 'none';
-
-            return;
-        }
-
-        selectedLeadRadio = this;
-
-        const isPaidOut = this.dataset.paidOut === '1';
-
-        if (isPaidOut) {
-
-            editLeadBtn.disabled = true;
-
-            paidLeadWarning.style.display = 'block';
-
-            return;
-        }
-
-        paidLeadWarning.style.display = 'none';
-
-        editLeadBtn.disabled = false;
-    });
-});
 </script>
 
 <script>

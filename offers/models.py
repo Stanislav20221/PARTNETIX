@@ -184,7 +184,9 @@ class OfferPromoMaterial(models.Model):
         auto_now_add=True,
         verbose_name='Загружено'
     )
-
+    @property
+    def filename(self):
+        return self.file.name.split('/')[-1]
     class Meta:
         verbose_name = 'Промоматериал'
         verbose_name_plural = 'Промоматериалы'
@@ -384,6 +386,12 @@ class PartnerRegistration(models.Model):
         related_name='partner_registrations',
         verbose_name='Оффер'
     )
+    offers = models.ManyToManyField(
+        Offer,
+        blank=True,
+        related_name='partner_registrations_many',
+        verbose_name='Офферы'
+    )
     referral_user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.SET_NULL,
@@ -580,6 +588,12 @@ class Lead(models.Model):
         blank=True,
         related_name='leads'
     )
+    @property
+    def is_paid_out(self):
+        return self.accruals.filter(
+            models.Q(payout_status='paid') |
+            models.Q(withdrawal_requests__status='paid')
+        ).exists()
     class Meta:
         verbose_name = 'Лид'
         verbose_name_plural = 'Лиды'

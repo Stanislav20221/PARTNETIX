@@ -4,20 +4,20 @@ from django.contrib.auth.views import LoginView, LogoutView
 from django.shortcuts import get_object_or_404, redirect, render
 from datetime import timedelta
 from django.utils import timezone
+from django.db import models
+from django.urls import reverse, reverse_lazy
 from urllib.parse import urlencode 
-from offers.models import Offer, OfferPromoMaterial, PartnerRegistration, PartnerStatus, OfferVisit, PartnerLink, Lead, Tariff
+from offers.models import Offer, Lead, OfferPromoMaterial, PartnerRegistration, PartnerStatus, OfferVisit, PartnerLink, Lead, Tariff
 from offers.forms import OfferCreateForm, OfferUpdateForm, PartnerRegistrationForm, PartnerCreateByUserForm
-from offers.models import Offer, OfferPromoMaterial, PartnerRegistration
+from offers.models import Offer, OfferPromoMaterial, PartnerRegistration, PartnerStatus
 from .forms import AdminLoginForm, AdminUserRegisterForm, ProfileUpdateForm, ClientRegistrationForm
-from .models import User, EducationVideo, EducationDocument, ChatTopic, ChatMessage
 from django.utils.crypto import get_random_string
 from django.contrib.auth import get_user_model, update_session_auth_hash
 from django.db.models import Q, Exists, OuterRef,Count, Sum, DecimalField, Value, F, Subquery, IntegerField
 from django.db.models.functions import Coalesce
 from django.contrib import messages
 from django.conf import settings
-from offers.models import Offer, Lead, Tariff 
-from users.models import User, Accrual, Subscription, WithdrawalRequest, MarketingMaterial
+from users.models import User, Accrual, Subscription, WithdrawalRequest, MarketingMaterial, EducationVideo, PartnerPaymentDetails, EducationDocument, ChatTopic, ChatMessage
 from decimal import Decimal
 from datetime import datetime
 from django.db import transaction
@@ -47,6 +47,9 @@ from moviepy import VideoFileClip
 import os
 from django.db.models.functions import TruncMonth
 from ai_service.whisper import transcribe_audio
+from asgiref.sync import async_to_sync
+from channels.layers import get_channel_layer
+
 
 def admin_required(view_func):
     @wraps(view_func)
@@ -528,7 +531,6 @@ def referral_program(request):
             total=Sum('partner_reward')
         )['total'] or Decimal('0')
 
-    create_form = OfferCreateForm()
     create_form = OfferCreateForm()
     update_forms = {offer.id: OfferUpdateForm(instance=offer) for offer in offers}
     partner_statuses = PartnerStatus.objects.all().order_by('reward_percent')
@@ -1492,14 +1494,45 @@ def create_lead(request):
     else:
         messages.success(request, 'Лид добавлен.')
     return redirect('leads')
+
 @login_required
 @admin_required
 def update_lead(request, lead_id):
     print('UPDATE_LEAD CALLED')
     lead = get_object_or_404(Lead, id=lead_id, admin=request.user)
+
+    print('LEAD ID:', lead.id)
+
+    print(
+        'ACCRUALS:',
+        list(
+            Accrual.objects.filter(
+                lead=lead
+            ).values(
+                'id',
+                'payout_status'
+            )
+        )
+    )
+
+    print(
+        'WITHDRAWALS:',
+        list(
+            WithdrawalRequest.objects.filter(
+                accruals__lead=lead
+            ).values(
+                'id',
+                'status'
+            )
+        )
+    )
+
+
     if Accrual.objects.filter(
-        lead=lead,
-        payout_status='paid'
+        lead=lead
+    ).filter(
+        models.Q(payout_status='paid') |
+        models.Q(withdrawal_requests__status='paid')
     ).exists():
         messages.error(
             request,
@@ -2570,7 +2603,8 @@ def admin_chat(request):
         'open_count': open_count,
         'closed_count': closed_count,
         'unread_count': unread_count,
-        'all_topics': all_topics
+        'all_topics': all_topics,
+
     })
 @login_required
 @admin_required
@@ -2611,6 +2645,19 @@ def admin_chat_topic(request, topic_id):
 
     elif current_filter == 'unread':
         topics = topics.filter(unread_count__gt=0)
+    for topic in topics:
+        last_message = topic.messages.order_by('-created_at').first()
+
+        topic.last_message_obj = last_message
+
+        if last_message:
+            topic.last_sender_label = (
+                'Партнёр'
+                if last_message.sender.role == 'partner'
+                else 'Администратор'
+            )
+        else:
+            topic.last_sender_label = ''
     current_topic = get_object_or_404(
         ChatTopic,
         id=topic_id,
@@ -2649,7 +2696,23 @@ def admin_chat_topic(request, topic_id):
         topics = topics.filter(unread_count__gt=0)
     all_topics = ChatTopic.objects.filter(
         admin=request.user
-    ).select_related('partner').order_by('-updated_at')      
+    ).select_related('partner').order_by('-updated_at') 
+    partner_reg = getattr(
+    current_topic.partner,
+    'partner_registration',
+    None
+)
+    if partner_reg and partner_reg.partner_type == 'company':
+        current_topic.partner_display_name = (
+            partner_reg.company_short_name
+            or partner_reg.company_full_name
+            or current_topic.partner.email
+        )
+    else:
+        current_topic.partner_display_name = (
+            f'{current_topic.partner.first_name} '
+            f'{current_topic.partner.last_name}'
+        ).strip() or current_topic.partner.emai     
     return render(request, 'users/admin_chat.html', {
         'active_page': 'admin_chat',
         'topics': topics,
@@ -2693,13 +2756,51 @@ def admin_chat_send_message(request, topic_id):
             topic.save(update_fields=['status', 'updated_at'])
             request.user.typing_updated_at = None
             request.user.save(update_fields=['typing_updated_at'])
+            sender_name = ''
+            partner_registration = getattr(
+                request.user,
+                'partner_registration',
+                None
+            )
+
+            if (
+                partner_registration
+                and partner_registration.partner_type == 'company'
+            ):
+                sender_name = (
+                    partner_registration.company_short_name
+                    or partner_registration.company_full_name
+                    or request.user.email
+                )
+            else:
+                sender_name = (
+                    f'{request.user.first_name} {request.user.last_name}'
+                ).strip() or request.user.email
+
             if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+                channel_layer = get_channel_layer()
+
+                async_to_sync(channel_layer.group_send)(
+                    f'user_notifications_{topic.partner.id}',
+                    {
+                        'type': 'topic_message_created',
+                        'topic_id': topic.id,
+                        'text': message.text,
+                        'time': message.created_at.strftime('%H:%M'),
+                        'sender_name': sender_name,
+                        'sender_email': request.user.email,
+                        'sender_role': 'Администратор',
+                    }
+                )
                 return JsonResponse({
                     'success': True,
                     'id': message.id,
                     'text': message.text,
                     'time': message.created_at.strftime('%H:%M'),
                     'is_own': True,
+                    'sender_name': sender_name,
+                    'sender_email': request.user.email,
+                    'sender_role': 'Администратор',
                 })
 
     return redirect('admin_chat_topic', topic_id=topic.id)
@@ -2784,7 +2885,43 @@ def admin_chat_create_topic(request):
                 priority='normal',
                 category='other'
             )
+            channel_layer = get_channel_layer()
+
+            async_to_sync(channel_layer.group_send)(
+                f'user_notifications_{partner.id}',
+                {
+                    'type': 'topic_created',
+                    'topic_id': topic.id,
+                    'title': topic.title,
+                    'url': reverse('partner_chat_topic', args=[topic.id]),
+                    'status_display': topic.get_status_display(),
+                    'created_by': 'Администратор',
+                }
+            )
+            if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+                return JsonResponse({
+                    'success': True,
+                    'topic_id': topic.id,
+                    'title': topic.title,
+                    'url': reverse('admin_chat_topic', args=[topic.id]),
+                    'partner_name': (
+                        partner.partner_registration.company_short_name
+                        if hasattr(partner, 'partner_registration')
+                        and partner.partner_registration.partner_type == 'company'
+                        else f'{partner.first_name} {partner.last_name}'
+                    ),
+                    'partner_email': partner.email,
+                    'status': topic.status,
+                    'status_display': topic.get_status_display(),
+                })
+
             return redirect('admin_chat_topic', topic_id=topic.id)
+
+    if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+        return JsonResponse({
+            'success': False,
+            'error': 'Не удалось создать тему'
+        })
 
     return redirect('admin_chat')
 
@@ -3091,3 +3228,603 @@ def chat_transcribe_voice(request, topic_id):
             'error': str(error)
         })
 
+@login_required
+@admin_required
+def admin_chat_topic_data(request, topic_id):
+    topic = get_object_or_404(
+        ChatTopic,
+        id=topic_id,
+        admin=request.user
+    )
+
+    topic.messages.filter(
+        is_read=False
+    ).exclude(
+        sender=request.user
+    ).update(
+        is_read=True
+    )
+
+    messages = (
+        topic.messages
+        .select_related('sender')
+        .order_by('created_at')
+    )
+
+    partner_reg = getattr(
+        topic.partner,
+        'partner_registration',
+        None
+    )
+
+    if partner_reg and partner_reg.partner_type == 'company':
+        partner_name = (
+            partner_reg.company_short_name
+            or partner_reg.company_full_name
+            or topic.partner.email
+        )
+    else:
+        partner_name = (
+            f'{topic.partner.first_name} {topic.partner.last_name}'
+        ).strip() or topic.partner.email
+
+    def serialize_message(message):
+        return {
+            'id': message.id,
+            'text': message.text or '',
+            'time': message.created_at.strftime('%H:%M'),
+            'is_own': message.sender_id == request.user.id,
+            'message_type': message.message_type,
+            'is_read': message.is_read,
+
+            'audio_url': message.audio_file.url if message.audio_file else '',
+            'image_url': message.image_file.url if message.image_file else '',
+            'file_url': message.file.url if message.file else '',
+            'file_name': message.file_name if message.file else '',
+            'video_note_url': message.video_note.url if message.video_note else '',
+
+            'avatar_url': (
+                message.sender.avatar.url
+                if message.sender.avatar
+                else ''
+            ),
+        }
+
+    return JsonResponse({
+        'topic': {
+            'id': topic.id,
+            'title': topic.title,
+            'status': topic.status,
+            'status_display': topic.get_status_display(),
+            'partner_name': partner_name,
+            'url': reverse('admin_chat_topic', args=[topic.id]),
+        },
+        'messages': [
+            serialize_message(message)
+            for message in messages
+        ]
+    })
+@login_required
+@admin_required
+def partner_detail(request, partner_id):
+    partner = get_object_or_404(
+        User.objects.select_related('partner_registration'),
+        id=partner_id
+    )
+
+    leads = Lead.objects.filter(
+        partner=partner
+    ).select_related(
+        'offer',
+        'client'
+    ).order_by('-created_at')
+
+    leads_count = leads.count()
+    deals_count = leads.filter(status='deal').count()
+
+    total_reward = (
+        leads.filter(status='deal')
+        .aggregate(total=Sum('partner_reward'))['total'] or 0
+    )
+    partner_registration = partner.partner_registration
+    payment_details, created = PartnerPaymentDetails.objects.get_or_create(
+    partner=partner
+)
+    if request.method == 'POST':
+        print('PARTNER SAVE POST')
+        print('POST DATA:', request.POST)
+        print(request.POST)
+        if partner_registration.partner_type == 'company':
+            partner.email = request.POST.get('email', '').strip()
+            partner.phone = request.POST.get('phone', '').strip()
+            partner.save(update_fields=['email', 'phone'])
+
+            partner_registration.company_full_name = request.POST.get(
+                'company_full_name',
+                ''
+            ).strip()
+
+            partner_registration.company_short_name = request.POST.get(
+                'company_short_name',
+                ''
+            ).strip()
+
+            partner_registration.legal_address = request.POST.get(
+                'legal_address',
+                ''
+            ).strip()
+
+            partner_registration.postal_address = request.POST.get(
+                'postal_address',
+                ''
+            ).strip()
+
+            partner_registration.contact_person_name = request.POST.get(
+                'contact_person_name',
+                ''
+            ).strip()
+            old_status_id = partner_registration.status_id
+            status_id = request.POST.get('status')
+
+            if status_id:
+                partner_registration.status_id = status_id
+            else:
+                partner_registration.status = None
+
+            partner_registration.save()
+            if old_status_id != partner_registration.status_id:
+                recalculate_partner_rewards(
+                    partner,
+                    partner_registration
+                )            
+            new_status_id = partner_registration.status_id
+
+            if old_status_id != new_status_id and partner_registration.status:
+                paid_lead_ids = Accrual.objects.filter(
+                    lead__isnull=False
+                ).filter(
+                    models.Q(payout_status='paid') |
+                    models.Q(withdrawal_requests__status='paid')
+                ).values_list('lead_id', flat=True)
+
+                leads_to_update = Lead.objects.filter(
+                    partner=partner,
+                    offer__payout_type='partner_status'
+                ).exclude(
+                    id__in=paid_lead_ids
+                ).select_related('tariff')
+                for lead in leads_to_update:
+                    if lead.tariff:
+                        lead.deal_amount = lead.tariff.price
+                        lead.partner_reward = (
+                            lead.deal_amount *
+                            partner_registration.status.reward_percent /
+                            Decimal('100')
+                        )
+                        lead.save(update_fields=[
+                            'deal_amount',
+                            'partner_reward'
+                        ])
+
+                        Accrual.objects.filter(
+                            lead=lead
+                        ).update(
+                            amount=lead.partner_reward
+                        )
+            return JsonResponse({
+                'success': True,
+                'message': 'Изменения успешно сохранены'
+            })
+
+        elif partner_registration.partner_type == 'individual':
+            partner.email = request.POST.get('email', '').strip()
+            partner.phone = request.POST.get('phone', '').strip()
+            partner.save(update_fields=['email', 'phone'])
+
+            partner_registration.full_name = request.POST.get(
+                'full_name',
+                ''
+            ).strip()
+
+            partner_registration.activity_type = request.POST.get(
+                'activity_type',
+                ''
+            ).strip()
+            old_status_id = partner_registration.status_id
+            status_id = request.POST.get('status')
+
+            if status_id:
+                partner_registration.status_id = status_id
+            else:
+                partner_registration.status = None
+
+            partner_registration.save()
+            if old_status_id != partner_registration.status_id:
+                recalculate_partner_rewards(
+                    partner,
+                    partner_registration
+                )
+            return JsonResponse({
+                'success': True,
+                'message': 'Изменения успешно сохранены'
+            })
+        elif partner_registration.partner_type == 'self_employed':
+            partner.email = request.POST.get('email', '').strip()
+            partner.phone = request.POST.get('phone', '').strip()
+            partner.save(update_fields=['email', 'phone'])
+
+            partner_registration.full_name = request.POST.get(
+                'full_name',
+                ''
+            ).strip()
+
+            partner_registration.activity_type = request.POST.get(
+                'activity_type',
+                ''
+            ).strip()
+
+            partner_registration.company_name = request.POST.get(
+                'company_name',
+                ''
+            ).strip()
+
+            partner_registration.inn = request.POST.get(
+                'inn',
+                ''
+            ).strip()
+            old_status_id = partner_registration.status_id
+            status_id = request.POST.get('status')
+
+            if status_id:
+                partner_registration.status_id = status_id
+            else:
+                partner_registration.status = None
+
+            partner_registration.save()
+            if old_status_id != partner_registration.status_id:
+                recalculate_partner_rewards(
+                    partner,
+                    partner_registration
+                )
+            return JsonResponse({
+                'success': True,
+                'message': 'Изменения успешно сохранены'
+            })
+        return JsonResponse({
+            'success': False,
+            'message': 'Этот тип партнёра пока не обрабатывается'
+        }, status=400)
+    partner_statuses = PartnerStatus.objects.all()
+    offers = partner_registration.offers.all()
+    for offer in offers:
+        offer.leads_count = Lead.objects.filter(
+            partner=partner,
+            offer=offer
+        ).count()
+
+        offer.deals_count = Lead.objects.filter(
+            partner=partner,
+            offer=offer,
+            status='deal'
+        ).count()
+
+        offer.deals_amount = (
+            Lead.objects.filter(
+                partner=partner,
+                offer=offer,
+                status='deal'
+            ).aggregate(total=Sum('partner_reward'))['total'] or 0
+        )
+    create_form = OfferCreateForm()
+    all_offers = Offer.objects.exclude(
+    id__in=partner_registration.offers.values_list(
+        'id',
+        flat=True
+    )
+    ).order_by('title')
+    return render(request, 'users/partner_detail.html', {
+        'active_page': 'partners',
+        'partner': partner,
+        'leads': leads[:5],
+        'leads_count': leads_count,
+        'deals_count': deals_count,
+        'total_reward': total_reward,
+        'partner_registration': partner_registration,
+        'partner_statuses': partner_statuses,
+        'offers': offers,
+        'all_offers': all_offers,
+        'create_form': create_form,
+        'payment_details': payment_details,
+    })
+
+@login_required
+@admin_required
+def create_partner_offer(request, partner_id):
+    if request.method != 'POST':
+        return redirect('partner_detail', partner_id=partner_id)
+
+    partner = get_object_or_404(
+        User,
+        id=partner_id
+    )
+
+    partner_registration = get_object_or_404(
+        PartnerRegistration,
+        user=partner
+    )
+    offer_mode = request.POST.get('offer_mode', 'new')
+
+    if offer_mode == 'existing':
+        existing_offer_id = request.POST.get('existing_offer_id')
+
+        offer = get_object_or_404(
+            Offer,
+            id=existing_offer_id
+        )
+
+        partner_registration.offers.add(offer)
+
+        if not partner_registration.offer:
+            partner_registration.offer = offer
+            partner_registration.save(update_fields=['offer'])
+
+        landing_page = offer.landing_page or 'https://partnetix.ru'
+
+        partner_url = (
+            f'{landing_page}'
+            f'/?referral={partner.user_id}'
+            f'&offer={offer.offer_id}'
+        )
+
+        PartnerLink.objects.get_or_create(
+            partner=partner,
+            offer=offer,
+            defaults={
+                'title': 'Моя новая ссылка',
+                'url': partner_url,
+            }
+        )
+
+        messages.success(request, 'Существующий оффер подключён партнёру.')
+
+        return redirect('partner_detail', partner_id=partner.id)
+    title = request.POST.get('title', '').strip()
+    description = request.POST.get('description', '').strip()
+    payout_type = request.POST.get('payout_type', 'fixed')
+    reward = request.POST.get('reward') or 0
+    activity_start = request.POST.get('activity_start')
+    activity_end = request.POST.get('activity_end')
+    landing_page = request.POST.get('landing_page') or 'https://partnetix.ru'
+
+    offer = Offer.objects.create(
+        title=title,
+        description=description,
+        payout_type=payout_type,
+        reward=reward,
+        activity_start=activity_start,
+        activity_end=activity_end,
+        landing_page=landing_page,
+        current_user=partner
+    )
+
+    partner_registration.offers.add(offer)
+
+    if not partner_registration.offer:
+        partner_registration.offer = offer
+        partner_registration.save(update_fields=['offer'])
+        partner_url = (
+            f'{landing_page}'
+            f'/?referral={partner.user_id}'
+            f'&offer={offer.offer_id}'
+        )
+    partner_url = (
+        f'{landing_page}'
+        f'/?referral={partner.user_id}'
+        f'&offer={offer.offer_id}'
+    )
+    PartnerLink.objects.get_or_create(
+        partner=partner,
+        offer=offer,
+        defaults={
+            'title': 'Моя новая ссылка',
+            'url': partner_url,
+        }
+    )
+
+    return redirect('partner_detail', partner_id=partner.id)
+
+@login_required
+@admin_required
+def update_partner_offer(request, partner_id, offer_id):
+    partner = get_object_or_404(User, id=partner_id)
+
+    partner_registration = get_object_or_404(
+        PartnerRegistration,
+        user=partner
+    )
+    offer = get_object_or_404(
+        partner_registration.offers,
+        id=offer_id
+    )
+
+    if request.method == 'POST':
+        old_payout_type = offer.payout_type
+        old_reward = offer.reward
+        offer.title = request.POST.get('title', '').strip()
+        offer.description = request.POST.get('description', '').strip()
+        offer.payout_type = request.POST.get('payout_type', 'fixed')
+        offer.reward = request.POST.get('reward') or 0
+        offer.activity_start = request.POST.get('activity_start')
+        offer.activity_end = request.POST.get('activity_end')
+        offer.landing_page = request.POST.get('landing_page') or 'https://partnetix.ru'
+        offer.save()
+    if (
+        old_payout_type == 'fixed'
+        and offer.payout_type == 'fixed'
+        and old_reward != offer.reward
+    ):
+        paid_lead_ids = Accrual.objects.filter(
+            lead__isnull=False,
+            payout_status='paid'
+        ).values_list('lead_id', flat=True)
+
+        Lead.objects.filter(
+            partner=partner,
+            offer=offer
+        ).exclude(
+            id__in=paid_lead_ids
+        ).update(
+            partner_reward=offer.reward
+        )
+        delete_file_ids = request.POST.getlist('delete_promo_files')
+
+        for file_id in delete_file_ids:
+            if not file_id:
+                continue
+
+            promo_file = OfferPromoMaterial.objects.filter(
+                id=file_id,
+                offer=offer
+            ).first()
+
+            delete_file_ids = request.POST.getlist('delete_promo_files')
+
+            for file_id in delete_file_ids:
+                if not file_id:
+                    continue
+
+                promo_file = OfferPromoMaterial.objects.filter(
+                    id=file_id,
+                    offer=offer
+                ).first()
+
+                if promo_file:
+                    file_name = promo_file.file.name if promo_file.file else ''
+
+                    if file_name:
+                        MarketingMaterial.objects.filter(
+                            offer=offer,
+                            file=file_name
+                        ).delete()
+
+                        MarketingMaterial.objects.filter(
+                            offer=offer,
+                            title=file_name.split('/')[-1]
+                        ).delete()
+
+                        promo_file.file.delete(save=False)
+
+                    promo_file.delete()
+        for uploaded_file in request.FILES.getlist('promo_materials'):
+
+            promo_file = OfferPromoMaterial.objects.create(
+                offer=offer,
+                file=uploaded_file
+            )
+
+            MarketingMaterial.objects.create(
+                title=uploaded_file.name,
+                description='Промоматериал оффера',
+                material_type=get_material_type_by_filename(
+                    uploaded_file.name
+                ),
+                file=promo_file.file,
+                offer=offer
+            )
+
+        messages.success(request, 'Оффер успешно обновлён.')
+
+    return redirect('partner_detail', partner_id=partner.id)
+
+def get_material_type_by_filename(filename):
+    ext = filename.split('.')[-1].lower()
+
+    image_exts = ['jpg', 'jpeg', 'png', 'webp', 'gif', 'svg']
+    video_exts = ['mp4', 'mov', 'avi', 'webm', 'mkv']
+
+    if ext in image_exts:
+        return 'image'
+
+    if ext in video_exts:
+        return 'video'
+
+    return 'text'
+
+@login_required
+@admin_required
+def remove_partner_offer(request, partner_id, offer_id):
+
+    partner = get_object_or_404(
+        User,
+        id=partner_id
+    )
+
+    partner_registration = get_object_or_404(
+        PartnerRegistration,
+        user=partner
+    )
+
+    offer = get_object_or_404(
+        Offer,
+        id=offer_id
+    )
+
+    # Удаляем связь партнёр ↔ оффер
+    partner_registration.offers.remove(offer)
+
+    # Если это основной оффер партнёра
+    if partner_registration.offer_id == offer.id:
+        partner_registration.offer = None
+        partner_registration.save(update_fields=['offer'])
+
+    # Удаляем все ссылки партнёра на этот оффер
+    PartnerLink.objects.filter(
+        partner=partner,
+        offer=offer
+    ).delete()
+
+    messages.success(
+        request,
+        'Оффер отключён от партнёра.'
+    )
+
+    return redirect(
+        'partner_detail',
+        partner_id=partner.id
+    )
+def recalculate_partner_rewards(partner, partner_registration):
+    paid_lead_ids = Accrual.objects.filter(
+        lead__isnull=False
+    ).filter(
+        models.Q(payout_status='paid') |
+        models.Q(withdrawal_requests__status='paid')
+    ).values_list('lead_id', flat=True)
+
+    leads_to_update = Lead.objects.filter(
+        partner=partner,
+        offer__payout_type='partner_status'
+    ).exclude(
+        id__in=paid_lead_ids
+    ).select_related('tariff', 'offer')
+
+    for lead in leads_to_update:
+        if lead.status == 'deal' and lead.tariff:
+            lead.deal_amount = lead.tariff.price
+            lead.partner_reward = (
+                lead.deal_amount
+                * partner_registration.status.reward_percent
+                / Decimal('100')
+            )
+        else:
+            lead.partner_reward = Decimal('0')
+
+        lead.save(update_fields=[
+            'deal_amount',
+            'partner_reward'
+        ])
+
+        Accrual.objects.filter(
+            lead=lead
+        ).update(
+            amount=lead.partner_reward
+        )

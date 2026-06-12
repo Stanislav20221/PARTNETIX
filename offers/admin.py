@@ -128,6 +128,7 @@ class PartnerRegistrationAdmin(admin.ModelAdmin):
         'is_default',
         'created_at',
     )
+    filter_horizontal = ('offers',)
     def get_readonly_fields(self, request, obj=None):
         if request.user.is_superuser:
             return []
@@ -147,6 +148,7 @@ class PartnerRegistrationAdmin(admin.ModelAdmin):
             'kpp',
             'contact_person_name',
             'offer',
+            'offers',
             'referral_user',
             'user',
             'status',

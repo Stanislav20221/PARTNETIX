@@ -40,4 +40,5 @@ urlpatterns = [
     path('chat/<int:topic_id>/send-video-note/',  views.partner_chat_send_video_note, name='partner_chat_send_video_note'),   
     path('chat/<int:topic_id>/transcribe-voice/', chat_transcribe_voice, name='chat_transcribe_voice'),
     path('chat/<int:topic_id>/toggle-status/', views.partner_chat_toggle_topic_status, name='partner_chat_toggle_topic_status'),
+    path('chat/topic-data/<int:topic_id>/', views.partner_chat_topic_data,  name='partner_chat_topic_data'),
 ]

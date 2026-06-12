@@ -1134,7 +1134,7 @@ else if (partnerType === 'self_employed') {
             settlementValid &&
             correspondentValid;
 
-        saveCardBtn.disabled = !isValid;
+     //  saveCardBtn.disabled = !isValid;
         if (isValid) {
             saveCardBtn.disabled = false;
             saveCardBtn.classList.remove('disabled-btn');
@@ -1260,7 +1260,7 @@ profileForm?.addEventListener('submit', async function (e) {
                 </div>
             `;
 
-            saveCardBtn.innerHTML = 'Сохранено';
+            saveCardBtn.innerHTML = 'Изменения сохранены';
 
             saveCardBtn.disabled = true;
             saveCardBtn.classList.add('disabled-btn');

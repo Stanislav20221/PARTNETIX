@@ -44,6 +44,7 @@ urlpatterns = [
     path('admin-chat/<int:topic_id>/send/',  views.admin_chat_send_message,  name='admin_chat_send_message'),
     path('admin-chat/<int:topic_id>/send-voice/', views.admin_chat_send_voice, name='admin_chat_send_voice'),
     path('admin-chat/<int:topic_id>/send-file/',  views.chat_send_file,  name='admin_chat_send_file'),
+    path('admin-chat/<int:topic_id>/topic-data/',  views.admin_chat_topic_data,  name='admin_chat_topic_data'),
     path('admin-chat/<int:topic_id>/', views.admin_chat_topic, name='admin_chat_topic'),
     path('admin-chat/<int:topic_id>/toggle-status/',  views.admin_chat_toggle_topic_status,  name='admin_chat_toggle_topic_status'),
     path('admin-chat/create-topic/',  views.admin_chat_create_topic,  name='admin_chat_create_topic'),
@@ -56,5 +57,8 @@ urlpatterns = [
     path('admin-chat/<int:topic_id>/send-file/',  views.chat_send_file,  name='admin_chat_send_file'),
     path('admin-chat/<int:topic_id>/send-video-note/', views.admin_chat_send_video_note, name='admin_chat_send_video_note'),
     path('admin-chat/<int:topic_id>/chat_transcribe_voice/', views.chat_transcribe_voice, name='chat_transcribe_voice'),
-    
+    path('partners/<int:partner_id>/', views.partner_detail, name='partner_detail'),
+    path('partners/<int:partner_id>/offers/create/', views.create_partner_offer, name='create_partner_offer'),
+    path('partners/<int:partner_id>/offers/<int:offer_id>/update/', views.update_partner_offer, name='update_partner_offer'),
+    path('partners/<int:partner_id>/offers/<int:offer_id>/remove/', views.remove_partner_offer, name='remove_partner_offer'),
 ]

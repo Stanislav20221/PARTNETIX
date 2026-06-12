@@ -136,7 +136,7 @@
         border-radius: 12px;
         padding: 12px 18px;
         font-size: 14px;
-        font-weight: 700;
+        font-weight: 600;
         cursor: default;
         background: #111827;
         color: white;
@@ -144,6 +144,7 @@
     }
 
     .details-btn:hover {
+        cursor: pointer;
         opacity: 1;
     }
 
@@ -1051,7 +1052,10 @@
                     </div>
 
                     <div class="partner-footer">
-                        <button type="button" class="details-btn">Подробнее</button>
+                        <a href="{% url 'partner_detail' partner.user.id %}"
+                        class="details-btn">
+                            Подробнее
+                        </a>
                     </div>
                 </div>
             {% endfor %}

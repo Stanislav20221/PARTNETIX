@@ -57,6 +57,7 @@
     flex: 1;
     overflow-y: auto;
     min-height: 0;
+    background: white;
 }
 
 .chat-topic-card {
@@ -71,6 +72,7 @@
     border: 1px solid transparent;
 
     margin-bottom: 10px;
+    font-size: 14px;
 }
 
 .chat-topic-card:hover {
@@ -80,23 +82,19 @@
 }
 
 .chat-topic-header {
-    display: flex;
-
-    align-items: center;
-
-    justify-content: space-between;
-
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: start;
     gap: 12px;
-
-    margin-bottom: 10px;
 }
-
+.chat-topic-header > div:first-child {
+    min-width: 0;
+}
 .chat-topic-title {
-    font-size: 15px;
-
-    font-weight: 700;
-
-    color: #111827;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+    line-height: 1.3;
 }
 
 .chat-topic-status {
@@ -107,6 +105,7 @@
     font-size: 12px;
 
     font-weight: 700;
+    margin-top: 6px;
 }
 
 .chat-topic-status.open {
@@ -487,12 +486,11 @@
 
 .chat-topic-card.active {
     position: sticky;
-    top: 0;
-    z-index: 10;
-
+    top: -12px;
+    z-index: 20;
     background: #eef4ff;
     border-color: #1d4ed8;
-    box-shadow: 0 8px 20px rgba(37,99,235,0.16);
+    box-shadow: 0 8px 20px rgb(219 222 227 / 97%);
 }
 .chat-topic-created,
 .chat-topic-last-message,
@@ -509,17 +507,19 @@
 .chat-topic-last-message {
     color: #374151;
 }
-.chat-topic-right {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-end;
-    gap: 8px;
-}
 
+.chat-topic-right {
+    flex-shrink: 0;
+    align-items: flex-end;
+    min-width: 70px;
+}
 .chat-topic-time {
     font-size: 12px;
     color: #9ca3af;
     font-weight: 600;
+    display: flex;
+    flex-direction: column;
+    text-align: right;
 }
 
 .chat-topic-unread {
@@ -585,7 +585,7 @@ button.mobile-topics-toggle {
     font-size: 12px;
     font-weight: 800;
     text-decoration: none;
-
+    margin-bottom: 10px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -1137,6 +1137,12 @@ button.mobile-topics-toggle {
 
     animation: videoNoteSpin 0.8s linear infinite;
 }
+.chat-topic-card.new-topic-highlight {
+    background: #ecfdf5 !important;
+    border-color: #22c55e !important;
+    box-shadow: 0 8px 22px rgba(34, 197, 94, 0.25) !important;
+}
+
 
 @keyframes videoNoteSpin {
     to {
@@ -1255,25 +1261,82 @@ button.mobile-topics-toggle {
         font-weight: 600;    
     }
 }
+@media (max-width: 480px) {
+    .chat-send-form {
+        position: sticky;
+        background: white;
+        border-top: 1px solid #eef2f7;
+        z-index: 20;
+        padding-bottom: 0px;
+        display: grid;
+        grid-template-columns: repeat(5, 52px);
+        gap: 10px;
+    }
+    .chat-send-form textarea {
+        grid-column: 1 / -1;
 
+        width: 100%;
+        min-height: 44px;
+        margin-bottom: 0;
+    }
+
+    .chat-send-form button,
+    .chat-send-form .voice-btn {
+        width: 52px;
+        height: 52px;
+    }
+    .chat-window {
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+        overflow: hidden;
+    }
+    .chat-messages {
+        flex: 1;
+        overflow-y: auto;
+    }
+
+    .chat-send-form {
+        margin-top: auto;
+        position: fixed;
+        top: 641px;
+        gap: 30px;
+        height: 119px;
+    }
+    .chat-window-header h2 {
+        font-size: 17px;
+   }  
+     .page-title {
+        font-size: 18px;
+        font-weight: 600;
+    }  
+    .chat-messages {
+        padding: 0px;
+        padding-top: 7px;
+        padding-right: 10px;
+        font-size: 12px;
+    }   
+    button.mobile-topics-toggle {
+        display: block;
+    }
+}
 </style>
 
 <div class="chat-layout">
     <button class="mobile-topics-toggle" type="button" onclick="openTopicsDrawer()">
         <i class="fa-solid fa-comments"></i>
-        Темы
+        Темы/Партнёры
     </button>
     <div class="chat-sidebar">
         <div class="chat-sidebar-top">
-            <div class="chat-sidebar-tabs">
+            <div class="chat-sidebar-tabs" id="chatSidebarTabs">
 
                 <label class="chat-tab-option">
                     <input
                         type="radio"
                         name="sidebarMode"
                         value="topics"
-                        checked
-                    >
+                                 >
                     <span>Темы</span>
                 </label>
 
@@ -1292,6 +1355,7 @@ button.mobile-topics-toggle {
                 type="text"
                 id="topicSearch"
                 class="chat-search"
+                placeholder="Поиск темы..."
             >
         </div>
         <button
@@ -1324,7 +1388,7 @@ button.mobile-topics-toggle {
             </a>
 
         </div>    
-        <div class="partner-topic-action" id="partnerTopicAction" style="display: none;">
+            <div class="partner-topic-action" id="partnerTopicAction" style="display: none;">
 
                 <button type="button"
                         class="partner-topic-btn disabled"
@@ -1406,14 +1470,52 @@ button.mobile-topics-toggle {
 
                     </div>
                 </div>
+                <div class="chat-topic-last-message">
 
-                    <div class="chat-topic-last-message">
+                    {% with last_message=topic.messages.last %}
 
-                        <strong>Последнее сообщение:</strong>
+                        {% if last_message %}
 
-                        {% with last_message=topic.messages.last %}
+                            <strong>Последнее сообщение:</strong>
 
-                            {% if last_message %}
+                            {% if last_message.text and last_message.text != 'Сообщение' %}
+
+                                {{ last_message.text|truncatechars:60 }}
+
+                            {% elif last_message.message_type == 'voice' %}
+
+                                🎤 Голосовое сообщение
+
+                            {% elif last_message.message_type == 'video_note' %}
+
+                                🎥 Видеосообщение
+
+                            {% elif last_message.message_type == 'image' %}
+
+                                🖼 Изображение
+
+                            {% elif last_message.message_type == 'file' %}
+
+                                📎 Файл
+
+                            {% else %}
+
+                                Текстовое сообщение
+
+                            {% endif %}
+
+                            <br>
+
+                            {% if last_message.sender.role != 'partner' %}
+
+                                От
+                                {{ last_message.sender.first_name }}
+                                {{ last_message.sender.last_name }}
+                                (Администратор)
+
+                            {% else %}
+
+                                От
 
                                 {% if last_message.sender.partner_registration.partner_type == 'company' %}
 
@@ -1426,19 +1528,15 @@ button.mobile-topics-toggle {
 
                                 {% endif %}
 
-                                — {{ last_message.sender.email }}
-
-                                {% if last_message.sender.role == 'admin' %}
-                                    (Администратор)
-                                {% else %}
-                                    (Партнёр)
-                                {% endif %}
+                                (Партнёр)
 
                             {% endif %}
 
-                        {% endwith %}
+                        {% endif %}
 
-                    </div>
+                    {% endwith %}
+
+                </div>
 
                     <div class="chat-topic-date">
                         <strong>Дата создания:</strong>
@@ -1476,7 +1574,11 @@ button.mobile-topics-toggle {
 
                     <div class="chat-partner-info">
                         <div class="chat-partner-name">
-                            {{ partner.first_name }} {{ partner.last_name }}
+                            {% if partner.partner_registration.partner_type == 'company' %}
+                                {{ partner.partner_registration.company_short_name }}
+                            {% else %}
+                                {{ partner.first_name }} {{ partner.last_name }}
+                            {% endif %}
                         </div>
 
                         <div class="chat-partner-email">
@@ -1536,13 +1638,18 @@ button.mobile-topics-toggle {
                 <div class="chat-window-header">
                     <div>
                         <h2>{{ current_topic.title }}</h2>
-                        <span>
-                            {{ current_topic.partner.first_name }}
-                            {{ current_topic.partner.last_name }}
-                            · {{ current_topic.get_status_display }}
-                        </span>
+                            <span>
+                                {% if current_topic.partner.partner_registration.partner_type == 'company' %}
+                                    {{ current_topic.partner.partner_registration.company_short_name }}
+                                {% else %}
+                                    {{ current_topic.partner.first_name }}
+                                    {{ current_topic.partner.last_name }}
+                                {% endif %}
+                                · {{ current_topic.get_status_display }}
+                            </span>
                     </div>
                     <form method="post"
+                        id="topicStatusForm"
                         action="{% url 'admin_chat_toggle_topic_status' current_topic.id %}">
                         {% csrf_token %}
 
@@ -1755,7 +1862,7 @@ button.mobile-topics-toggle {
             <button type="button" onclick="closeNewTopicModal()">×</button>
         </div>
 
-        <form method="post" action="{% url 'admin_chat_create_topic' %}">
+        <form method="post" action="{% url 'admin_chat_create_topic' %}" id="newTopicForm">
             {% csrf_token %}
 
             <div class="new-topic-group">
@@ -1909,25 +2016,36 @@ button.mobile-topics-toggle {
     const voiceBtn = document.getElementById('voiceBtn');
     const voiceMessageBtn = document.getElementById('voiceMessageBtn');
     const videoNoteBtn = document.getElementById('videoNoteBtn');
-    const voiceUrl = "{% url 'admin_chat_send_voice' current_topic.id %}";
-    const videoNoteUrl = "{% url 'admin_chat_send_video_note' current_topic.id %}";
+    const currentUserId = Number("{{ request.user.id }}");
+    let currentTopicId = Number("{{ current_topic.id }}");
+    let voiceUrl = `/users/admin-chat/${currentTopicId}/send-voice/`;
+    let videoNoteUrl = `/users/admin-chat/${currentTopicId}/send-video-note/`;;
     const transcribeUrl = "{% url 'chat_transcribe_voice' current_topic.id %}";
     const fileBtn = document.getElementById('fileBtn');
     const fileUploadStatus = document.getElementById('fileUploadStatus');
     const fileInput = document.getElementById('fileInput');
-    const fileUrl = "{% url 'admin_chat_send_file' current_topic.id %}";
-    const messagesUrl = "{% url 'admin_chat_messages' current_topic.id %}";
-    const chatSocketUrl = `ws://${window.location.host}/ws/chat/{{ current_topic.id }}/`;
+    let fileUrl = `/users/admin-chat/${currentTopicId}/send-file/`;
+    let messagesUrl = `/users/admin-chat/${currentTopicId}/messages/`;
+    let readStatusesUrl = `/users/admin-chat/${currentTopicId}/read-statuses/`;
+    let markReadUrl = `/users/admin-chat/${currentTopicId}/mark-read/`;    
+    const wsProtocol = window.location.protocol === 'https:' ? 'wss' : 'ws';
+
     const presenceSocket = new WebSocket(
         `ws://${window.location.host}/ws/presence/`
     );
-    const currentUserId = Number("{{ request.user.id }}");
-
+    
     let chatSocket = null;
     let lastMarkReadAt = 0;
     let selectedMessageId = null;
     let editingMessageId = null;
+    function getChatSocketUrl(topicId) {
+    const wsProtocol =
+        window.location.protocol === 'https:' ? 'wss' : 'ws';
 
+    return `${wsProtocol}://${window.location.host}/ws/chat/${topicId}/`;
+}
+
+    let chatSocketUrl = getChatSocketUrl(currentTopicId)
 
     
     const deletePopup = document.getElementById(
@@ -2018,66 +2136,21 @@ button.mobile-topics-toggle {
         deletePopup.style.display = 'none';
         selectedMessageId = null;
     });
-    presenceSocket.onmessage = function(event) {
-        const data = JSON.parse(event.data);
 
-        console.log('Presence message:', data);
+ // Функция для подключения WebSocket к чату   
+function connectChatSocket() {
 
-        if (data.type !== 'user_status') return;
+    if (chatSocket) {
+        chatSocket.onclose = null;
+        chatSocket.onerror = null;
+        chatSocket.close();
+    }
 
-        const statusBlocks = document.querySelectorAll(
-            `[data-partner-status-id="${data.user_id}"]`
-        );
-        statusBlocks.forEach(statusBlock => {
+    chatSocketUrl =
+        `${wsProtocol}://${window.location.host}/ws/chat/${currentTopicId}/`;
 
-            if (data.is_online) {
-
-                delete statusBlock.dataset.offlineAt;
-
-                statusBlock.innerHTML = `
-                    <span class="online-dot"></span>
-                    <span class="online-text">online</span>
-                `;
-
-            } else {
-
-                statusBlock.dataset.offlineAt = Date.now();
-
-                statusBlock.innerHTML = `
-                    <span class="offline-dot"></span>
-                    <span class="offline-text">только что</span>
-                `;
-            }
-        });
-        const topicStatusBlocks = document.querySelectorAll(
-            `[data-topic-partner-status-id="${data.user_id}"]`
-        );
-
-        topicStatusBlocks.forEach(statusBlock => {
-
-            if (data.is_online) {
-
-                delete statusBlock.dataset.offlineAt;
-
-                statusBlock.innerHTML = `
-                    <span class="online-dot"></span>
-                    <span class="online-text">online</span>
-                `;
-
-            } else {
-
-                statusBlock.dataset.offlineAt = Date.now();
-
-                statusBlock.innerHTML = `
-                    <span class="offline-dot"></span>
-                    <span class="offline-text">только что</span>
-                `;
-            }
-        });
-    };
-    function connectChatSocket() {
-        chatSocket = new WebSocket(chatSocketUrl);
-        chatSocket.onopen = () => {
+    chatSocket = new WebSocket(chatSocketUrl);
+           chatSocket.onopen = () => {
             console.log('WebSocket connected:', chatSocket.readyState);
 
             setTimeout(() => {
@@ -2118,6 +2191,14 @@ button.mobile-topics-toggle {
                 return;
             }
             if (data.type === 'new_message') {
+                const existingMessage = document.querySelector(
+                    `.message-row[data-message-id="${data.message_id}"]`
+                );
+
+                if (existingMessage) {
+                    return;
+                }
+
                 loadMessages();
             }
             if (data.type === 'messages_read' && data.user_id !== currentUserId) {
@@ -2207,6 +2288,89 @@ button.mobile-topics-toggle {
         };
     }
     connectChatSocket();
+
+
+    document.addEventListener('click', async function(event) {
+        const card = event.target.closest('.chat-topic-card');
+
+        if (!card) return;
+
+        event.preventDefault();
+        event.stopPropagation();
+
+        const topicId = card.dataset.topicId;
+
+        if (!topicId) return;
+
+        try {
+                const response = await fetch(
+                    `/users/admin-chat/${topicId}/topic-data/`,
+                    {
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest'
+                        }
+                    }
+                );
+
+            if (!response.ok) {
+                console.error('Ошибка загрузки темы:', response.status);
+                return;
+            }
+
+            const data = await response.json();
+
+            renderAdminTopic(data);
+
+        } catch (error) {
+            console.error('Ошибка переключения темы:', error);
+        }
+    });
+    document.addEventListener('click', async function(event) {
+        const tab = event.target.closest('#topicFilterTabs .chat-tab');
+
+        if (!tab) return;
+
+        event.preventDefault();
+        event.stopPropagation();
+
+        try {
+            const response = await fetch(tab.href, {
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            });
+
+            if (!response.ok) {
+                console.error('Ошибка загрузки фильтра:', response.status);
+                return;
+            }
+
+            const html = await response.text();
+
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(html, 'text/html');
+
+            const newTopics = doc.querySelector('.chat-topics');
+            const currentTopics = document.querySelector('.chat-topics');
+
+            if (newTopics && currentTopics) {
+                currentTopics.innerHTML = newTopics.innerHTML;
+            }
+
+            document
+                .querySelectorAll('#topicFilterTabs .chat-tab')
+                .forEach(item => item.classList.remove('active'));
+
+            tab.classList.add('active');
+
+            const url = new URL(tab.href);
+            window.history.pushState({}, '', url.pathname + url.search);
+
+        } catch (error) {
+            console.error('Ошибка переключения фильтра:', error);
+        }
+    });
+
     if (fileBtn && fileInput) {
         fileBtn.addEventListener('click', () => {
             fileInput.click();
@@ -2288,19 +2452,81 @@ button.mobile-topics-toggle {
         });
         if (data.success) {
 
-            chatMessages.appendChild(renderMessage(data));
+            console.log('FILE UPLOAD DATA:', data);
 
-            chatSocket.send(JSON.stringify({
-                type: 'new_message',
-                message_id: data.id
-            }));
+            chatMessages.appendChild(
+                renderMessage(data)
+            );
 
-            moveCurrentTopicToTop();
+            if (chatSocket && chatSocket.readyState === WebSocket.OPEN) {
+                chatSocket.send(JSON.stringify({
+                    type: 'new_message',
+                    message_id: data.id
+                }));
+            }
 
             setTimeout(() => {
-                chatMessages.scrollTop = chatMessages.scrollHeight;
-            }, 300);
+                chatMessages.scrollTop =
+                    chatMessages.scrollHeight;
+            }, 100);
+
+    /*
+        closeNewTopicModal();
+
+        const topicsContainer =
+            document.querySelector('.chat-topics');
+
+        if (topicsContainer) {
+            const topicCard = `
+                <a href="${data.url}"
+                class="chat-topic-card new-topic-highlight"
+                data-topic-id="${data.topic_id}">
+
+                    <div class="chat-topic-header">
+                        <div>
+                            <div class="chat-topic-title">
+                                ${data.title}
+                            </div>
+                        </div>
+
+                        <div class="chat-topic-right">
+                            <div class="chat-topic-status open">
+                                ${data.status_display}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="chat-topic-created">
+                        <strong>Создал:</strong>
+                        Администратор
+                    </div>
+
+                    <div class="chat-topic-last-message">
+                        <strong>Последнее сообщение:</strong>
+                        Сообщений пока нет
+                    </div>
+
+                    <div class="chat-topic-date">
+                        <strong>Дата создания:</strong>
+                        Только что
+                    </div>
+                </a>
+            `;
+
+            document
+                .querySelectorAll('.chat-topic-card.active')
+                .forEach(card => card.classList.remove('active'));
+
+            topicsContainer.insertAdjacentHTML(
+                'afterbegin',
+                topicCard
+            );
         }
+
+        switchToTopic(data);
+        */
+    } 
+    
 
         const fileUploadText =
             fileUploadStatus.querySelector('.file-upload-text');
@@ -2527,9 +2753,9 @@ document.addEventListener('DOMContentLoaded', initVideoNoteLoaders);
 
         if (!topicsContainer) return;
 
-        const currentTopicCard = topicsContainer.querySelector(
-            '[data-topic-id="{{ current_topic.id }}"]'
-        );
+    const currentTopicCard = topicsContainer.querySelector(
+        `[data-topic-id="${currentTopicId}"]`
+    );
 
         if (!currentTopicCard) return;
 
@@ -2638,10 +2864,66 @@ document.addEventListener('DOMContentLoaded', initVideoNoteLoaders);
             .then(data => {
                 if (data.success) {
                     chatMessages.appendChild(renderMessage(data));
+
+                    const currentTopicCard = document.querySelector(
+                        `.chat-topic-card[data-topic-id="${currentTopicId}"]`
+                    );
+
+                    if (currentTopicCard) {
+
+                        const lastMessageBlock =
+                            currentTopicCard.querySelector('.chat-topic-last-message');
+
+                        if (lastMessageBlock) {
+                            lastMessageBlock.innerHTML = `
+                                <strong>Последнее сообщение:</strong>
+                                ${data.text || 'Вложение'}
+                            `;
+                        }
+
+                        const timeBlock =
+                            currentTopicCard.querySelector('.chat-topic-time');
+
+                        if (timeBlock) {
+                            timeBlock.textContent = data.time;
+                        }
+                    }
                     chatSocket.send(JSON.stringify({
                         type: 'new_message',
                         message_id: data.id
                     }));
+ 
+                    if (currentTopicCard) {
+
+                        const lastMessageBlock =
+                            currentTopicCard.querySelector('.chat-topic-last-message');
+
+                        if (lastMessageBlock) {
+                            lastMessageBlock.innerHTML = `
+                                <strong>Последнее сообщение:</strong>
+                                ${data.text}
+                            `;
+                        }
+
+                        let senderBlock =
+                            currentTopicCard.querySelector('.chat-topic-last-sender');
+
+                        if (!senderBlock) {
+
+                            senderBlock = document.createElement('div');
+
+                            senderBlock.className =
+                                'chat-topic-last-sender';
+
+                            lastMessageBlock.insertAdjacentElement(
+                                'afterend',
+                                senderBlock
+                            );
+                        }
+
+                        senderBlock.textContent =
+                            `От ${data.sender_name} - ${data.sender_email} (${data.sender_role})`;
+                    }
                     moveCurrentTopicToTop();
 
                     textarea.value = '';
@@ -2713,6 +2995,7 @@ document.addEventListener('DOMContentLoaded', initVideoNoteLoaders);
     let videoNoteRecorder;
     let videoNoteChunks = [];
     let isVideoNoteRecording = false;
+    let videoNoteStream = null;
     async function transcribeWithWhisper() {
 
     if (isTranscribing) {
@@ -2838,12 +3121,13 @@ document.addEventListener('DOMContentLoaded', initVideoNoteLoaders);
 }  
     async function startVideoNoteRecording() {
 
-        const stream = await navigator.mediaDevices.getUserMedia({
+        videoNoteStream = await navigator.mediaDevices.getUserMedia({
             video: true,
             audio: true
         });
 
-        videoNoteRecorder = new MediaRecorder(stream);
+        videoNoteRecorder = new MediaRecorder(videoNoteStream);
+        videoNoteRecorder = new MediaRecorder(videoNoteStream);
 
         videoNoteChunks = [];
 
@@ -2910,6 +3194,13 @@ document.addEventListener('DOMContentLoaded', initVideoNoteLoaders);
 
             videoNoteBtn.classList.remove('listening');
             isVideoNoteRecording = false;
+            if (videoNoteStream) {
+                videoNoteStream.getTracks().forEach(track => {
+                    track.stop();
+                });
+
+                videoNoteStream = null;
+            }
         };
     }
     if (videoNoteBtn) {
@@ -3008,8 +3299,6 @@ document.addEventListener('DOMContentLoaded', initVideoNoteLoaders);
             }
         });
     }
-    const readStatusesUrl = "{% url 'admin_chat_read_statuses' current_topic.id %}";
-    const markReadUrl = "{% url 'admin_chat_mark_read' current_topic.id %}";
 
     function markMessagesAsRead() {
 
@@ -3095,6 +3384,11 @@ document.addEventListener('visibilitychange', () => {
 {% endif %}
 <script>
     function openNewTopicModal() {
+        localStorage.setItem(
+            'adminChatSidebarMode',
+            'partners'
+        );
+
         const modal = document.getElementById('newTopicModal');
         const partnerSelect = modal.querySelector('select[name="partner"]');
 
@@ -3134,14 +3428,13 @@ document.addEventListener('visibilitychange', () => {
         sidebarModeRadios.forEach(radio => {
             radio.addEventListener('change', () => {
                 const topicFilterTabs = document.getElementById('topicFilterTabs');
-                const partnerTopicAction = document.getElementById('partnerTopicAction');
-
+          
                 if (radio.value === 'topics' && radio.checked) {
                     topicsBlock.style.display = 'block';
                     partnersBlock.style.display = 'none';
                     topicSearch.style.display = 'block';
                     topicFilterTabs.style.display = 'grid';
-                    partnerTopicAction.style.display = 'none';
+          
                 }
 
                 if (radio.value === 'partners' && radio.checked) {
@@ -3149,7 +3442,7 @@ document.addEventListener('visibilitychange', () => {
                     partnersBlock.style.display = 'block';
                     topicSearch.style.display = 'none';
                     topicFilterTabs.style.display = 'none';
-                    partnerTopicAction.style.display = 'block';
+          
                 }
             });
         });
@@ -3175,6 +3468,7 @@ document.addEventListener('visibilitychange', () => {
                 }
             });
         });       
+        
 </script>
 <script>
     function openSelectTopicModal() {
@@ -3233,7 +3527,7 @@ document.addEventListener('visibilitychange', () => {
 
         if (!topicId) return;
 
-        window.location.href = `/users/admin-chat/${topicId}/`;
+   //     window.location.href = `/users/admin-chat/${topicId}/`;
     });
 </script>
 <script>
@@ -3300,5 +3594,531 @@ function sendHeartbeat() {
     setInterval(updatePartnersStatuses, 3000);
    */
 </script>
+<script>
+    function setSidebarMode(mode) {
+        const topicsBlock = document.querySelector('.chat-topics');
+        const partnersBlock = document.querySelector('.chat-partners');
+        const topicFilterTabs = document.getElementById('topicFilterTabs');
 
+        const partnerTopicAction = document.getElementById('partnerTopicAction');
+
+        const topicsRadio = document.querySelector(
+            'input[name="sidebarMode"][value="topics"]'
+        );
+
+        const partnersRadio = document.querySelector(
+            'input[name="sidebarMode"][value="partners"]'
+        );
+
+        if (mode === 'partners') {
+            if (topicsBlock) topicsBlock.style.display = 'none';
+            if (partnersBlock) partnersBlock.style.display = 'flex';
+            if (topicFilterTabs) topicFilterTabs.style.display = 'none';
+
+            if (partnersRadio) partnersRadio.checked = true;
+                if (partnerTopicAction) {
+                    partnerTopicAction.style.display = 'block';
+                }
+        } else {
+            if (topicsBlock) topicsBlock.style.display = 'block';
+            if (partnersBlock) partnersBlock.style.display = 'none';
+            if (topicFilterTabs) topicFilterTabs.style.display = 'grid';
+            if (partnerTopicAction) {
+                partnerTopicAction.style.display = 'none';
+            }
+            if (topicsRadio) topicsRadio.checked = true;
+        }
+    }
+
+document.querySelectorAll('input[name="sidebarMode"]').forEach(radio => {
+    radio.addEventListener('change', () => {
+        localStorage.setItem(
+            'adminChatSidebarMode',
+            radio.value
+        );
+
+        setSidebarMode(radio.value);
+    });
+});
+
+document.addEventListener('DOMContentLoaded', () => {
+    const savedMode =
+        localStorage.getItem('adminChatSidebarMode') || 'topics';
+
+    setSidebarMode(savedMode);
+    const savedPartnerId =
+        localStorage.getItem('adminChatSelectedPartnerId');
+
+    if (savedMode === 'partners' && savedPartnerId) {
+        window.selectedPartnerId = savedPartnerId;
+
+        const partnerCard = document.querySelector(
+            `.chat-partner-card[data-partner-id="${savedPartnerId}"]`
+        );
+
+        if (partnerCard) {
+            partnerCard.classList.add('active');
+        }
+
+        const partnerTopicAction =
+            document.getElementById('partnerTopicAction');
+
+        if (partnerTopicAction) {
+            partnerTopicAction.style.display = 'block';
+        }
+    }
+    document
+        .querySelector('.chat-layout')
+        ?.classList.add('sidebar-ready');
+});
+const newTopicForm = document.getElementById('newTopicForm');
+
+if (newTopicForm) {
+    newTopicForm.addEventListener('submit', async function(event) {
+        event.preventDefault();
+
+        const formData = new FormData(newTopicForm);
+
+        const csrfToken = newTopicForm.querySelector(
+            '[name=csrfmiddlewaretoken]'
+        ).value;
+
+        const response = await fetch(newTopicForm.action, {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-CSRFToken': csrfToken,
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            closeNewTopicModal();
+            messagesUrl = `/users/admin-chat/${currentUserId}/messages/`;
+
+            readStatusesUrl = `/users/admin-chat/${currentUserId}/read-statuses/`;
+
+            markReadUrl = `/users/admin-chat/${currentUserId}/mark-read/`;
+
+            connectChatSocket();
+            setSidebarMode('topics');
+
+            localStorage.setItem(
+                'adminChatSidebarMode',
+                'topics'
+            );
+            const topicsContainer =
+                document.querySelector('.chat-topics');
+
+            if (topicsContainer) {
+                const emptyBlock =
+                    topicsContainer.querySelector('.empty-chat');
+
+                if (emptyBlock) {
+                    emptyBlock.remove();
+                }
+
+                document
+                    .querySelectorAll('.chat-topic-card.active')
+                    .forEach(card => card.classList.remove('active'));
+
+                const topicCard = `
+                    <a href="${data.url}"
+                    class="chat-topic-card active"
+                    data-topic-id="${data.topic_id}">
+
+                        <div class="chat-topic-header">
+                            <div>
+                                <div class="chat-topic-title">
+                                    ${data.title}
+                                </div>
+                            </div>
+
+                            <div class="chat-topic-right">
+                                <div class="chat-topic-status open">
+                                    ${data.status_display || 'Открыта'}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="chat-topic-created">
+                            <strong>Создал:</strong>
+                            Администратор
+                        </div>
+
+                        <div class="chat-topic-last-message">
+                            <strong>Последнее сообщение:</strong>
+                            Сообщений пока нет
+                        </div>
+
+                        <div class="chat-topic-date">
+                            <strong>Дата создания:</strong>
+                            Только что
+                        </div>
+                    </a>
+                `;
+
+                topicsContainer.insertAdjacentHTML(
+                    'afterbegin',
+                    topicCard
+                );
+
+                const newCard = topicsContainer.querySelector(
+                    `.chat-topic-card[data-topic-id="${data.topic_id}"]`
+                );
+
+                console.log('newCard highlight:', newCard);
+                console.log('classes:', newCard?.className);
+
+                if (newCard) {
+                    setTimeout(() => {
+                        newCard.classList.remove('new-topic-highlight');
+                    }, 6000);
+                }
+            }
+
+            const title =
+                document.querySelector('.chat-window-header h2');
+
+            if (title) {
+                title.textContent = data.title;
+            }
+
+            const subtitle =
+                document.querySelector('.chat-window-header span');
+
+
+            if (subtitle) {
+                subtitle.textContent =
+                    `${data.partner_name || data.company_name || ''} · ${data.status_display}`;
+            }
+
+            const chatMessages =
+                document.getElementById('chatMessages');
+
+            if (chatMessages) {
+                chatMessages.innerHTML = `
+                    <div class="empty-chat">
+                        Сообщений пока нет
+                    </div>
+                `;
+            }
+
+            const chatForm =
+                document.querySelector('.chat-send-form');
+
+            if (chatForm) {
+                chatForm.action =
+                    `/users/admin-chat/${data.topic_id}/send/`;
+
+                const textarea = chatForm.querySelector('textarea');
+
+                if (textarea) {
+                    textarea.value = '';
+                    textarea.style.height = '';
+                }
+            }
+
+            const topicStatusForm =
+                document.getElementById('topicStatusForm');
+
+            if (topicStatusForm) {
+                topicStatusForm.action =
+                    `/users/admin-chat/${data.topic_id}/toggle-status/`;
+            }
+
+            window.history.pushState(
+                {},
+                '',
+                data.url
+            );
+        }
+    });
+    // Подключаем WebSocket для получения уведомлений о новых темах от партнёров
+        const wsProtocol = window.location.protocol === 'https:' ? 'wss' : 'ws';
+        const notificationSocket = new WebSocket(
+        `${wsProtocol}://${window.location.host}/ws/user-notifications/`
+    );
+
+    notificationSocket.onopen = function() {
+        console.log('Admin Notification WebSocket connected');
+    };
+
+    notificationSocket.onmessage = function(event) {
+        const data = JSON.parse(event.data);
+
+        console.log('Admin Notification message:', data);
+    if (data.type === 'topic_message_created') {
+
+        const topicCard = document.querySelector(
+            `.chat-topic-card[data-topic-id="${data.topic_id}"]`
+        );
+
+        if (!topicCard) return;
+
+        const lastMessageBlock =
+            topicCard.querySelector('.chat-topic-last-message');
+
+        if (lastMessageBlock) {
+            lastMessageBlock.innerHTML = `
+                <strong>Последнее сообщение:</strong>
+                ${data.text || 'Вложение'}
+            `;
+        }
+
+        let senderBlock =
+            topicCard.querySelector('.chat-topic-last-sender');
+
+        if (!senderBlock && lastMessageBlock) {
+            senderBlock = document.createElement('div');
+            senderBlock.className = 'chat-topic-last-sender';
+
+            lastMessageBlock.insertAdjacentElement(
+                'afterend',
+                senderBlock
+            );
+        }
+
+        if (senderBlock) {
+            senderBlock.textContent =
+                `От ${data.sender_name} - ${data.sender_email} (${data.sender_role})`;
+        }
+
+        const timeBlock =
+            topicCard.querySelector('.chat-topic-time');
+
+        if (timeBlock) {
+            timeBlock.textContent = data.time;
+        }
+
+        topicCard.classList.add('new-topic-highlight');
+
+        const topicsContainer =
+            document.querySelector('.chat-topics');
+
+        if (topicsContainer) {
+            topicsContainer.prepend(topicCard);
+        }
+
+        setTimeout(() => {
+            topicCard.classList.remove('new-topic-highlight');
+        }, 6000);
+
+        return;
+    }
+        if (data.type !== 'topic_created') return;
+
+
+        if (!topicsContainer) return;
+
+        const emptyBlock =
+            topicsContainer.querySelector('.empty-chat');
+
+        if (emptyBlock) {
+            emptyBlock.remove();
+        }
+
+        const topicCard = `
+            <a href="${data.url}"
+            class="chat-topic-card new-topic-highlight"
+            data-topic-id="${data.topic_id}">
+
+                <div class="chat-topic-header">
+                    <div>
+                        <div class="chat-topic-title">
+                            ${data.title}
+                        </div>
+                    </div>
+
+                    <div class="chat-topic-right">
+                        <div class="chat-topic-status open">
+                            ${data.status_display}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="chat-topic-created">
+                    <strong>Создал:</strong>
+                    ${data.created_by}
+                </div>
+
+                <div class="chat-topic-last-message">
+                    <strong>Последнее сообщение:</strong>
+                    Сообщений пока нет
+                </div>
+
+                <div class="chat-topic-date">
+                    <strong>Дата создания:</strong>
+                    Только что
+                </div>
+            </a>
+        `;
+
+        topicsContainer.insertAdjacentHTML(
+            'afterbegin',
+            topicCard
+        );
+
+        const newCard = topicsContainer.querySelector(
+            `.chat-topic-card[data-topic-id="${data.topic_id}"]`
+        );
+
+        if (newCard) {
+            setTimeout(() => {
+                newCard.classList.remove('new-topic-highlight');
+            }, 6000);
+        }
+
+        showNotification('Партнёр создал новую тему');
+    };
+
+    notificationSocket.onclose = function() {
+        console.log('Admin Notification WebSocket disconnected');
+    };
+}   
+</script>    
+<script>
+    function renderAdminTopic(data) {
+        const topic = data.topic;
+
+        currentTopicId = Number(topic.id);
+
+        voiceUrl = `/users/admin-chat/${currentTopicId}/send-voice/`;
+        videoNoteUrl = `/users/admin-chat/${currentTopicId}/send-video-note/`;
+        fileUrl = `/users/admin-chat/${currentTopicId}/send-file/`;
+        messagesUrl = `/users/admin-chat/${currentTopicId}/messages/`;
+        readStatusesUrl = `/users/admin-chat/${currentTopicId}/read-statuses/`;
+        markReadUrl = `/users/admin-chat/${currentTopicId}/mark-read/`;
+
+        document
+            .querySelectorAll('.chat-topic-card.active')
+            .forEach(card => card.classList.remove('active'));
+
+        const activeCard = document.querySelector(
+            `.chat-topic-card[data-topic-id="${currentTopicId}"]`
+        );
+
+        if (activeCard) {
+            activeCard.classList.add('active');
+        }
+
+        const title = document.querySelector('.chat-window-header h2');
+
+        if (title) {
+            title.textContent = topic.title;
+        }
+
+        const subtitle = document.querySelector('.chat-window-header span');
+
+        if (subtitle) {
+            subtitle.textContent =
+                `${topic.partner_name} · ${topic.status_display}`;
+        }
+
+        chatMessages.innerHTML = '';
+
+        data.messages.forEach(message => {
+            chatMessages.appendChild(renderMessage(message));
+        });
+
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+
+        const chatForm = document.querySelector('.chat-send-form');
+
+        if (chatForm) {
+            chatForm.action = `/users/admin-chat/${currentTopicId}/send/`;
+        }
+
+        const topicStatusForm =
+            document.getElementById('topicStatusForm');
+
+        if (topicStatusForm) {
+            topicStatusForm.action =
+                `/users/admin-chat/${currentTopicId}/toggle-status/`;
+        }
+
+  //      window.history.pushState({}, '', topic.url);
+
+        connectChatSocket();
+    }
+ 
+</script>
+<script>
+    const adminPresenceWsProtocol =
+        window.location.protocol === 'https:' ? 'wss' : 'ws';
+
+    const adminPresenceSocket = new WebSocket(
+        `${adminPresenceWsProtocol}://${window.location.host}/ws/presence/`
+    );
+
+    adminPresenceSocket.onopen = function() {
+        console.log('Admin Presence WebSocket connected');
+    };
+
+    adminPresenceSocket.onmessage = function(event) {
+        const data = JSON.parse(event.data);
+
+        console.log('Admin Presence message:', data);
+
+        if (data.type !== 'user_status') return;
+
+        const statusBlocks = document.querySelectorAll(
+            `[data-partner-status-id="${data.user_id}"]`
+        );
+
+        statusBlocks.forEach(statusBlock => {
+            if (data.is_online) {
+                delete statusBlock.dataset.offlineAt;
+
+                statusBlock.innerHTML = `
+                    <span class="online-dot"></span>
+                    <span class="online-text">online</span>
+                `;
+            } else {
+                statusBlock.dataset.offlineAt = Date.now();
+
+                statusBlock.innerHTML = `
+                    <span class="offline-dot"></span>
+                    <span class="offline-text">только что</span>
+                `;
+            }
+        });
+
+        const topicStatusBlocks = document.querySelectorAll(
+            `[data-topic-partner-status-id="${data.user_id}"]`
+        );
+
+        topicStatusBlocks.forEach(statusBlock => {
+            if (data.is_online) {
+                delete statusBlock.dataset.offlineAt;
+
+                statusBlock.innerHTML = `
+                    <span class="online-dot"></span>
+                    <span class="online-text">online</span>
+                `;
+            } else {
+                statusBlock.dataset.offlineAt = Date.now();
+
+                statusBlock.innerHTML = `
+                    <span class="offline-dot"></span>
+                    <span class="offline-text">только что</span>
+                `;
+            }
+        });
+    };
+
+    adminPresenceSocket.onclose = function(event) {
+        console.log(
+            'Admin Presence WebSocket disconnected',
+            event.code,
+            event.reason
+        );
+    };
+
+    adminPresenceSocket.onerror = function(error) {
+        console.log('Admin Presence WebSocket error', error);
+    };
+</script>
 {% endblock %}

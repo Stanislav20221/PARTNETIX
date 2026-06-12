@@ -18,7 +18,7 @@
             (администратор)
 
             <div class="admin-status-right">
-                {% if admin.is_online %}
+                {% if admin.chat_online %}
                     <span class="online-dot"></span>
                     <span class="online-text">online</span>
                 {% else %}
@@ -42,7 +42,7 @@
             (администратор)
 
             <div class="admin-status-right">
-                {% if admin.is_online %}
+                {% if admin.chat_online %}
                     <span class="online-dot"></span>
                     <span class="online-text">online</span>
                 {% else %}
@@ -127,11 +127,13 @@
 
     cursor: pointer;
 
-    transition: 0.2s;
+    transition: background 0.2s ease,
+        border-color 0.2s ease;
 
     border: 1px solid transparent;
 
     margin-bottom: 10px;
+    font-size: 14px;    
 }
 
 .chat-topic-card:hover {
@@ -141,23 +143,21 @@
 }
 
 .chat-topic-header {
-    display: flex;
-
-    align-items: center;
-
-    justify-content: space-between;
-
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: start;
     gap: 12px;
+}
 
-    margin-bottom: 10px;
+.chat-topic-header > div:first-child {
+    min-width: 0;
 }
 
 .chat-topic-title {
-    font-size: 15px;
-
-    font-weight: 700;
-
-    color: #111827;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+    line-height: 1.3;
 }
 
 .chat-topic-status {
@@ -168,6 +168,7 @@
     font-size: 12px;
 
     font-weight: 700;
+    margin-top: 6px;
 }
 
 .chat-topic-status.open {
@@ -548,12 +549,11 @@
 
 .chat-topic-card.active {
     position: sticky;
-    top: 0;
-    z-index: 10;
-
+    top: -12px;
+    z-index: 20;
     background: #eef4ff;
     border-color: #1d4ed8;
-    box-shadow: 0 8px 20px rgba(37,99,235,0.16);
+    box-shadow: 0 8px 20px rgb(219 222 227 / 97%);
 }
 .chat-topic-created,
 .chat-topic-last-message,
@@ -570,17 +570,20 @@
 .chat-topic-last-message {
     color: #374151;
 }
+
 .chat-topic-right {
-    display: flex;
-    flex-direction: column;
+    flex-shrink: 0;
     align-items: flex-end;
-    gap: 8px;
+    min-width: 70px;
 }
 
 .chat-topic-time {
     font-size: 12px;
     color: #9ca3af;
     font-weight: 600;
+    display: flex;
+    flex-direction: column;
+    text-align: right;
 }
 
 .chat-topic-unread {
@@ -993,20 +996,27 @@ span.online-text {
     z-index: 2;
 }
 
-.video-note-spinner {
-    width: 28px;
-    height: 28px;
+.chat-topic-card.new-topic-highlight {
+    background: #ecfdf5 !important;
+    border: 2px solid #22c55e !important;
+    box-shadow: 0 8px 22px rgba(34, 197, 94, 0.25) !important;
 
-    border: 3px solid rgba(255,255,255,0.35);
-    border-top-color: white;
-
-    border-radius: 50%;
-
-    margin-bottom: 10px;
-
-    animation: videoNoteSpin 0.8s linear infinite;
+    animation: newTopicPulse 1s ease-in-out 3;
 }
 
+@keyframes newTopicPulse {
+    0% {
+        transform: scale(1);
+    }
+
+    50% {
+        transform: scale(1.02);
+    }
+
+    100% {
+        transform: scale(1);
+    }
+}
 @keyframes videoNoteSpin {
     to {
         transform: rotate(360deg);
@@ -1116,7 +1126,60 @@ span.online-text {
         margin-bottom: 15px;
     }    
 }
+@media (max-width: 480px) {
+    .chat-send-form {
+        position: sticky;
+        background: white;
+        border-top: 1px solid #eef2f7;
+        z-index: 20;
+        padding-bottom: 0px;
+        display: grid;
+        grid-template-columns: repeat(5, 52px);
+        gap: 10px;
+    }
+    .chat-send-form textarea {
+        grid-column: 1 / -1;
 
+        width: 100%;
+        min-height: 44px;
+        margin-bottom: 0;
+    }
+
+    .chat-send-form button,
+    .chat-send-form .voice-btn {
+        width: 52px;
+        height: 52px;
+    }
+    .chat-window {
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+        overflow: hidden;
+    }
+    .chat-messages {
+        flex: 1;
+        overflow-y: auto;
+    }
+
+    .chat-send-form {
+        margin-top: auto;
+        position: fixed;
+        top: 641px;
+    }
+    .chat-window-header h2 {
+        font-size: 17px;
+   }  
+     .page-title {
+        font-size: 18px;
+        font-weight: 600;
+    }  
+    .chat-messages {
+        padding: 0px;
+        padding-top: 7px;
+        padding-right: 10px;
+        font-size: 12px;
+    }   
+}
 </style>
 
 <div class="chat-layout">
@@ -1140,6 +1203,29 @@ span.online-text {
             <i class="fa-solid fa-plus"></i>
             Открыть тему
         </button>
+        <div class="chat-tabs" id="topicFilterTabs">
+
+        <a href="?filter=all"
+        class="chat-tab {% if current_filter == 'all' %}active{% endif %}">
+            Все ({{ all_count }})
+        </a>
+
+        <a href="?filter=open"
+        class="chat-tab {% if current_filter == 'open' %}active{% endif %}">
+            Открытые ({{ open_count }})
+        </a>
+
+        <a href="?filter=unread"
+        class="chat-tab {% if current_filter == 'unread' %}active{% endif %}">
+            Непрочитанные ({{ unread_count }})
+        </a>
+
+        <a href="?filter=closed"
+        class="chat-tab {% if current_filter == 'closed' %}active{% endif %}">
+            Закрытые ({{ closed_count }})
+        </a>
+
+    </div>
        <div class="chat-topics">
 
             {% for topic in topics %}
@@ -1178,39 +1264,51 @@ span.online-text {
                     </div>
 
                 </div>
+                <div class="chat-topic-last-message">
 
-                <div class="chat-topic-created">
+                    {% with last_message=topic.messages.last %}
 
-                    <strong>Создал:</strong>
+                        {% if last_message %}
 
-                    {% if topic.created_by.partner_registration.partner_type == 'company' %}
+                            <strong>Последнее сообщение:</strong>
 
-                        {{ topic.created_by.partner_registration.company_short_name }}
+                            {% if last_message.text and last_message.text != 'Сообщение' %}
 
-                    {% else %}
+                               {{ last_message.text|truncatechars:60 }}
 
-                        {{ topic.created_by.first_name }}
-                        {{ topic.created_by.last_name }}
+                            {% elif last_message.message_type == 'voice' %}
 
-                    {% endif %}
+                                🎤 Голосовое сообщение
 
-                    — {{ topic.created_by.email }}
+                            {% elif last_message.message_type == 'video_note' %}
 
-                    {% if topic.created_by.role == 'admin' %}
-                        (Администратор)
-                    {% else %}
-                        (Партнёр)
-                    {% endif %}
+                                🎥 Видеосообщение
 
-                </div>
+                            {% elif last_message.message_type == 'image' %}
 
-                    <div class="chat-topic-last-message">
+                                🖼 Изображение
 
-                        <strong>Последнее сообщение:</strong>
+                            {% elif last_message.message_type == 'file' %}
 
-                        {% with last_message=topic.messages.last %}
+                                📎 Файл
 
-                            {% if last_message %}
+                            {% else %}
+
+                                Текстовое сообщение
+
+                            {% endif %}
+
+                            <br>
+
+                            {% if last_message.sender.role != 'partner' %}
+
+                                От {{ last_message.sender.first_name }}
+                                {{ last_message.sender.last_name }}
+                                (Администратор)
+
+                            {% else %}
+
+                                От
 
                                 {% if last_message.sender.partner_registration.partner_type == 'company' %}
 
@@ -1223,26 +1321,21 @@ span.online-text {
 
                                 {% endif %}
 
-                                — {{ last_message.sender.email }}
-
-                                {% if last_message.sender.role == 'admin' %}
-                                    (Администратор)
-                                {% else %}
-                                    (Партнёр)
-                                {% endif %}
+                                (Партнёр)
 
                             {% endif %}
 
-                        {% endwith %}
+                        {% endif %}
 
-                    </div>
+                    {% endwith %}
 
-                    <div class="chat-topic-date">
-                        <strong>Дата создания:</strong>
-                        {{ topic.created_at|date:"d.m.Y" }}
-                    </div>
+                </div>
+                                    <div class="chat-topic-date">
+                                        <strong>Дата создания:</strong>
+                                        {{ topic.created_at|date:"d.m.Y" }}
+                                    </div>
 
-                </a>
+                                </a>
 
             {% empty %}
 
@@ -1265,8 +1358,12 @@ span.online-text {
                     <div>
                         <h2>{{ current_topic.title }}</h2>
                         <span>
-                            {{ current_topic.partner.first_name }}
-                            {{ current_topic.partner.last_name }}
+                            {% if current_topic.partner.partner_registration.partner_type == 'company' %}
+                                {{ current_topic.partner.partner_registration.company_short_name }}
+                            {% else %}
+                                {{ current_topic.partner.first_name }}
+                                {{ current_topic.partner.last_name }}
+                            {% endif %}
                             · {{ current_topic.get_status_display }}
                         </span>
                     </div>
@@ -1571,23 +1668,26 @@ span.online-text {
     const chatMessages = document.getElementById('chatMessages');
     const topicsContainer = document.querySelector('.chat-topics');
     const chatForm = document.querySelector('.chat-send-form');
+    let currentTopicId = Number("{{ current_topic.id }}");
     const voiceBtn = document.getElementById('voiceBtn');
     const voiceMessageBtn = document.getElementById('voiceMessageBtn');
     const videoNoteBtn = document.getElementById('videoNoteBtn');
     const fileBtn = document.getElementById('fileBtn');
     const fileUploadStatus = document.getElementById('fileUploadStatus');
     const fileInput = document.getElementById('fileInput');
-    const fileUrl = "{% url 'partner_chat_send_file' current_topic.id %}";
-    const messagesUrl = "{% url 'partner_chat_messages' current_topic.id %}";
-    const voiceUrl = "{% url 'partner_chat_send_voice' current_topic.id %}";
+    let fileUrl = "{% url 'partner_chat_send_file' current_topic.id %}";
+    let messagesUrl = "{% url 'partner_chat_messages' current_topic.id %}";
+    let voiceUrl = "{% url 'partner_chat_send_voice' current_topic.id %}";
 
     const transcribeUrl = "{% url 'chat_transcribe_voice' current_topic.id %}";
 
-    const videoNoteUrl = "{% url 'partner_chat_send_video_note' current_topic.id %}";
+    let videoNoteUrl = "{% url 'partner_chat_send_video_note' current_topic.id %}";
     const wsProtocol = window.location.protocol === 'https:' ? 'wss' : 'ws';
-    const chatSocketUrl = `${wsProtocol}://${window.location.host}/ws/chat/{{ current_topic.id }}/`
+    let chatSocketUrl =
+    `${wsProtocol}://${window.location.host}/ws/chat/${currentTopicId}/`;
 
     let chatSocket = null;
+    let shouldReconnectChatSocket = true;
     let selectedMessageId = null;
     let editingMessageId = null;
     let isTranscribing = false;
@@ -1681,7 +1781,7 @@ span.online-text {
         selectedMessageId = null;
     });
     function connectChatSocket() {
-        chatSocket = new WebSocket(chatSocketUrl);
+        chatSocket = new WebSocket(chatSocketUrl)
 
         chatSocket.onopen = () => {
             console.log('Partner WebSocket connected');
@@ -1692,8 +1792,8 @@ span.online-text {
         };
         chatSocket.onmessage = function(event) {
             const data = JSON.parse(event.data);
-
-        // console.log('Partner WS message:', data);
+            
+             console.log('Partner WS message:', data);
             if (data.type === 'message_deleted') {
 
                 const row = document.querySelector(
@@ -1776,8 +1876,15 @@ span.online-text {
             }
         };        
 
-       chatSocket.onclose = () => {
-            console.log('Partner WebSocket disconnected. Reconnecting...');
+        chatSocket.onclose = () => {
+            console.log('Partner WebSocket disconnected');
+
+            if (!shouldReconnectChatSocket) {
+                console.log('Socket closed intentionally');
+                return;
+            }
+
+            console.log('Reconnecting...');
 
             setTimeout(() => {
                 connectChatSocket();
@@ -1790,6 +1897,7 @@ span.online-text {
         };
     }
     const currentUserId = Number("{{ request.user.id }}");
+
     connectChatSocket();
    
     if (fileBtn && fileInput) {
@@ -1882,10 +1990,12 @@ span.online-text {
 
         chatMessages.appendChild(row);
 
-        chatSocket.send(JSON.stringify({
-            type: 'new_message',
-            message_id: data.id
-        }));
+        if (chatSocket && chatSocket.readyState === WebSocket.OPEN) {
+            chatSocket.send(JSON.stringify({
+                type: 'new_message',
+                message_id: data.id
+            }));
+        }
 
         moveCurrentTopicToTop();
 
@@ -2015,12 +2125,19 @@ function initVideoNoteLoaders() {
 }
 
 document.addEventListener('DOMContentLoaded', initVideoNoteLoaders);   
+
     function renderMessage(message) {
         const row = document.createElement('div');
-        row.className = message.is_own ? 'message-row own' : 'message-row other';
+
+        row.className = message.is_own
+            ? 'message-row own'
+            : 'message-row other';
+
         row.dataset.messageId = message.id;
         row.dataset.messageType = message.message_type;
+
         let content = '';
+
         if (message.message_type === 'video_note' && message.video_note_url) {
 
             content = `
@@ -2042,11 +2159,20 @@ document.addEventListener('DOMContentLoaded', initVideoNoteLoaders);
                     </div>
                 </div>
             `;
-        } else
-        if (message.message_type === 'voice' && message.audio_url) {
+
+        } else if (message.message_type === 'voice' && message.audio_url) {
 
             content = `
                 <audio controls src="${message.audio_url}"></audio>
+            `;
+
+        } else if (message.message_type === 'image' && message.image_url) {
+
+            content = `
+                <img
+                    src="${message.image_url}"
+                    class="chat-image"
+                    alt="image">
             `;
 
         } else if (message.message_type === 'file' && message.file_url) {
@@ -2091,10 +2217,14 @@ document.addEventListener('DOMContentLoaded', initVideoNoteLoaders);
         }
 
         if (
-            message.message_type === 'file' &&
+            message.message_type === 'image' ||
+            message.message_type === 'video_note' ||
             (
-                isImageFile(message.file_name) ||
-                isVideoFile(message.file_name)
+                message.message_type === 'file' &&
+                (
+                    isImageFile(message.file_name) ||
+                    isVideoFile(message.file_name)
+                )
             )
         ) {
             row.classList.add('media-message');
@@ -2103,14 +2233,17 @@ document.addEventListener('DOMContentLoaded', initVideoNoteLoaders);
         row.innerHTML = `
             ${!message.is_own ? `
                 <div class="message-avatar">
-                    <img src="${message.avatar_url}" alt="">
+                    ${message.avatar_url ? `
+                        <img src="${message.avatar_url}" alt="">
+                    ` : ''}
                 </div>
             ` : ''}
 
             <div class="message-bubble">
                 ${content}
+
                 <div class="message-time">
-                    ${message.time}
+                    ${message.time || ''}
 
                     ${message.is_own ? `
                         <span class="message-read-status">
@@ -2120,39 +2253,189 @@ document.addEventListener('DOMContentLoaded', initVideoNoteLoaders);
                 </div>
             </div>
         `;
-            const videoNotes = row.querySelectorAll('.video-note');
 
-            videoNotes.forEach(video => {
+        if (message.message_type === 'video_note') {
+            row.querySelectorAll('.video-note-wrapper').forEach(wrapper => {
+                const video = wrapper.querySelector('.video-note');
+
+                if (!video) return;
+
+                const markLoaded = () => {
+                    wrapper.classList.add('loaded');
+                };
+
+                video.addEventListener('loadedmetadata', markLoaded, { once: true });
+                video.addEventListener('loadeddata', markLoaded, { once: true });
+                video.addEventListener('canplay', markLoaded, { once: true });
+
+                video.preload = 'auto';
                 video.load();
             });
-
-
-
-        row.querySelectorAll('.video-note-wrapper').forEach(wrapper => {
-            const video = wrapper.querySelector('.video-note');
-
-            if (!video) return;
-
-            const markLoaded = () => {
-                wrapper.classList.add('loaded');
-            };
-
-            video.addEventListener('loadedmetadata', markLoaded, { once: true });
-            video.addEventListener('loadeddata', markLoaded, { once: true });
-            video.addEventListener('canplay', markLoaded, { once: true });
-
-            video.preload = 'auto';
-            video.load();
-        });         
-
-            return row;
         }
+
+        return row;
+    }
+ // Получение CSRF токена из формы для использования в AJAX запросах
+    function getCsrfToken() {
+        const tokenInput = document.querySelector(
+            '[name=csrfmiddlewaretoken]'
+        );
+
+        return tokenInput ? tokenInput.value : '';
+    }
+     // Рендер темы и её сообщений при открытии или переключении темы
+    function renderTopic(data) {
+        const chatMain = document.querySelector('.chat-main');
+
+        if (!chatMain) return;
+
+        currentTopicId = Number(data.topic.id);
+        fileUrl = `/partner/chat/${currentTopicId}/send-file/`;
+        messagesUrl = `/partner/chat/${currentTopicId}/messages/`;
+        voiceUrl = `/partner/chat/${currentTopicId}/send-voice/`;
+        videoNoteUrl = `/partner/chat/${currentTopicId}/send-video-note/`;
+        chatSocketUrl = `${wsProtocol}://${window.location.host}/ws/chat/${currentTopicId}/`;
+        chatSocketUrl =
+            `${wsProtocol}://${window.location.host}/ws/chat/${currentTopicId}/`;
+
+        if (chatSocket) {
+            shouldReconnectChatSocket = false;
+            chatSocket.close();
+        }
+
+        shouldReconnectChatSocket = true;
+        connectChatSocket();
+        document.querySelectorAll('.chat-topic-card').forEach(card => {
+            card.classList.remove('active');
+        });
+
+        const activeCard = document.querySelector(
+            `.chat-topic-card[data-topic-id="${currentTopicId}"]`
+        );
+
+        if (activeCard) {
+            activeCard.classList.add('active');
+        }
+
+    chatMain.innerHTML = `
+        <div class="chat-window">
+            <div class="chat-window-header">
+                <div>
+                    <h2>${data.topic.title}</h2>
+                    <span>${data.topic.status_display}</span>
+                </div>
+            </div>
+
+            <div class="chat-messages" id="chatMessages"></div>
+
+            <div class="typing-indicator" id="typingIndicator" style="display: none;">
+                Печатает...
+            </div>
+
+<form method="post"
+      action="/partner/chat/${data.topic.id}/send/"
+      class="chat-send-form">
+
+    <input type="hidden" name="csrfmiddlewaretoken" value="${getCsrfToken()}">
+
+    <textarea
+        name="text"
+        placeholder="Напишите сообщение..."
+        required></textarea>
+
+                <input
+                    type="file"
+                    id="fileInput"
+                    style="display:none;">
+
+                <button type="button" class="voice-btn" id="fileBtn">
+                    <i class="fa-solid fa-paperclip"></i>
+                </button>
+
+                <button type="button" class="voice-btn" id="voiceBtn">
+                    <i class="fa-solid fa-microphone"></i>
+                </button>
+
+                <button type="button" class="voice-btn" id="voiceMessageBtn">
+                    <i class="fa-solid fa-wave-square"></i>
+                </button>
+
+                <button type="button" class="voice-btn" id="videoNoteBtn">
+                    <i class="fa-solid fa-video"></i>
+                </button>
+
+                <button type="submit">
+                    <i class="fa-solid fa-paper-plane"></i>
+                </button>
+            </form>
+        </div>
+    `;
+
+        const newChatMessages = document.getElementById('chatMessages');
+
+        data.messages.forEach(message => {
+            newChatMessages.appendChild(renderMessage(message));
+        });
+
+        newChatMessages.scrollTop = newChatMessages.scrollHeight;
+        bindChatForm();
+        history.pushState(
+            null,
+            '',
+            `/partner/chat/${data.topic.id}/`
+        );
+    }
+    // Привязка обработчика отправки формы для отправки сообщений через AJAX
+    function bindChatForm() {
+        const chatForm = document.querySelector('.chat-send-form');
+        const chatMessages = document.getElementById('chatMessages');
+
+        if (!chatForm || !chatMessages) return;
+
+        const textarea = chatForm.querySelector('textarea');
+        const submitBtn = chatForm.querySelector('button[type="submit"]');
+        textarea.addEventListener('keydown', function(event) {
+            if (event.key === 'Enter' && !event.shiftKey) {
+                event.preventDefault();
+                chatForm.requestSubmit();
+            }
+        });
+        chatForm.addEventListener('submit', function(event) {
+            event.preventDefault();
+
+            const formData = new FormData(chatForm);
+
+            submitBtn.disabled = true;
+
+            fetch(chatForm.action, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (!data.success) return;
+
+                chatMessages.appendChild(renderMessage(data));
+
+                textarea.value = '';
+                textarea.style.height = '';
+
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+            })
+            .finally(() => {
+                submitBtn.disabled = false;
+            });
+        });
+    }
     function moveCurrentTopicToTop() {
 
         if (!topicsContainer) return;
 
         const currentTopicCard = topicsContainer.querySelector(
-            '[data-topic-id="{{ current_topic.id }}"]'
+            `[data-topic-id="${currentTopicId}"]`
         );
 
         if (!currentTopicCard) return;
@@ -2343,7 +2626,39 @@ if (chatForm && chatMessages) {
             updateTypingIndicator(false);
 
             chatMessages.appendChild(renderMessage(data));
+            const currentTopicCard = document.querySelector(
+                `.chat-topic-card[data-topic-id="${currentTopicId}"]`
+            );
 
+            if (currentTopicCard) {
+                const lastMessageBlock =
+                    currentTopicCard.querySelector('.chat-topic-last-message');
+
+                if (lastMessageBlock) {
+                    lastMessageBlock.innerHTML = `
+                        <strong>Последнее сообщение:</strong>
+                        ${data.text}
+                    `;
+                }
+
+                let senderBlock =
+                    currentTopicCard.querySelector('.chat-topic-last-sender');
+
+                if (!senderBlock && lastMessageBlock) {
+                    senderBlock = document.createElement('div');
+                    senderBlock.className = 'chat-topic-last-sender';
+
+                    lastMessageBlock.insertAdjacentElement(
+                        'afterend',
+                        senderBlock
+                    );
+                }
+
+                if (senderBlock) {
+                    senderBlock.textContent =
+                        `От ${data.sender_name} - ${data.sender_email} (${data.sender_role})`;
+                }
+            }
             chatSocket.send(JSON.stringify({
                 type: 'new_message',
                 message_id: data.id
@@ -2439,6 +2754,7 @@ if (chatForm && chatMessages) {
     let videoNoteRecorder;
     let videoNoteChunks = [];
     let isVideoNoteRecording = false;
+    let videoNoteStream = null;
     // Функция для записи голоса и отправки его на сервер для транскрипции с помощью Whisper
 async function transcribeWithWhisper() {
 
@@ -2553,13 +2869,13 @@ async function transcribeWithWhisper() {
     }    
 async function startVideoNoteRecording() {
 
-    let stream;
-
     try {
-        stream = await navigator.mediaDevices.getUserMedia({
+        videoNoteStream = await navigator.mediaDevices.getUserMedia({
             video: true,
             audio: true
         });
+
+        videoNoteRecorder = new MediaRecorder(videoNoteStream);
     } catch (error) {
         console.log('Video note error:', error);
 
@@ -2570,7 +2886,7 @@ async function startVideoNoteRecording() {
         return;
     }
 
-    videoNoteRecorder = new MediaRecorder(stream);
+    videoNoteRecorder = new MediaRecorder(videoNoteStream);
 
     videoNoteChunks = [];
 
@@ -2636,6 +2952,13 @@ async function startVideoNoteRecording() {
             }
             videoNoteBtn.classList.remove('listening');
             isVideoNoteRecording = false;
+            if (videoNoteStream) {
+                videoNoteStream.getTracks().forEach(track => {
+                    track.stop();
+                });
+
+                videoNoteStream = null;
+            }
         };
     }
     if (videoNoteBtn) {
@@ -2863,6 +3186,266 @@ updateAdminStatus();
 setInterval(updateAdminStatus, 3000);
 */
 </script>
-{% endif %}
+<script>
+    // Подключение к WebSocket для получения уведомлений о новых темах от администратора
+        const notificationSocket = new WebSocket(
+        `${wsProtocol}://${window.location.host}/ws/user-notifications/`
+    );
 
+    notificationSocket.onopen = function() {
+        console.log('Notification WebSocket connected');
+    };
+
+    notificationSocket.onmessage = function(event) {
+        const data = JSON.parse(event.data);
+
+        console.log('Notification message:', data);
+
+    if (data.type === 'topic_message_created') {
+        const topicCard = document.querySelector(
+            `.chat-topic-card[data-topic-id="${data.topic_id}"]`
+        );
+
+        if (!topicCard) return;
+
+        const lastMessageBlock =
+            topicCard.querySelector('.chat-topic-last-message');
+
+        if (lastMessageBlock) {
+            lastMessageBlock.innerHTML = `
+                <strong>Последнее сообщение:</strong>
+                ${data.text || 'Вложение'}
+            `;
+        }
+
+        let senderBlock =
+            topicCard.querySelector('.chat-topic-last-sender');
+
+        if (!senderBlock && lastMessageBlock) {
+            senderBlock = document.createElement('div');
+            senderBlock.className = 'chat-topic-last-sender';
+
+            lastMessageBlock.insertAdjacentElement(
+                'afterend',
+                senderBlock
+            );
+        }
+
+        if (senderBlock) {
+            senderBlock.textContent =
+                `От ${data.sender_name} - ${data.sender_email} (${data.sender_role})`;
+        }
+
+        const timeBlock =
+            topicCard.querySelector('.chat-topic-time');
+
+        if (timeBlock) {
+            timeBlock.textContent = data.time;
+        }
+
+        topicCard.classList.add('new-topic-highlight');
+        const topicsContainer =
+            document.querySelector('.chat-topics');
+        topicsContainer.prepend(topicCard);
+
+        setTimeout(() => {
+            topicCard.classList.remove('new-topic-highlight');
+        }, 6000);
+
+        return;
+    }
+
+    if (data.type !== 'topic_created') return;
+
+        if (!topicsContainer) return;
+
+        const emptyBlock =
+            topicsContainer.querySelector('.empty-chat');
+
+        if (emptyBlock) {
+            emptyBlock.remove();
+        }
+
+        const topicCard = `
+            <a href="${data.url}"
+            class="chat-topic-card new-topic-highlight"
+            data-topic-id="${data.topic_id}">
+                <div class="chat-topic-header">
+                    <div>
+                        <div class="chat-topic-title">
+                            ${data.title}
+                        </div>
+                    </div>
+
+                    <div class="chat-topic-right">
+                        <div class="chat-topic-status open">
+                            ${data.status_display}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="chat-topic-created">
+                    <strong>Создал:</strong>
+                    ${data.created_by}
+                </div>
+
+                <div class="chat-topic-last-message">
+                    <strong>Последнее сообщение:</strong>
+                    Сообщений пока нет
+                </div>
+
+                <div class="chat-topic-date">
+                    <strong>Дата создания:</strong>
+                    Только что
+                </div>
+            </a>
+        `;
+
+        topicsContainer.insertAdjacentHTML(
+            'afterbegin',
+            topicCard
+        );
+        const newCard = topicsContainer.querySelector(
+            `.chat-topic-card[data-topic-id="${data.topic_id}"]`
+        );
+
+        console.log('newCard highlight:', newCard);
+        console.log('classes:', newCard?.className);
+
+        if (newCard) {
+            newCard.classList.add('new-topic-highlight');
+
+            setTimeout(() => {
+                newCard.classList.remove('new-topic-highlight');
+            }, 6000);
+        }
+        showNotification('Администратор создал новую тему');
+    };
+
+    notificationSocket.onclose = function() {
+        console.log('Notification WebSocket disconnected');
+    };
+</script>
+<script>
+document.querySelectorAll('.chat-topic-card').forEach(card => {
+
+    card.addEventListener('click', async function(event) {
+
+        event.preventDefault();
+
+        const topicId = this.dataset.topicId;
+
+        const response = await fetch(
+            `/partner/chat/topic-data/${topicId}/`
+        );
+
+        const data = await response.json();
+
+        renderTopic(data);
+    });
+
+});
+document.addEventListener('click', async function(event) {
+    const tab = event.target.closest('#topicFilterTabs .chat-tab');
+
+    if (!tab) return;
+
+    event.preventDefault();
+    event.stopPropagation();
+
+    try {
+        const response = await fetch(tab.href, {
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        });
+
+        if (!response.ok) {
+            console.error('Ошибка загрузки фильтра:', response.status);
+            return;
+        }
+
+        const html = await response.text();
+
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(html, 'text/html');
+
+        const newTopics = doc.querySelector('.chat-topics');
+        const currentTopics = document.querySelector('.chat-topics');
+
+        if (newTopics && currentTopics) {
+            currentTopics.innerHTML = newTopics.innerHTML;
+        }
+
+        document
+            .querySelectorAll('#topicFilterTabs .chat-tab')
+            .forEach(item => item.classList.remove('active'));
+
+        tab.classList.add('active');
+
+        const url = new URL(tab.href);
+        window.history.pushState({}, '', url.pathname + url.search);
+
+    } catch (error) {
+        console.error('Ошибка переключения фильтра:', error);
+    }
+});
+</script>
+{% endif %}
+<script>
+    const presenceWsProtocol =
+        window.location.protocol === 'https:' ? 'wss' : 'ws';
+
+    const presenceSocket = new WebSocket(
+        `${presenceWsProtocol}://${window.location.host}/ws/presence/`
+    );
+
+    presenceSocket.onopen = function() {
+        console.log('Presence WebSocket connected');
+    };
+
+    presenceSocket.onmessage = function(event) {
+        const data = JSON.parse(event.data);
+
+        console.log('Presence WS:', data);
+
+        if (data.type !== 'user_status') return;
+ 
+        const block = document.getElementById('adminStatusBlock');
+
+        if (!block) return;
+
+        const statusRight = block.querySelector('.admin-status-right');
+
+        if (!statusRight) return;
+
+        if (data.is_online) {
+            delete statusRight.dataset.offlineAt;
+
+            statusRight.innerHTML = `
+                <span class="online-dot"></span>
+                <span class="online-text">online</span>
+            `;
+        } else {
+            statusRight.dataset.offlineAt = Date.now();
+
+            statusRight.innerHTML = `
+                <span class="offline-dot"></span>
+                <span class="offline-text">только что</span>
+            `;
+        }
+    };
+
+    presenceSocket.onclose = function(event) {
+        console.log(
+            'Presence WebSocket disconnected',
+            event.code,
+            event.reason
+        );
+    };
+
+    presenceSocket.onerror = function(error) {
+        console.log('Presence WebSocket error', error);
+    };
+</script>  
 {% endblock %}
